@@ -724,7 +724,7 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.0</div>
+<div class="version-tag">v1.1</div>
 
 <script>
 'use strict';
@@ -777,7 +777,17 @@ async function gistFetch(gistId, token) {
     headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github+json' }
   });
   if (!resp.ok) throw new Error('HTTP ' + resp.status);
-  return resp.json();
+  const data = await resp.json();
+  // Fetch raw content for truncated files
+  for (const fname of Object.keys(data.files || {})) {
+    if (data.files[fname].truncated && data.files[fname].raw_url) {
+      const raw = await fetch(data.files[fname].raw_url, {
+        headers: { Authorization: 'token ' + token }
+      });
+      if (raw.ok) data.files[fname].content = await raw.text();
+    }
+  }
+  return data;
 }
 
 async function gistWrite(gistId, token, content) {
@@ -843,7 +853,7 @@ function importClarito(gistData) {
   // Find db.json or similar Clarito file
   let clarito = null;
   for (const fname of Object.keys(gistData.files || {})) {
-    if (fname === 'db.json' || fname.endsWith('db.json')) {
+    if (fname === 'clarito-data.json' || fname.includes('clarito-data')) {
       try { clarito = JSON.parse(gistData.files[fname].content); } catch(e) {}
       break;
     }
@@ -1279,7 +1289,7 @@ async function runSetupConnect() {
     // Try to get persona names from Clarito db.json
     let p1 = 'Persona 1', p2 = 'Persona 2';
     for (const fname of Object.keys(gistData.files || {})) {
-      if (fname.endsWith('db.json') || fname === 'db.json') {
+      if (fname === 'clarito-data.json' || fname.includes('clarito-data')) {
         try {
           const clarito = JSON.parse(gistData.files[fname].content);
           if (clarito.persons && clarito.persons.length >= 2) {
