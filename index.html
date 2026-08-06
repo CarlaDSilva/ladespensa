@@ -822,17 +822,6 @@ async function syncFromClarito() {
   try {
     const gistData = await gistFetch(settings.gistId, settings.gistToken);
 
-    // Read ladespensa.json if exists
-    if (gistData.files && gistData.files[LADESPENSA_FILE]) {
-      try {
-        const remote = JSON.parse(gistData.files[LADESPENSA_FILE].content);
-        if (remote && remote.version) {
-          DB.lines = remote.lines || [];
-          DB.shoppingList = remote.shoppingList || [];
-        }
-      } catch(e) {}
-    }
-
     // Import Clarito tickets
     importClarito(gistData);
 
