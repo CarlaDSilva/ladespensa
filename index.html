@@ -15,8 +15,8 @@
     --bg: #1a1a1f;
     --surface: #242429;
     --surface2: #2e2e35;
-    --accent: #8b2635;
-    --accent-light: #b03045;
+    --accent: #c9952a;
+    --accent-light: #d4a843;
     --text: #f0f0f5;
     --text2: #9999aa;
     --radius: 14px;
@@ -53,6 +53,9 @@
   }
   .header-title {
     font-size: 22px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
     font-weight: 700;
     letter-spacing: 2px;
     color: var(--text);
@@ -61,9 +64,9 @@
   .icon-btn {
     background: var(--surface);
     border: none;
-    border-radius: 10px;
-    width: 40px;
-    height: 40px;
+    border-radius: 12px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -71,7 +74,8 @@
     color: var(--text2);
     transition: background 0.15s, color 0.15s;
   }
-  .icon-btn:hover, .icon-btn.active { background: var(--surface2); color: var(--text); }
+  @media (hover: hover) { .icon-btn:hover { background: var(--surface2); color: var(--text); } }
+  .icon-btn.active { background: var(--surface2); color: var(--text); }
   .icon-btn svg { width: 20px; height: 20px; }
 
   /* ── FILTER BAR ── */
@@ -178,8 +182,8 @@
     background: var(--surface2);
     border: none;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -188,7 +192,8 @@
     flex-shrink: 0;
     transition: background 0.15s, color 0.15s;
   }
-  .add-btn:hover, .add-btn.in-list { background: var(--accent); color: var(--text); }
+  .add-btn.in-list { background: var(--accent); color: #1a1a1f; }
+  @media (hover: hover) { .add-btn:hover { background: var(--accent); color: #1a1a1f; } }
   .add-btn svg { width: 18px; height: 18px; }
 
   /* ── ITEM EXPANDED ── */
@@ -250,11 +255,11 @@
   /* ── FAB ── */
   .fab {
     position: fixed;
-    bottom: 24px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 18px;
+    bottom: 28px;
+    right: 22px;
+    width: 62px;
+    height: 62px;
+    border-radius: 20px;
     background: var(--accent);
     border: none;
     color: white;
@@ -263,7 +268,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(139,38,53,0.5);
+    box-shadow: 0 4px 20px rgba(201,149,42,0.45);
     transition: background 0.15s, transform 0.15s;
     z-index: 50;
   }
@@ -326,7 +331,7 @@
     background: var(--accent);
     border: none;
     border-radius: var(--radius);
-    color: white;
+    color: #1a1a1f;
     font-size: 16px;
     font-weight: 600;
     padding: 14px;
@@ -469,6 +474,23 @@
     pointer-events: none;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── IPAD / LARGE SCREENS ── */
+  @media (min-width: 768px) {
+    .header { padding: 20px 24px 0; }
+    .header-title { font-size: 26px; }
+    .icon-btn { width: 52px; height: 52px; border-radius: 14px; }
+    .icon-btn svg { width: 24px; height: 24px; }
+    .main { padding: 20px 24px; max-width: 720px; margin: 0 auto; width: 100%; }
+    .item-name { font-size: 19px; }
+    .item-main { padding: 18px 16px 18px 20px; }
+    .add-btn { width: 50px; height: 50px; }
+    .add-btn svg { width: 22px; height: 22px; }
+    .fab { width: 68px; height: 68px; border-radius: 22px; bottom: 32px; right: 28px; }
+    .fab svg { width: 34px; height: 34px; }
+    .sheet { max-width: 560px; padding: 28px 28px 48px; }
+    .chip-btn { padding: 9px 18px; font-size: 14px; }
+  }
 </style>
 </head>
 <body>
@@ -536,7 +558,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-row">
-      <span class="header-title">LADESPENSA</span>
+      <span class="header-title" id="headerTitle" style="cursor:pointer">LADESPENSA</span>
       <div class="header-actions">
         <div class="header-btn-wrap">
           <button class="icon-btn" id="shoppingListBtn" title="Lista de la compra">
@@ -724,14 +746,14 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.1</div>
+<div class="version-tag">v1.2</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.0';
-const LADESPENSA_FILE = 'ladespensa.json';
+const VERSION = '1.2';
+const LS_KEY = 'ladespensa_v1';
 const GIST_API = 'https://api.github.com/gists/';
 
 // ── STATE ──────────────────────────────────────────────────────────────────
@@ -743,14 +765,14 @@ let filters = { persona: 'all', lugar: 'all', store: 'all' };
 // ── STORAGE ────────────────────────────────────────────────────────────────
 function loadLocal() {
   try {
-    const raw = localStorage.getItem('ladespensa');
+    const raw = localStorage.getItem(LS_KEY);
     if (raw) return JSON.parse(raw);
   } catch(e) {}
   return null;
 }
 
 function saveLocal(data) {
-  try { localStorage.setItem('ladespensa', JSON.stringify(data)); } catch(e) {}
+  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {}
 }
 
 function defaultDB() {
@@ -790,22 +812,9 @@ async function gistFetch(gistId, token) {
   return data;
 }
 
-async function gistWrite(gistId, token, content) {
-  const resp = await fetch(GIST_API + gistId, {
-    method: 'PATCH',
-    headers: {
-      Authorization: 'token ' + token,
-      Accept: 'application/vnd.github+json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ files: { [LADESPENSA_FILE]: { content: JSON.stringify(content, null, 2) } } })
-  });
-  if (!resp.ok) throw new Error('HTTP ' + resp.status);
-  return resp.json();
-}
 
 // ── SYNC ───────────────────────────────────────────────────────────────────
-async function syncFromGist(initial) {
+async function syncFromClarito() {
   const bar = document.getElementById('syncBar');
   bar.style.width = '30%';
   bar.classList.add('syncing');
@@ -831,12 +840,6 @@ async function syncFromGist(initial) {
     DB.settings = settings;
     saveLocal(DB);
     bar.style.width = '70%';
-
-    // Write back
-    await gistWrite(settings.gistId, settings.gistToken, DB);
-    settings.lastSync = new Date().toISOString();
-    DB.settings = settings;
-    saveLocal(DB);
 
     bar.style.width = '100%';
     showToast('Sincronizado');
@@ -891,7 +894,7 @@ function importClarito(gistData) {
         date: ticket.date,
         qty: prod.qty || 1,
         store: ticket.store || '',
-        capricho: false,
+        puntual: false,
         ticketId: ticket.id
       });
       line.lastUpdated = new Date().toISOString();
@@ -912,7 +915,7 @@ function dateDiffDays(a, b) {
 }
 
 function predict(line) {
-  const real = (line.purchases || []).filter(p => !p.capricho).sort((a, b) => a.date < b.date ? -1 : 1);
+  const real = (line.purchases || []).filter(p => !p.puntual).sort((a, b) => a.date < b.date ? -1 : 1);
 
   if (real.length >= 2) {
     const intervals = [];
@@ -1191,7 +1194,7 @@ function makeCard(line, pred) {
       e.stopPropagation();
       const idx = parseInt(btn.dataset.purchaseIdx);
       if (line.purchases[idx]) {
-        line.purchases[idx].capricho = !line.purchases[idx].capricho;
+        line.purchases[idx].puntual = !(line.purchases[idx].puntual || line.purchases[idx].capricho || false);
         saveAndSync();
         renderAll();
       }
@@ -1209,7 +1212,7 @@ function renderPurchaseList(line) {
       <span style="color:var(--text2)">${p.date}</span>
       <span style="flex:1">${esc(p.store || '')}</span>
       <span>x${p.qty || 1}</span>
-      <button data-purchase-idx="${idx}" style="background:none;border:none;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:8px;${p.capricho ? 'background:var(--accent);color:white' : 'color:var(--text2)'}">capricho</button>
+      <button data-purchase-idx="${idx}" style="background:none;border:none;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:8px;${p.puntual||p.capricho ? 'background:var(--accent-light);color:#1a1a1f' : 'color:var(--text2)'}">Puntual</button>
     </div>`;
   }).join('');
 }
@@ -1241,22 +1244,11 @@ function renderShoppingList() {
 }
 
 // ── SAVE & SYNC ────────────────────────────────────────────────────────────
-let syncTimer = null;
 function saveAndSync() {
   DB.settings = settings;
   saveLocal(DB);
-  clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => { if (settings.gistId && settings.gistToken) gistWriteOnly(); }, 3000);
 }
 
-async function gistWriteOnly() {
-  try {
-    await gistWrite(settings.gistId, settings.gistToken, DB);
-    settings.lastSync = new Date().toISOString();
-    DB.settings = settings;
-    saveLocal(DB);
-  } catch(e) { showToast('Error al guardar en Gist'); }
-}
 
 // ── SETUP ──────────────────────────────────────────────────────────────────
 function showSetup() {
@@ -1307,23 +1299,6 @@ async function runSetupConnect() {
     DB.settings.gistToken = token;
     settings = DB.settings;
 
-    // Check if ladespensa.json exists
-    if (gistData.files && gistData.files[LADESPENSA_FILE]) {
-      try {
-        const remote = JSON.parse(gistData.files[LADESPENSA_FILE].content);
-        if (remote && remote.version) {
-          DB = remote;
-          DB.settings.gistId = gistId;
-          DB.settings.gistToken = token;
-          settings = DB.settings;
-          saveLocal(DB);
-          showApp();
-          syncFromGist(false);
-          return;
-        }
-      } catch(e) {}
-    }
-
     document.getElementById('setupP1Name').value = p1;
     document.getElementById('setupP2Name').value = p2;
 
@@ -1359,7 +1334,7 @@ function finishSetup(lugarKey) {
   DB.settings = settings;
   saveLocal(DB);
   showApp();
-  syncFromGist(true);
+  syncFromClarito();
 }
 
 // ── SETTINGS ───────────────────────────────────────────────────────────────
@@ -1411,6 +1386,17 @@ function init() {
   document.getElementById('setupLugar1Btn').addEventListener('click', () => finishSetup('lugar1'));
   document.getElementById('setupLugar2Btn').addEventListener('click', () => finishSetup('lugar2'));
 
+  document.getElementById('headerTitle').addEventListener('click', () => {
+    expandedId = null;
+    filters = { persona: 'all', lugar: 'all', store: 'all' };
+    document.getElementById('filterPersona').value = 'all';
+    document.getElementById('filterLugar').value = 'all';
+    document.getElementById('filterStore').value = 'all';
+    document.getElementById('filterBar').classList.remove('open');
+    document.getElementById('filterBtn').classList.remove('active');
+    renderAll();
+  });
+
   document.getElementById('filterBtn').addEventListener('click', () => {
     const bar = document.getElementById('filterBar');
     const btn = document.getElementById('filterBtn');
@@ -1423,7 +1409,7 @@ function init() {
   document.getElementById('filterStore').addEventListener('change', (e) => { filters.store = e.target.value; renderAll(); });
 
   document.getElementById('syncBtn').addEventListener('click', () => {
-    if (settings && settings.gistId) syncFromGist(false);
+    if (settings && settings.gistId) syncFromClarito();
     else showToast('Configura el Gist primero');
   });
 
@@ -1432,7 +1418,7 @@ function init() {
   document.getElementById('settingsCloseBtn').addEventListener('click', () => closeOverlay('settingsOverlay'));
   document.getElementById('settingsResetBtn').addEventListener('click', () => {
     if (confirm('¿Reiniciar la app? Se perderán los ajustes locales.')) {
-      localStorage.removeItem('ladespensa');
+      localStorage.removeItem(LS_KEY);
       location.reload();
     }
   });
@@ -1481,7 +1467,7 @@ function init() {
     renderAll();
     // Background sync
     if (settings.gistId && settings.gistToken) {
-      setTimeout(() => syncFromGist(false), 1000);
+      setTimeout(() => syncFromClarito(), 1000);
     }
   } else {
     DB = defaultDB();
