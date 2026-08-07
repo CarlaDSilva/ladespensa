@@ -36,7 +36,7 @@
 
   body { display: flex; flex-direction: column; }
 
-  /* ââ HEADER ââ */
+  /* ── HEADER ── */
   .header {
     position: sticky;
     top: 0;
@@ -74,7 +74,7 @@
   .icon-btn:hover, .icon-btn.active { background: var(--surface2); color: var(--text); }
   .icon-btn svg { width: 20px; height: 20px; }
 
-  /* ââ FILTER BAR ââ */
+  /* ── FILTER BAR ── */
   .filter-bar {
     overflow: hidden;
     max-height: 0;
@@ -102,7 +102,7 @@
     cursor: pointer;
   }
 
-  /* ââ MAIN ââ */
+  /* ── MAIN ── */
   .main { flex: 1; padding: 16px; overflow-y: auto; padding-bottom: 100px; }
 
   .section-title {
@@ -114,7 +114,7 @@
     margin-bottom: 10px;
   }
 
-  /* ââ ITEMS ââ */
+  /* ── ITEMS ── */
   .item-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
 
   .item-card {
@@ -191,7 +191,7 @@
   .add-btn:hover, .add-btn.in-list { background: var(--accent); color: var(--text); }
   .add-btn svg { width: 18px; height: 18px; }
 
-  /* ââ ITEM EXPANDED ââ */
+  /* ── ITEM EXPANDED ── */
   .item-expanded {
     display: none;
     padding: 10px 16px 14px;
@@ -238,7 +238,7 @@
   .chip-btn.danger { border-color: transparent; }
   .chip-btn.danger:hover { background: #c0392b; border-color: #c0392b; color: white; }
 
-  /* ââ EMPTY STATE ââ */
+  /* ── EMPTY STATE ── */
   .empty-state {
     text-align: center;
     padding: 48px 24px;
@@ -247,7 +247,7 @@
   .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
   .empty-state p { font-size: 15px; }
 
-  /* ââ FAB ââ */
+  /* ── FAB ── */
   .fab {
     position: fixed;
     bottom: 24px;
@@ -270,7 +270,7 @@
   .fab:hover { background: var(--accent-light); transform: scale(1.05); }
   .fab svg { width: 28px; height: 28px; }
 
-  /* ââ MODALS ââ */
+  /* ── MODALS ── */
   .overlay {
     position: fixed;
     inset: 0;
@@ -349,7 +349,7 @@
   }
   .btn-secondary:hover { background: #38383f; }
 
-  /* ââ SETUP WIZARD ââ */
+  /* ── SETUP WIZARD ── */
   #setupOverlay {
     position: fixed;
     inset: 0;
@@ -401,7 +401,7 @@
   .setup-step { display: none; }
   .setup-step.active { display: block; }
 
-  /* ââ SETTINGS ââ */
+  /* ── SETTINGS ── */
   .settings-section { margin-bottom: 24px; }
   .settings-section-title {
     font-size: 11px;
@@ -441,7 +441,7 @@
   .toggle input:checked + .toggle-slider { background: var(--accent); }
   .toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: white; }
 
-  /* ââ VERSION ââ */
+  /* ── VERSION ── */
   .version-tag {
     position: fixed;
     bottom: 8px;
@@ -452,7 +452,7 @@
     pointer-events: none;
   }
 
-  /* ââ SHOPPING LIST ââ */
+  /* ── SHOPPING LIST ── */
   .shopping-badge {
     position: absolute;
     top: -4px;
@@ -514,7 +514,7 @@
     margin-top: 8px;
   }
 
-  /* ââ CUSTOM CONFIRM ââ */
+  /* ── CUSTOM CONFIRM ── */
   .confirm-overlay {
     position: fixed;
     inset: 0;
@@ -548,7 +548,7 @@
   .confirm-cancel-btn { background: var(--surface2); color: var(--text); }
   .confirm-ok-btn { background: #c0392b; color: white; }
 
-  /* ââ SYNC indicator ââ */
+  /* ── SYNC indicator ── */
   .sync-bar {
     height: 2px;
     background: var(--accent);
@@ -596,7 +596,7 @@
 <!-- CUSTOM CONFIRM MODAL -->
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-box">
-    <div class="confirm-msg" id="confirmMsg">Â¿Eliminar este producto?</div>
+    <div class="confirm-msg" id="confirmMsg">¿Eliminar este producto?</div>
     <div class="confirm-btns">
       <button class="confirm-cancel-btn" id="confirmCancelBtn">Cancelar</button>
       <button class="confirm-ok-btn" id="confirmOkBtn">Eliminar</button>
@@ -607,7 +607,7 @@
 <!-- SETUP WIZARD -->
 <div id="setupOverlay">
   <div class="setup-card">
-    <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">Ã</button>
+    <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
 
     <!-- Step 1: Gist -->
@@ -649,7 +649,7 @@
 
     <!-- Step 3: Lugar actual -->
     <div class="setup-step" id="step3">
-      <p class="setup-subtitle" id="setupLugarQ">Â¿En quÃ© casa estÃ¡s ahora?</p>
+      <p class="setup-subtitle" id="setupLugarQ">¿En qué casa estás ahora?</p>
       <button class="btn-primary" id="setupLugar1Btn">Piso</button>
       <button class="btn-secondary" id="setupLugar2Btn">Mogor</button>
     </div>
@@ -704,7 +704,7 @@
             <option value="all">Todos</option>
             <option value="p1">Persona 1</option>
             <option value="p2">Persona 2</option>
-            <option value="comun">ComÃºn</option>
+            <option value="comun">Común</option>
           </select>
         </div>
         <div class="filter-group">
@@ -749,12 +749,12 @@
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
       <p>No hay productos que mostrar</p>
-      <p style="font-size:13px;margin-top:6px">Pulsa + para aÃ±adir uno</p>
+      <p style="font-size:13px;margin-top:6px">Pulsa + para añadir uno</p>
     </div>
   </div>
 
   <!-- FAB -->
-  <button class="fab" id="fabAdd" title="AÃ±adir producto">
+  <button class="fab" id="fabAdd" title="Añadir producto">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <line x1="12" y1="5" x2="12" y2="19"/>
       <line x1="5" y1="12" x2="19" y2="12"/>
@@ -765,7 +765,7 @@
 <!-- ADD PRODUCT MODAL -->
 <div class="overlay" id="addOverlay">
   <div class="sheet">
-    <div class="sheet-title">AÃ±adir producto</div>
+    <div class="sheet-title">Añadir producto</div>
     <div class="sheet-field">
       <label class="sheet-label">Nombre</label>
       <input class="sheet-input" id="addName" placeholder="Ej: Leche entera 1L" list="addNameList" autocomplete="off">
@@ -776,7 +776,7 @@
       <select class="sheet-select" id="addPersona">
         <option value="p1">Persona 1</option>
         <option value="p2">Persona 2</option>
-        <option value="comun">ComÃºn</option>
+        <option value="comun">Común</option>
       </select>
     </div>
     <div class="sheet-field">
@@ -790,7 +790,7 @@
       <label class="sheet-label">Estado inicial</label>
       <select class="sheet-select" id="addStatus">
         <option value="">Normal</option>
-        <option value="agotandose">AgotÃ¡ndose</option>
+        <option value="agotandose">Agotándose</option>
         <option value="agotado">Agotado</option>
         <option value="puntual">Puntual (compra ocasional)</option>
       </select>
@@ -800,7 +800,7 @@
       <input class="sheet-input" id="addStore" list="storeListAdd" placeholder="Mercadona, Lidl..." autocomplete="off">
       <datalist id="storeListAdd"></datalist>
     </div>
-    <button class="btn-primary" id="addConfirmBtn">AÃ±adir</button>
+    <button class="btn-primary" id="addConfirmBtn">Añadir</button>
     <button class="btn-secondary" id="addCancelBtn">Cancelar</button>
   </div>
 </div>
@@ -811,7 +811,7 @@
     <div class="sheet-title">Lista de la compra</div>
     <div class="shopping-actions">
       <button class="chip-btn" id="selectAllBtn">Seleccionar todos</button>
-      <button class="chip-btn" id="compraMadaBtn" style="background:var(--accent);border-color:var(--accent);color:white">Compra hecha â</button>
+      <button class="chip-btn" id="compraMadaBtn" style="background:var(--accent);border-color:var(--accent);color:white">Compra hecha ✓</button>
     </div>
     <div id="shoppingContent"></div>
     <div class="shopping-total" id="shoppingTotal" style="display:none"></div>
@@ -824,13 +824,13 @@
   <div class="sheet">
     <div class="sheet-title">Ajustes</div>
     <div class="settings-section">
-      <div class="settings-section-title">ConexiÃ³n</div>
+      <div class="settings-section-title">Conexión</div>
       <div class="settings-row">
         <span class="settings-row-label">Gist ID</span>
         <span class="settings-row-value" id="settingsGistId">-</span>
       </div>
       <div class="settings-row">
-        <span class="settings-row-label">Ãltima sync</span>
+        <span class="settings-row-label">Última sync</span>
         <span class="settings-row-value" id="settingsLastSync">-</span>
       </div>
     </div>
@@ -885,19 +885,19 @@
 <script>
 'use strict';
 
-// ââ CONSTANTS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
 const VERSION = '1.4';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
-// ââ STATE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── STATE ──────────────────────────────────────────────────────────────────
 let DB = null;
 let settings = null;
 let expandedId = null;
 let filters = { persona: 'all', lugar: 'all', store: 'all' };
 let shoppingTicked = new Set(); // ids ticked in current shopping session
 
-// ââ CONFIRM MODAL ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── CONFIRM MODAL ──────────────────────────────────────────────────────────
 let _confirmCallback = null;
 
 function customConfirm(msg, onOk) {
@@ -906,7 +906,7 @@ function customConfirm(msg, onOk) {
   document.getElementById('confirmOverlay').classList.add('open');
 }
 
-// ââ STORAGE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── STORAGE ────────────────────────────────────────────────────────────────
 function loadLocal() {
   try {
     const raw = localStorage.getItem('ladespensa');
@@ -941,7 +941,7 @@ function defaultDB() {
   };
 }
 
-// ââ GIST API âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── GIST API ───────────────────────────────────────────────────────────────
 async function gistFetch(gistId, token) {
   const resp = await fetch(GIST_API + gistId, {
     headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github+json' }
@@ -964,7 +964,7 @@ async function gistWrite(gistId, token, content) {
   return resp.json();
 }
 
-// ââ SYNC âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SYNC ───────────────────────────────────────────────────────────────────
 async function syncFromGist(initial) {
   const bar = document.getElementById('syncBar');
   bar.style.width = '30%';
@@ -1077,14 +1077,14 @@ function importClarito(gistData) {
   }
 }
 
-// ââ PRICE HELPERS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── PRICE HELPERS ──────────────────────────────────────────────────────────
 function getAvgPrice(productName) {
   const prices = (DB.claritoPrices || {})[productName];
   if (!prices || !prices.length) return null;
   return prices.reduce((s, p) => s + p, 0) / prices.length;
 }
 
-// ââ PREDICTION âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── PREDICTION ─────────────────────────────────────────────────────────────
 function median(arr) {
   if (!arr.length) return null;
   const s = [...arr].sort((a, b) => a - b);
@@ -1147,16 +1147,16 @@ function formatCountdown(pred) {
   if (pred.status === 'desconocido') return 'Desconocido';
   if (pred.daysRemaining === null) return 'Sin datos';
   if (pred.daysRemaining <= 0) return 'Agotado';
-  if (pred.daysRemaining === 1) return 'MaÃ±ana';
-  return 'En ' + pred.daysRemaining + ' dÃ­as';
+  if (pred.daysRemaining === 1) return 'Mañana';
+  return 'En ' + pred.daysRemaining + ' días';
 }
 
-// ââ NAMES ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── NAMES ──────────────────────────────────────────────────────────────────
 function getPersonaName(p) {
   const useOrig = settings.useOriginalNames;
   if (p === 'p1') return (useOrig && settings.persona1OriginalName) ? settings.persona1OriginalName : settings.persona1Name;
   if (p === 'p2') return (useOrig && settings.persona2OriginalName) ? settings.persona2OriginalName : settings.persona2Name;
-  return 'ComÃºn';
+  return 'Común';
 }
 function getLugarName(l) {
   if (l === 'lugar1') return settings.lugar1Name;
@@ -1164,7 +1164,7 @@ function getLugarName(l) {
   return l;
 }
 
-// ââ RENDER âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── RENDER ─────────────────────────────────────────────────────────────────
 function renderAll() {
   // Update filter labels
   document.querySelector('#filterPersona option[value="p1"]').textContent = getPersonaName('p1');
@@ -1253,7 +1253,7 @@ function renderAll() {
   const urgentAll = [...groups.agotado, ...groups.urgente];
   renderSection('urgentSection', 'urgentList', urgentAll, urgentAll.length > 0 ? (groups.agotado.length ? 'Agotado / Urgente' : 'Urgente') : '');
   renderSection('soonSection', 'soonList', groups.pronto, 'En breve (esta semana)');
-  renderSection('visibleSection', 'visibleList', groups.visible, 'PrÃ³ximamente');
+  renderSection('visibleSection', 'visibleList', groups.visible, 'Próximamente');
   renderSection('okSection', 'okList', [...groups.ok, ...groups.desconocido], 'Sin alertas');
 
   const total = lined.length;
@@ -1297,7 +1297,7 @@ function makeCard(line, pred) {
         </div>
       </div>
       <div class="item-countdown ${pred.status}">${formatCountdown(pred)}</div>
-      <button class="add-btn ${line.addedToShoppingList ? 'in-list' : ''}" data-action="toggle-list" title="${line.addedToShoppingList ? 'En la lista' : 'AÃ±adir a lista'}">
+      <button class="add-btn ${line.addedToShoppingList ? 'in-list' : ''}" data-action="toggle-list" title="${line.addedToShoppingList ? 'En la lista' : 'Añadir a lista'}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           ${line.addedToShoppingList
             ? '<polyline points="20 6 9 17 4 12"/>'
@@ -1316,7 +1316,7 @@ function makeCard(line, pred) {
           <select class="expand-select" data-field="persona">
             <option value="p1" ${line.persona === 'p1' ? 'selected' : ''}>${esc(getPersonaName('p1'))}</option>
             <option value="p2" ${line.persona === 'p2' ? 'selected' : ''}>${esc(getPersonaName('p2'))}</option>
-            <option value="comun" ${line.persona === 'comun' ? 'selected' : ''}>ComÃºn</option>
+            <option value="comun" ${line.persona === 'comun' ? 'selected' : ''}>Común</option>
           </select>
         </div>
         <div class="expand-field">
@@ -1328,7 +1328,7 @@ function makeCard(line, pred) {
         </div>
       </div>
       <div class="expand-actions">
-        <button class="chip-btn ${line.manualStatus === 'agotandose' ? 'active' : ''}" data-action="mark" data-val="agotandose">AgotÃ¡ndose</button>
+        <button class="chip-btn ${line.manualStatus === 'agotandose' ? 'active' : ''}" data-action="mark" data-val="agotandose">Agotándose</button>
         <button class="chip-btn ${line.manualStatus === 'agotado' ? 'active' : ''}" data-action="mark" data-val="agotado">Agotado</button>
         <button class="chip-btn ${line.manualStatus === 'puntual' ? 'active' : ''}" data-action="mark" data-val="puntual">Puntual</button>
         <button class="chip-btn danger" data-action="delete">Eliminar</button>
@@ -1336,7 +1336,7 @@ function makeCard(line, pred) {
       </div>
       <div style="margin-top:10px">
         <span class="expand-label">Compras (${(line.purchases || []).length})</span>
-        <div style="margin-top:6px;max-height:120px;overflow-y:uto">
+        <div style="margin-top:6px;max-height:120px;overflow-y:auto">
           ${renderPurchaseList(line)}
         </div>
       </div>
@@ -1367,7 +1367,7 @@ function makeCard(line, pred) {
 
   card.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
     e.stopPropagation();
-    customConfirm('Â¿Eliminar ' + line.product + '?', () => {
+    customConfirm('¿Eliminar ' + line.product + '?', () => {
       DB.lines = DB.lines.filter(l => l.id !== line.id);
       if (expandedId === line.id) expandedId = null;
       saveAndSync();
@@ -1417,14 +1417,14 @@ function renderPurchaseList(line) {
   }).join('');
 }
 
-// ââ SHOPPING LIST ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SHOPPING LIST ──────────────────────────────────────────────────────────
 function renderShoppingList() {
   const items = DB.lines.filter(l => l.addedToShoppingList);
   const content = document.getElementById('shoppingContent');
   const totalEl = document.getElementById('shoppingTotal');
 
   if (!items.length) {
-    content.innerHTML = '<p style="color:var(--text2);font-size:15px;padding:12px 0">Lista vacÃ­a</p>';
+    content.innerHTML = '<p style="color:var(--text2);font-size:15px;padding:12px 0">Lista vacía</p>';
     totalEl.style.display = 'none';
     return;
   }
@@ -1437,7 +1437,7 @@ function renderShoppingList() {
   content.innerHTML = ordered.map(l => {
     const isTicked = shoppingTicked.has(l.id);
     const avgPrice = getAvgPrice(l.product);
-    const priceStr = avgPrice != null ? avgPrice.toFixed(2) + 'â¬' : '';
+    const priceStr = avgPrice != null ? avgPrice.toFixed(2) + '€' : '';
     return `<div class="shopping-item ${isTicked ? 'ticked' : ''}" data-sid="${l.id}">
       <button class="shopping-tick ${isTicked ? 'checked' : ''}" data-tick="${l.id}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -1490,13 +1490,13 @@ function renderShoppingList() {
   });
   if (hasAnyPrice) {
     totalEl.style.display = 'block';
-    totalEl.textContent = 'Total aprox.: ' + total.toFixed(2) + 'â¬';
+    totalEl.textContent = 'Total aprox.: ' + total.toFixed(2) + '€';
   } else {
     totalEl.style.display = 'none';
   }
 }
 
-// ââ SAVE & SYNC ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SAVE & SYNC ────────────────────────────────────────────────────────────
 let syncTimer = null;
 function saveAndSync() {
   DB.settings = settings;
@@ -1514,7 +1514,7 @@ async function gistWriteOnly() {
   } catch(e) { showToast('Error al guardar en Gist'); }
 }
 
-// ââ SETUP ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SETUP ──────────────────────────────────────────────────────────────────
 function showSetup() {
   document.getElementById('setupOverlay').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
@@ -1605,7 +1605,7 @@ function setupNamesNext() {
   settings.lugar1Name = document.getElementById('setupL1Name').value.trim() || 'Piso';
   settings.lugar2Name = document.getElementById('setupL2Name').value.trim() || 'Mogor';
 
-  document.getElementById('setupLugarQ').textContent = 'Â¿En quÃ© casa estÃ¡s ahora?';
+  document.getElementById('setupLugarQ').textContent = '¿En qué casa estás ahora?';
   document.getElementById('setupLugar1Btn').textContent = settings.lugar1Name;
   document.getElementById('setupLugar2Btn').textContent = settings.lugar2Name;
 
@@ -1621,7 +1621,7 @@ function finishSetup(lugarKey) {
   syncFromGist(true);
 }
 
-// ââ SETTINGS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SETTINGS ───────────────────────────────────────────────────────────────
 function openSettings() {
   renderAll();
   openOverlay('settingsOverlay');
@@ -1641,11 +1641,11 @@ function saveSettings() {
   showToast('Ajustes guardados');
 }
 
-// ââ OVERLAY HELPERS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── OVERLAY HELPERS ────────────────────────────────────────────────────────
 function openOverlay(id) { document.getElementById(id).classList.add('open'); }
 function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
 
-// ââ UTILS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── UTILS ──────────────────────────────────────────────────────────────────
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
@@ -1661,7 +1661,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ââ INIT âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── INIT ───────────────────────────────────────────────────────────────────
 function init() {
   const saved = loadLocal();
 
@@ -1711,7 +1711,7 @@ function init() {
   document.getElementById('settingsSaveBtn').addEventListener('click', saveSettings);
   document.getElementById('settingsCloseBtn').addEventListener('click', () => closeOverlay('settingsOverlay'));
   document.getElementById('settingsResetBtn').addEventListener('click', () => {
-    customConfirm('Â¿Reiniciar la app? Se perderÃ¡n los ajustes locales.', () => {
+    customConfirm('¿Reiniciar la app? Se perderán los ajustes locales.', () => {
       localStorage.removeItem('ladespensa');
       location.reload();
     });
@@ -1752,7 +1752,7 @@ function init() {
     closeOverlay('addOverlay');
     saveAndSync();
     renderAll();
-    showToast('Producto aÃ±adido');
+    showToast('Producto añadido');
   });
 
   // Shopping list
@@ -1783,11 +1783,11 @@ function init() {
     saveAndSync();
     renderAll();
     renderShoppingList();
-    showToast("Â¡Compra registrada!');
+    showToast("¡Compra registrada!');
   });
 
   // Close overlays on backdrop click
-  ['addOverlay', 'shoppingOverlay', 'settingsOverlay].forEach(id => {
+  ['addOverlay', 'shoppingOverlay', 'settingsOverlay'].forEach(id => {
     document.getElementById(id).addEventListener('click', (e) => {
       if (e.target.id === id) closeOverlay(id);
     });
@@ -1805,7 +1805,6 @@ function init() {
     settings = DB.settings;
     // Show close button since we have existing data
     document.getElementById('setupCloseBtn').style.display = 'block';
-
     showApp();
     renderAll();
     if (settings.gistId && settings.gistToken) {
@@ -1824,7 +1823,7 @@ if (document.readyState === 'loading') {
   init();
 }
 
-// ââ SERVICE WORKER âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SERVICE WORKER ─────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
