@@ -1,12 +1,8 @@
-const CACHE = 'ladespensa-v1.5';
+const CACHE = 'ladespensa-v1.5.1';
 const ASSETS = ['./', './index.html', './manifest.json'];
-
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
-  );
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
-
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -14,16 +10,13 @@ self.addEventListener('activate', e => {
     ).then(() => self.clients.claim())
   );
 });
-
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('api.github.com')) return; // don't cache API calls
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(resp => {
-      if (resp && resp.status === 200 && e.request.method === 'GET') {
-        const clone = resp.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-      }
-      return resp;
-    }))
-  );
+  if (e.request.url.includes('api.github.com')) return;
+  e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request).then(resp => {
+    if (resp && resp.status === 200 && e.request.method === 'GET') {
+      const clone = resp.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+    }
+    return resp;
+  })));
 });
