@@ -1439,7 +1439,7 @@ function renderShoppingList() {
     const avgPrice = getAvgPrice(l.product);
     const priceStr = avgPrice != null ? avgPrice.toFixed(2) + '€' : '';
     return `<div class="shopping-item ${isTicked ? 'ticked' : ''}" data-sid="${l.id}">
-      <button class="shopping-tick ${isTicked ? 'checked' = ''}" data-tick="${l.id}">
+      <button class="shopping-tick ${isTicked ? 'checked' : ''}" data-tick="${l.id}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
