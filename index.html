@@ -9,223 +9,613 @@
 <title>LADESPENSA</title>
 <link rel="manifest" href="manifest.json">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #1a1a1f; --surface: #242429; --surface2: #2e2e35;
-  --accent: #c9952a; --accent-light: #d4a843;
-  --text: #f0f0f5; --text2: #9999aa; --radius: 14px;
-  --urgent: #c0392b; --soon: #e67e22; --visible: #f1c40f; --ok: #27ae60;
-}
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; overflow-x: hidden; }
-body { display: flex; flex-direction: column; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* HEADER */
-.header { position: sticky; top: 0; z-index: 100; background: var(--bg); padding: 16px 16px 0; border-bottom: 1px solid #2e2e35; }
-.header-row { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; }
-.header-title { font-size: 22px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; font-weight: 700; letter-spacing: 2px; color: var(--text); }
-.header-actions { display: flex; gap: 6px; }
-.icon-btn { background: none; border: none; border-radius: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); transition: color 0.15s; -webkit-tap-highlight-color: transparent; }
-.icon-btn:hover { color: var(--text); }
-.icon-btn.active { color: var(--accent); }
-.icon-btn svg { width: 22px; height: 22px; }
+  :root {
+    --bg: #1a1a1f;
+    --surface: #242429;
+    --surface2: #2e2e35;
+    --accent: #8b2635;
+    --accent-light: #b03045;
+    --text: #f0f0f5;
+    --text2: #9999aa;
+    --radius: 14px;
+    --urgent: #c0392b;
+    --soon: #e67e22;
+    --visible: #f1c40f;
+    --ok: #27ae60;
+  }
 
-/* FILTER BAR */
-.filter-bar { overflow: hidden; max-height: 0; transition: max-height 0.25s ease; padding: 0 16px; }
-.filter-bar.open { max-height: 200px; padding-bottom: 12px; }
-.filter-row { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 10px; }
-.filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 90px; }
-.filter-label { font-size: 13px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500; }
-.filter-select { background: var(--surface); border: 1px solid var(--surface2); border-radius: 8px; color: var(--text); padding: 8px 10px; font-size: 14px; appearance: none; cursor: pointer; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, sans-serif;
+    overflow-x: hidden;
+  }
 
-/* MAIN */
-.main { flex: 1; padding: 16px; overflow-y: auto; padding-bottom: 100px; }
-.section-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
-.puntual-section-title { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; opacity: 0.7; }
-.item-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  body { display: flex; flex-direction: column; }
 
-/* STORE GROUP */
-.store-group { margin-bottom: 10px; }
-.store-group-header { display: flex; align-items: center; gap: 8px; padding: 6px 4px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
-.store-group-name { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; flex: 1; }
-.store-group-count { font-size: 11px; color: var(--text2); background: var(--surface2); padding: 2px 7px; border-radius: 10px; }
-.store-group-chevron { width: 14px; height: 14px; color: var(--text2); transition: transform 0.2s; flex-shrink: 0; }
-.store-group.collapsed .store-group-chevron { transform: rotate(-90deg); }
-.store-group-items { display: flex; flex-direction: column; gap: 8px; }
-.store-group.collapsed .store-group-items { display: none; }
-.smart-cat-label { font-size: 11px; color: var(--text2); letter-spacing: 0.5px; padding: 6px 2px 2px; opacity: 0.7; }
+  /* ââ HEADER ââ */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    padding: 16px 16px 0;
+    border-bottom: 1px solid #2e2e35;
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+  }
+  .header-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    background: var(--surface);
+    border: none;
+    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text2);
+    transition: background 0.15s, color 0.15s;
+  }
+  .icon-btn:hover, .icon-btn.active { background: var(--surface2); color: var(--text); }
+  .icon-btn svg { width: 20px; height: 20px; }
 
-/* ITEM CARDS */
-.item-card { background: var(--surface); border-radius: var(--radius); overflow: hidden; }
-.item-card.selected { outline: 2px solid var(--accent); }
-.item-main { display: flex; align-items: center; padding: 14px 14px 14px 16px; gap: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.status-dot.urgente { background: var(--urgent); box-shadow: 0 0 6px var(--urgent); }
-.status-dot.pronto { background: var(--soon); }
-.status-dot.visible { background: var(--visible); }
-.status-dot.ok { background: var(--ok); }
-.status-dot.agotado { background: var(--urgent); }
-.status-dot.desconocido { background: var(--text2); }
-.status-dot.puntual { background: var(--accent); }
-.item-info { flex: 1; min-width: 0; }
-.item-name { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.item-meta { font-size: 12px; color: var(--text2); margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; }
-.item-countdown { font-size: 13px; font-weight: 600; text-align: right; flex-shrink: 0; }
-.item-countdown.urgente { color: var(--urgent); }
-.item-countdown.pronto { color: var(--soon); }
-.item-countdown.visible { color: var(--visible); }
-.item-countdown.ok { color: var(--ok); }
-.item-countdown.agotado { color: var(--urgent); }
-.item-countdown.desconocido { color: var(--text2); }
-.item-countdown.puntual { color: var(--accent); }
-.add-btn { background: none; border: none; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
-.add-btn.in-list { color: var(--accent); }
-@media (hover: hover) { .add-btn:hover { color: var(--text); } }
-.add-btn svg { width: 20px; height: 20px; }
+  /* ââ FILTER BAR ââ */
+  .filter-bar {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.25s ease;
+    background: var(--bg);
+    padding: 0 16px;
+  }
+  .filter-bar.open { max-height: 200px; padding-bottom: 12px; }
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 10px;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 100px; }
+  .filter-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+  .filter-select {
+    background: var(--surface);
+    border: 1px solid var(--surface2);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 6px 10px;
+    font-size: 13px;
+    appearance: none;
+    cursor: pointer;
+  }
 
-/* SELECT */
-.select-checkbox { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--surface2); flex-shrink: 0; display: none; align-items: center; justify-content: center; }
-.select-mode .select-checkbox { display: flex; }
-.select-mode .add-btn { display: none; }
-.item-card.selected .select-checkbox { background: var(--accent); border-color: var(--accent); }
-.select-toolbar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--surface2); padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px)); display: none; z-index: 150; align-items: center; gap: 10px; }
-.select-toolbar.open { display: flex; }
-.select-count { flex: 1; font-size: 14px; font-weight: 600; }
-.select-action { background: var(--surface2); border: 1px solid #3a3a42; border-radius: 10px; color: var(--text); padding: 8px 14px; font-size: 13px; cursor: pointer; }
-.select-action.danger { border-color: var(--urgent); color: var(--urgent); }
+  /* ââ MAIN ââ */
+  .main { flex: 1; padding: 16px; overflow-y: auto; padding-bottom: 100px; }
 
-/* ITEM EXPANDED */
-.item-expanded { display: none; padding: 0 16px 14px; border-top: 1px solid var(--surface2); }
-.item-expanded.open { display: block; }
-.expand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-.expand-field { display: flex; flex-direction: column; gap: 4px; }
-.expand-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; }
-.expand-input, .expand-select { background: var(--surface2); border: 1px solid #3a3a42; border-radius: 8px; color: var(--text); padding: 7px 10px; font-size: 13px; width: 100%; appearance: none; }
-.expand-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; align-items: center; }
-.chip-btn { background: var(--surface2); border: 1px solid #3a3a42; border-radius: 20px; color: var(--text2); padding: 7px 14px; font-size: 13px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-.chip-btn:hover { border-color: var(--accent); color: var(--text); }
-.chip-btn.active { background: var(--accent); border-color: var(--accent); color: #1a1a1f; font-weight: 600; }
-.chip-btn.puntual-on { border-color: var(--accent); color: var(--accent); }
-.chip-btn.danger { border-color: transparent; }
-.chip-btn.danger:hover { background: var(--urgent); border-color: var(--urgent); color: white; }
-.chip-btn.save-btn { background: var(--surface); border-color: var(--text2); color: var(--text); margin-left: auto; }
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+  }
 
-/* ORIGINAL NAME HINT */
-.original-hint { font-size: 11px; color: var(--text2); margin-top: 8px; }
+  /* ââ ITEMS ââ */
+  .item-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
 
-/* EMPTY STATE */
-.empty-state { text-align: center; padding: 48px 24px; color: var(--text2); }
-.empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+  .item-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: box-shadow 0.15s;
+  }
+  .item-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
 
-/* FAB */
-.fab { position: fixed; bottom: 28px; right: 22px; width: 62px; height: 62px; border-radius: 20px; background: var(--accent); border: none; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 20px rgba(201,149,42,0.45); transition: background 0.15s; z-index: 50; }
-.fab:hover { background: var(--accent-light); }
-.fab svg { width: 28px; height: 28px; }
+  .item-main {
+    display: flex;
+    align-items: center;
+    padding: 14px 14px 14px 16px;
+    gap: 12px;
+    cursor: pointer;
+  }
 
-/* OVERLAYS */
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-.overlay.open { opacity: 1; pointer-events: all; }
-.overlay.fullscreen { align-items: stretch; }
-.sheet { background: var(--surface); border-radius: 20px 20px 0 0; padding: 20px 20px 40px; width: 100%; max-width: 500px; transform: translateY(100%); transition: transform 0.25s ease; max-height: 85vh; overflow-y: auto; }
-.overlay.open .sheet { transform: translateY(0); }
-.overlay.fullscreen .sheet { border-radius: 0; max-width: 100%; max-height: 100%; min-height: 100%; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
-.sheet-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
-.sheet-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-.sheet-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; }
-.sheet-input, .sheet-select { background: var(--surface2); border: 1px solid #3a3a42; border-radius: 10px; color: var(--text); padding: 12px 14px; font-size: 15px; width: 100%; appearance: none; }
-.sheet-input:focus, .sheet-select:focus { outline: none; border-color: var(--accent); }
-.btn-primary { width: 100%; background: var(--accent); border: none; border-radius: var(--radius); color: #1a1a1f; font-size: 16px; font-weight: 600; padding: 14px; cursor: pointer; margin-top: 8px; }
-.btn-primary:hover { background: var(--accent-light); }
-.btn-secondary { width: 100%; background: var(--surface2); border: 1px solid #3a3a42; border-radius: var(--radius); color: var(--text); font-size: 15px; padding: 12px; cursor: pointer; margin-top: 8px; }
-.btn-secondary:hover { background: #38383f; }
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-dot.urgente { background: var(--urgent); box-shadow: 0 0 6px var(--urgent); }
+  .status-dot.pronto { background: var(--soon); }
+  .status-dot.visible { background: var(--visible); }
+  .status-dot.ok { background: var(--ok); }
+  .status-dot.agotado { background: var(--urgent); }
+  .status-dot.desconocido { background: var(--text2); }
 
-/* SHOPPING LIST */
-.shop-store-section { margin-bottom: 28px; }
-.shop-store-name { font-size: 17px; font-weight: 700; color: var(--accent); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--surface2); }
-.shop-cat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin: 12px 0 6px; }
-.shop-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--surface2); }
-.shop-item-name { flex: 1; font-size: 15px; }
-.shop-item-meta { font-size: 12px; color: var(--text2); }
-.shop-remove { background: none; border: none; cursor: pointer; color: var(--text2); padding: 4px; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name {
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .item-meta {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 2px;
+    display: flex;
+    gap: 8px;
+  }
+  .item-countdown {
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .item-countdown.urgente { color: var(--urgent); }
+  .item-countdown.pronto { color: var(--soon); }
+  .item-countdown.visible { color: var(--visible); }
+  .item-countdown.ok { color: var(--ok); }
+  .item-countdown.agotado { color: var(--urgent); }
+  .item-countdown.desconocido { color: var(--text2); }
 
-/* SETUP WIZARD */
-#setupOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 24px; }
-.setup-card { background: var(--surface); border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
-.setup-logo { font-size: 26px; font-weight: 800; letter-spacing: 3px; margin-bottom: 6px; }
-.setup-subtitle { font-size: 14px; color: var(--text2); margin-bottom: 24px; line-height: 1.5; }
-.setup-step { display: none; }
-.setup-step.active { display: block; }
+  .add-btn {
+    background: var(--surface2);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text2);
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+  }
+  .add-btn:hover, .add-btn.in-list { background: var(--accent); color: var(--text); }
+  .add-btn svg { width: 18px; height: 18px; }
 
-/* TUTORIAL */
-#tutorialOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 500; display: none; align-items: center; justify-content: center; padding: 24px; }
-#tutorialOverlay.open { display: flex; }
-.tutorial-card { background: var(--surface); border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 380px; }
-.tutorial-step { display: none; }
-.tutorial-step.active { display: block; }
-.tutorial-icon { font-size: 36px; margin-bottom: 12px; }
-.tutorial-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-.tutorial-body { font-size: 14px; color: var(--text2); line-height: 1.7; margin-bottom: 20px; }
-.tutorial-dots { display: flex; gap: 6px; margin-bottom: 20px; }
-.tutorial-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface2); transition: background 0.2s; }
-.tutorial-dot.active { background: var(--accent); }
-.tutorial-skip { display: flex; align-items: center; gap: 10px; margin-top: 14px; cursor: pointer; user-select: none; }
-.tutorial-skip input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
-.tutorial-skip span { font-size: 13px; color: var(--text2); }
+  /* ââ ITEM EXPANDED ââ */
+  .item-expanded {
+    display: none;
+    padding: 10px 16px 14px;
+    border-top: 1px solid var(--surface2);
+  }
+  .item-expanded.open { display: block; }
 
-/* SETTINGS */
-.settings-section { margin-bottom: 24px; }
-.settings-section-title { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
-.settings-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--surface2); }
-.settings-row:last-child { border-bottom: none; }
-.settings-row-label { font-size: 14px; }
-.settings-row-value { font-size: 13px; color: var(--text2); }
-.settings-toggle { width: 44px; height: 26px; background: var(--surface2); border-radius: 13px; border: none; cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
-.settings-toggle.on { background: var(--accent); }
-.settings-toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.2s; }
-.settings-toggle.on::after { transform: translateX(18px); }
+  .expand-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .expand-field { display: flex; flex-direction: column; gap: 4px; }
+  .expand-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; }
+  .expand-input, .expand-select {
+    background: var(--surface2);
+    border: 1px solid #3a3a42;
+    border-radius: 8px;
+    color: var(--text);
+    padding: 7px 10px;
+    font-size: 13px;
+    width: 100%;
+    appearance: none;
+  }
+  .expand-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .chip-btn {
+    background: var(--surface2);
+    border: 1px solid #3a3a42;
+    border-radius: 20px;
+    color: var(--text2);
+    padding: 5px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chip-btn:hover { border-color: var(--accent); color: var(--text); }
+  .chip-btn.active { background: var(--accent); border-color: var(--accent); color: var(--text); }
+  .chip-btn.danger { border-color: transparent; }
+  .chip-btn.danger:hover { background: #c0392b; border-color: #c0392b; color: white; }
 
-/* MISC */
-.version-tag { position: fixed; bottom: 8px; left: 12px; font-size: 10px; color: #44444e; z-index: 10; pointer-events: none; }
-.shopping-badge { position: absolute; top: -4px; right: -4px; background: var(--accent); color: white; font-size: 10px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.header-btn-wrap { position: relative; }
-.sync-bar { height: 2px; background: var(--accent); width: 0%; transition: width 0.4s; position: fixed; top: 0; left: 0; z-index: 999; }
-.sync-bar.syncing { animation: syncpulse 1s infinite; }
-@keyframes syncpulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface2); color: var(--text); padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity 0.2s, transform 0.2s; z-index: 400; white-space: nowrap; pointer-events: none; }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  /* ââ EMPTY STATE ââ */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text2);
+  }
+  .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-state p { font-size: 15px; }
 
-/* IPAD */
-@media (min-width: 768px) {
-  .header { padding: 20px 24px 0; }
-  .header-title { font-size: 26px; }
-  .icon-btn { width: 52px; height: 52px; }
-  .icon-btn svg { width: 24px; height: 24px; }
-  .main { padding: 20px 24px; max-width: 720px; margin: 0 auto; width: 100%; }
-  .item-name { font-size: 19px; }
-  .item-main { padding: 18px 16px 18px 20px; }
-  .add-btn { width: 50px; height: 50px; }
-  .fab { width: 68px; height: 68px; border-radius: 22px; bottom: 32px; right: 28px; }
-  .fab svg { width: 34px; height: 34px; }
-  .sheet { max-width: 560px; }
-  .chip-btn { padding: 9px 18px; font-size: 14px; }
-  .filter-label { font-size: 14px; }
-  .filter-select { font-size: 15px; }
-}
+  /* ââ FAB ââ */
+  .fab {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(139,38,53,0.5);
+    transition: background 0.15s, transform 0.15s;
+    z-index: 50;
+  }
+  .fab:hover { background: var(--accent-light); transform: scale(1.05); }
+  .fab svg { width: 28px; height: 28px; }
+
+  /* ââ MODALS ââ */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+
+  .sheet {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px 40px;
+    width: 100%;
+    max-width: 500px;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .overlay.open .sheet { transform: translateY(0); }
+
+  .sheet-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+  .sheet-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .sheet-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; }
+  .sheet-input, .sheet-select {
+    background: var(--surface2);
+    border: 1px solid #3a3a42;
+    border-radius: 10px;
+    color: var(--text);
+    padding: 12px 14px;
+    font-size: 15px;
+    width: 100%;
+    appearance: none;
+  }
+  .sheet-input:focus, .sheet-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 14px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: var(--accent-light); }
+  .btn-secondary {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid #3a3a42;
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 15px;
+    padding: 12px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.15s;
+  }
+  .btn-secondary:hover { background: #38383f; }
+
+  /* ââ SETUP WIZARD ââ */
+  #setupOverlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .setup-card {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .setup-close-btn {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 26px;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .setup-close-btn:hover { color: var(--text); background: var(--surface2); }
+  .setup-logo {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .setup-subtitle {
+    font-size: 14px;
+    color: var(--text2);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .setup-step { display: none; }
+  .setup-step.active { display: block; }
+
+  /* ââ SETTINGS ââ */
+  .settings-section { margin-bottom: 24px; }
+  .settings-section-title {
+    font-size: 11px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+  }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--surface2);
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row-label { font-size: 14px; color: var(--text); }
+  .settings-row-value { font-size: 13px; color: var(--text2); }
+
+  /* Toggle switch */
+  .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0;
+    background: var(--surface2); border-radius: 24px;
+    transition: background 0.2s; cursor: pointer;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    left: 3px; top: 3px;
+    background: var(--text2);
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: white; }
+
+  /* ââ VERSION ââ */
+  .version-tag {
+    position: fixed;
+    bottom: 8px;
+    left: 12px;
+    font-size: 10px;
+    color: #44444e;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* ââ SHOPPING LIST ââ */
+  .shopping-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .header-btn-wrap { position: relative; }
+
+  /* Shopping list items */
+  .shopping-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--surface2);
+    transition: opacity 0.2s;
+  }
+  .shopping-item.ticked { opacity: 0.38; }
+  .shopping-tick {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--text2);
+    background: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    color: transparent;
+  }
+  .shopping-tick.checked { background: var(--ok); border-color: var(--ok); color: white; }
+  .shopping-tick svg { width: 14px; height: 14px; }
+  .shopping-item-info { flex: 1; min-width: 0; }
+  .shopping-item-name { font-size: 17px; font-weight: 500; }
+  .shopping-item-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .shopping-item-price { font-size: 14px; color: var(--text2); flex-shrink: 0; }
+  .shopping-remove { background: none; border: none; cursor: pointer; color: var(--text2); flex-shrink: 0; padding: 4px; }
+
+  .shopping-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .shopping-total {
+    padding: 12px 0 4px;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: right;
+    border-top: 1px solid var(--surface2);
+    margin-top: 8px;
+  }
+
+  /* ââ CUSTOM CONFIRM ââ */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .confirm-overlay.open { opacity: 1; pointer-events: all; }
+  .confirm-box {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 28px 24px 20px;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+  }
+  .confirm-msg {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 22px;
+    color: var(--text);
+  }
+  .confirm-btns { display: flex; gap: 10px; }
+  .confirm-btns button { flex: 1; padding: 13px; border-radius: 12px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .confirm-cancel-btn { background: var(--surface2); color: var(--text); }
+  .confirm-ok-btn { background: #c0392b; color: white; }
+
+  /* ââ SYNC indicator ââ */
+  .sync-bar {
+    height: 2px;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.4s;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999;
+  }
+  .sync-bar.syncing { animation: syncpulse 1s infinite; }
+  @keyframes syncpulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface2);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 400;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
+<!-- Sync bar -->
 <div class="sync-bar" id="syncBar"></div>
+
+<!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- CUSTOM CONFIRM MODAL -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-msg" id="confirmMsg">Â¿Eliminar este producto?</div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel-btn" id="confirmCancelBtn">Cancelar</button>
+      <button class="confirm-ok-btn" id="confirmOkBtn">Eliminar</button>
+    </div>
+  </div>
+</div>
 
 <!-- SETUP WIZARD -->
 <div id="setupOverlay">
   <div class="setup-card">
+    <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">Ã</button>
     <div class="setup-logo">LADESPENSA</div>
+
+    <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
       <p class="setup-subtitle">Conecta con tu Gist de Clarito para empezar a predecir el stock de tu despensa.</p>
       <div class="sheet-field">
         <label class="sheet-label">Gist ID</label>
-        <input class="sheet-input" id="setupGistId" placeholder="abc123..." autocomplete="off" spellcheck="false">
+        <input class="sheet-input" id="setupGistId" placeholder="abc123def456..." autocomplete="off" spellcheck="false">
       </div>
       <div class="sheet-field">
         <label class="sheet-label">Token GitHub <span style="color:var(--text2);font-size:11px">(scope: gist)</span></label>
@@ -234,104 +624,95 @@ body { display: flex; flex-direction: column; }
       <button class="btn-primary" id="setupConnectBtn">Conectar</button>
       <p id="setupError" style="color:#c0392b;font-size:13px;margin-top:8px;display:none"></p>
     </div>
+
+    <!-- Step 2: Names -->
     <div class="setup-step" id="step2">
-      <p class="setup-subtitle">Personaliza los nombres.</p>
-      <div class="sheet-field"><label class="sheet-label">Persona 1</label><input class="sheet-input" id="setupP1Name" value="Persona 1"></div>
-      <div class="sheet-field"><label class="sheet-label">Persona 2</label><input class="sheet-input" id="setupP2Name" value="Persona 2"></div>
-      <div class="sheet-field"><label class="sheet-label">Lugar 1</label><input class="sheet-input" id="setupL1Name" value="Piso"></div>
-      <div class="sheet-field"><label class="sheet-label">Lugar 2</label><input class="sheet-input" id="setupL2Name" value="Mogor"></div>
+      <p class="setup-subtitle">Personaliza los nombres de las personas y los lugares.</p>
+      <div class="sheet-field">
+        <label class="sheet-label">Nombre Persona 1</label>
+        <input class="sheet-input" id="setupP1Name" value="Persona 1">
+      </div>
+      <div class="sheet-field">
+        <label class="sheet-label">Nombre Persona 2</label>
+        <input class="sheet-input" id="setupP2Name" value="Persona 2">
+      </div>
+      <div class="sheet-field">
+        <label class="sheet-label">Nombre Lugar 1</label>
+        <input class="sheet-input" id="setupL1Name" value="Piso">
+      </div>
+      <div class="sheet-field">
+        <label class="sheet-label">Nombre Lugar 2</label>
+        <input class="sheet-input" id="setupL2Name" value="Mogor">
+      </div>
       <button class="btn-primary" id="setupNamesNext">Continuar</button>
     </div>
+
+    <!-- Step 3: Lugar actual -->
     <div class="setup-step" id="step3">
-      <p class="setup-subtitle" id="setupLugarQ">¿Dónde estás ahora?</p>
+      <p class="setup-subtitle" id="setupLugarQ">Â¿En quÃ© casa estÃ¡s ahora?</p>
       <button class="btn-primary" id="setupLugar1Btn">Piso</button>
       <button class="btn-secondary" id="setupLugar2Btn">Mogor</button>
     </div>
   </div>
 </div>
 
-<!-- TUTORIAL -->
-<div id="tutorialOverlay">
-  <div class="tutorial-card">
-    <div class="tutorial-dots" id="tutorialDots"></div>
-    <div class="tutorial-step active" data-step="0">
-      <div class="tutorial-icon">🏠</div>
-      <div class="tutorial-title">LADESPENSA</div>
-      <div class="tutorial-body">Predice cuándo se agota cada producto aprendiendo de tus compras en Clarito. Pulsa <b>Siguiente</b> para el tour rápido.</div>
-    </div>
-    <div class="tutorial-step" data-step="1">
-      <div class="tutorial-icon">🔴🟡🟢</div>
-      <div class="tutorial-title">Colores de urgencia</div>
-      <div class="tutorial-body"><b style="color:var(--urgent)">Rojo</b> = agotado o urgente (≤3 días). <b style="color:var(--soon)">Naranja</b> = esta semana. <b style="color:var(--visible)">Amarillo</b> = próximamente. <b style="color:var(--ok)">Verde</b> = bien de stock. El punto <b style="color:var(--accent)">dorado</b> = compra puntual.</div>
-    </div>
-    <div class="tutorial-step" data-step="2">
-      <div class="tutorial-icon">➕</div>
-      <div class="tutorial-title">Lista de la compra</div>
-      <div class="tutorial-body">Pulsa el <b>+</b> a la derecha de cualquier producto para añadirlo a la lista. La lista (icono bolsa arriba) agrupa por supermercado y categoría.</div>
-    </div>
-    <div class="tutorial-step" data-step="3">
-      <div class="tutorial-icon">📋</div>
-      <div class="tutorial-title">Tarjeta de producto</div>
-      <div class="tutorial-body">Pulsa un producto para desplegarlo. Desde ahí puedes:<br>• <b>Agotándose / Agotado</b>: forzar el estado<br>• <b>Puntual</b>: moverlo a la sección de compras puntuales (sin predicción)<br>• <b>Guardar</b>: confirmar cambios de nombre, tienda, persona<br>• <b>Eliminar</b>: quitarlo (con opción de ignorarlo en syncs futuras)</div>
-    </div>
-    <div class="tutorial-step" data-step="4">
-      <div class="tutorial-icon">🔄</div>
-      <div class="tutorial-title">Sync con Clarito</div>
-      <div class="tutorial-body">Pulsa el icono de flechas para importar los tickets más recientes de Clarito. Los productos se agrupan por supermercado. Puedes seleccionar varios a la vez con el icono de cuadrícula.</div>
-    </div>
-    <div style="margin-top:16px">
-      <button class="btn-primary" id="tutorialNext">Siguiente</button>
-      <label class="tutorial-skip">
-        <input type="checkbox" id="tutorialDontShow">
-        <span>No volver a mostrar</span>
-      </label>
-    </div>
-  </div>
-</div>
-
 <!-- MAIN APP -->
-<div id="app" style="display:none;flex:1;flex-direction:column;">
+<div id="app" style="display:none; flex:1; display:none; flex-direction:column;">
+
+  <!-- Header -->
   <div class="header">
     <div class="header-row">
-      <span class="header-title" id="headerTitle">LADESPENSA</span>
+      <span class="header-title">LADESPENSA</span>
       <div class="header-actions">
-        <button class="icon-btn" id="selectModeBtn" title="Selección múltiple">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        </button>
         <div class="header-btn-wrap">
           <button class="icon-btn" id="shoppingListBtn" title="Lista de la compra">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+            <span class="shopping-badge" id="shoppingBadge" style="display:none">0</span>
           </button>
-          <span class="shopping-badge" id="shoppingBadge" style="display:none">0</span>
         </div>
         <button class="icon-btn" id="filterBtn" title="Filtros">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
         </button>
-        <button class="icon-btn" id="syncBtn" title="Sincronizar con Clarito">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        <button class="icon-btn" id="syncBtn" title="Sincronizar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+          </svg>
         </button>
         <button class="icon-btn" id="settingsBtn" title="Ajustes">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
         </button>
       </div>
     </div>
+
+    <!-- Filter bar -->
     <div class="filter-bar" id="filterBar">
       <div class="filter-row">
         <div class="filter-group">
           <span class="filter-label">Persona</span>
           <select class="filter-select" id="filterPersona">
             <option value="all">Todos</option>
-            <option value="p1">P1</option>
-            <option value="p2">P2</option>
-            <option value="comun">Común</option>
+            <option value="p1">Persona 1</option>
+            <option value="p2">Persona 2</option>
+            <option value="comun">ComÃºn</option>
           </select>
         </div>
         <div class="filter-group">
           <span class="filter-label">Lugar</span>
           <select class="filter-select" id="filterLugar">
             <option value="all">Todos</option>
-            <option value="lugar1">L1</option>
-            <option value="lugar2">L2</option>
+            <option value="lugar1">Lugar 1</option>
+            <option value="lugar2">Lugar 2</option>
           </select>
         </div>
         <div class="filter-group">
@@ -344,342 +725,452 @@ body { display: flex; flex-direction: column; }
     </div>
   </div>
 
+  <!-- Main content -->
   <div class="main" id="mainContent">
-    <div id="urgentSection" style="display:none"><div class="section-title" id="urgentTitle">Urgente</div><div class="item-list" id="urgentList"></div></div>
-    <div id="soonSection" style="display:none"><div class="section-title">En breve</div><div class="item-list" id="soonList"></div></div>
-    <div id="visibleSection" style="display:none"><div class="section-title">Pronto</div><div class="item-list" id="visibleList"></div></div>
-    <div id="okSection" style="display:none"><div class="section-title">Sin alertas</div><div class="item-list" id="okList"></div></div>
-    <div id="puntualSection" style="display:none"><div class="puntual-section-title">Compras puntuales</div><div class="item-list" id="puntualList"></div></div>
+    <div id="urgentSection" style="display:none">
+      <div class="section-title" id="urgentTitle">Urgente</div>
+      <div class="item-list" id="urgentList"></div>
+    </div>
+    <div id="soonSection" style="display:none">
+      <div class="section-title">En breve</div>
+      <div class="item-list" id="soonList"></div>
+    </div>
+    <div id="visibleSection" style="display:none">
+      <div class="section-title">Pronto</div>
+      <div class="item-list" id="visibleList"></div>
+    </div>
+    <div id="okSection" style="display:none">
+      <div class="section-title">Bien por ahora</div>
+      <div class="item-list" id="okList"></div>
+    </div>
     <div id="emptyState" class="empty-state" style="display:none">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <p>No hay productos</p>
-      <p style="font-size:13px;margin-top:6px">Pulsa + para añadir</p>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <p>No hay productos que mostrar</p>
+      <p style="font-size:13px;margin-top:6px">Pulsa + para aÃ±adir uno</p>
     </div>
   </div>
 
-  <button class="fab" id="fabAdd">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  <!-- FAB -->
+  <button class="fab" id="fabAdd" title="AÃ±adir producto">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
   </button>
 </div>
 
-<!-- SELECT TOOLBAR -->
-<div class="select-toolbar" id="selectToolbar">
-  <span class="select-count" id="selectCount">0 seleccionados</span>
-  <button class="select-action" id="selectAddListBtn">+ Lista</button>
-  <button class="select-action danger" id="selectDeleteBtn">Eliminar</button>
-  <button class="select-action" id="selectCancelBtn">Cancelar</button>
-</div>
-
-<!-- ADD PRODUCT -->
+<!-- ADD PRODUCT MODAL -->
 <div class="overlay" id="addOverlay">
   <div class="sheet">
-    <div class="sheet-title">Añadir producto</div>
-    <div class="sheet-field"><label class="sheet-label">Nombre</label><input class="sheet-input" id="addName" placeholder="Leche entera 1L"></div>
+    <div class="sheet-title">AÃ±adir producto</div>
+    <div class="sheet-field">
+      <label class="sheet-label">Nombre</label>
+      <input class="sheet-input" id="addName" placeholder="Ej: Leche entera 1L" list="addNameList" autocomplete="off">
+      <datalist id="addNameList"></datalist>
+    </div>
     <div class="sheet-field">
       <label class="sheet-label">Persona</label>
       <select class="sheet-select" id="addPersona">
-        <option value="p1">Persona 1</option><option value="p2">Persona 2</option><option value="comun">Común</option>
+        <option value="p1">Persona 1</option>
+        <option value="p2">Persona 2</option>
+        <option value="comun">ComÃºn</option>
       </select>
     </div>
     <div class="sheet-field">
       <label class="sheet-label">Lugar</label>
       <select class="sheet-select" id="addLugar">
-        <option value="lugar1">Lugar 1</option><option value="lugar2">Lugar 2</option>
+        <option value="lugar1">Lugar 1</option>
+        <option value="lugar2">Lugar 2</option>
       </select>
     </div>
-    <div class="sheet-field"><label class="sheet-label">Supermercado (opcional)</label><input class="sheet-input" id="addStore" placeholder="Mercadona" autocomplete="off"></div>
-    <button class="btn-primary" id="addConfirmBtn">Añadir</button>
+    <div class="sheet-field">
+      <label class="sheet-label">Estado inicial</label>
+      <select class="sheet-select" id="addStatus">
+        <option value="">Normal</option>
+        <option value="agotandose">AgotÃ¡ndose</option>
+        <option value="agotado">Agotado</option>
+        <option value="puntual">Puntual (compra ocasional)</option>
+      </select>
+    </div>
+    <div class="sheet-field">
+      <label class="sheet-label">Supermercado</label>
+      <input class="sheet-input" id="addStore" list="storeListAdd" placeholder="Mercadona, Lidl..." autocomplete="off">
+      <datalist id="storeListAdd"></datalist>
+    </div>
+    <button class="btn-primary" id="addConfirmBtn">AÃ±adir</button>
     <button class="btn-secondary" id="addCancelBtn">Cancelar</button>
   </div>
 </div>
 
-<!-- SHOPPING LIST (full screen) -->
-<div class="overlay fullscreen" id="shoppingOverlay">
+<!-- SHOPPING LIST MODAL -->
+<div class="overlay" id="shoppingOverlay">
   <div class="sheet">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-      <div class="sheet-title" style="margin-bottom:0;flex:1">Lista de la compra</div>
-      <button class="icon-btn" id="shoppingCloseBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+    <div class="sheet-title">Lista de la compra</div>
+    <div class="shopping-actions">
+      <button class="chip-btn" id="selectAllBtn">Seleccionar todos</button>
+      <button class="chip-btn" id="compraMadaBtn" style="background:var(--accent);border-color:var(--accent);color:white">Compra hecha â</button>
     </div>
     <div id="shoppingContent"></div>
+    <div class="shopping-total" id="shoppingTotal" style="display:none"></div>
+    <button class="btn-secondary" id="shoppingCloseBtn" style="margin-top:16px">Cerrar</button>
   </div>
 </div>
 
-<!-- SETTINGS -->
+<!-- SETTINGS MODAL -->
 <div class="overlay" id="settingsOverlay">
   <div class="sheet">
     <div class="sheet-title">Ajustes</div>
     <div class="settings-section">
-      <div class="settings-section-title">Conexión</div>
-      <div class="settings-row"><span class="settings-row-label">Gist ID</span><span class="settings-row-value" id="settingsGistId">-</span></div>
-      <div class="settings-row"><span class="settings-row-label">Última sync</span><span class="settings-row-value" id="settingsLastSync">-</span></div>
-    </div>
-    <div class="settings-section">
-      <div class="settings-section-title">Visualización</div>
+      <div class="settings-section-title">ConexiÃ³n</div>
       <div class="settings-row">
-        <span class="settings-row-label">Ver nombres originales</span>
-        <button class="settings-toggle" id="toggleOriginalNames"></button>
+        <span class="settings-row-label">Gist ID</span>
+        <span class="settings-row-value" id="settingsGistId">-</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Ãltima sync</span>
+        <span class="settings-row-value" id="settingsLastSync">-</span>
       </div>
     </div>
     <div class="settings-section">
       <div class="settings-section-title">Personas</div>
-      <div class="sheet-field"><label class="sheet-label">Persona 1</label><input class="sheet-input" id="settingsP1Name"></div>
-      <div class="sheet-field"><label class="sheet-label">Persona 2</label><input class="sheet-input" id="settingsP2Name"></div>
+      <div class="sheet-field">
+        <label class="sheet-label">Persona 1</label>
+        <input class="sheet-input" id="settingsP1Name">
+      </div>
+      <div class="sheet-field">
+        <label class="sheet-label">Persona 2</label>
+        <input class="sheet-input" id="settingsP2Name">
+      </div>
     </div>
     <div class="settings-section">
       <div class="settings-section-title">Lugares</div>
-      <div class="sheet-field"><label class="sheet-label">Lugar 1</label><input class="sheet-input" id="settingsL1Name"></div>
-      <div class="sheet-field"><label class="sheet-label">Lugar 2</label><input class="sheet-input" id="settingsL2Name"></div>
+      <div class="sheet-field">
+        <label class="sheet-label">Lugar 1</label>
+        <input class="sheet-input" id="settingsL1Name">
+      </div>
+      <div class="sheet-field">
+        <label class="sheet-label">Lugar 2</label>
+        <input class="sheet-input" id="settingsL2Name">
+      </div>
     </div>
     <div class="settings-section">
       <div class="settings-section-title">Casa actual</div>
       <select class="sheet-select" id="settingsCurrentLugar">
-        <option value="lugar1">Lugar 1</option><option value="lugar2">Lugar 2</option>
+        <option value="lugar1">Lugar 1</option>
+        <option value="lugar2">Lugar 2</option>
       </select>
     </div>
+    <div class="settings-section">
+      <div class="settings-section-title">Preferencias</div>
+      <div class="settings-row">
+        <span class="settings-row-label">Nombres originales (Clarito)</span>
+        <label class="toggle">
+          <input type="checkbox" id="settingsOriginalNames">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
     <button class="btn-primary" id="settingsSaveBtn">Guardar</button>
-    <button class="btn-secondary" id="tutorialBtn">Tutorial</button>
     <button class="btn-secondary" id="settingsCloseBtn">Cancelar</button>
     <button class="btn-secondary" id="settingsResetBtn" style="color:#c0392b;border-color:#c0392b;margin-top:16px">Reiniciar app</button>
   </div>
 </div>
 
-<div class="version-tag">v1.3</div>
+<!-- Version -->
+<div class="version-tag">v1.4</div>
 
 <script>
 'use strict';
-const VERSION = '1.3';
-const LS_KEY = 'ladespensa_v1';
-const GIST_API = 'https://api.github.com/gists/';
-const TUTORIAL_TOTAL = 5;
 
-let DB = null, settings = null;
+// ââ CONSTANTS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const VERSION = '1.4';
+const LADESPENSA_FILE = 'ladespensa.json';
+const GIST_API = 'https://api.github.com/gists/';
+
+// ââ STATE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+let DB = null;
+let settings = null;
 let expandedId = null;
 let filters = { persona: 'all', lugar: 'all', store: 'all' };
-let selectMode = false;
-let selectedIds = new Set();
-let collapsedGroups = new Set();
-let tutStep = 0;
+let shoppingTicked = new Set(); // ids ticked in current shopping session
 
-// ── STORAGE ──────────────────────────────────────────────────────────
+// ââ CONFIRM MODAL ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+let _confirmCallback = null;
+
+function customConfirm(msg, onOk) {
+  _confirmCallback = onOk;
+  document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+// ââ STORAGE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function loadLocal() {
-  try { const r = localStorage.getItem(LS_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  try {
+    const raw = localStorage.getItem('ladespensa');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
   return null;
 }
-function saveLocal(d) { try { localStorage.setItem(LS_KEY, JSON.stringify(d)); } catch(e) {} }
+
+function saveLocal(data) {
+  try { localStorage.setItem('ladespensa', JSON.stringify(data)); } catch(e) {}
+}
+
 function defaultDB() {
-  return { version: 1, settings: {
-    gistId: '', gistToken: '',
-    persona1Name: 'Persona 1', persona2Name: 'Persona 2',
-    lugar1Name: 'Piso', lugar2Name: 'Mogor',
-    currentLugar: 'lugar1', lastSync: null,
-    showOriginalNames: false, tutorialSeen: false
-  }, lines: [], shoppingList: [], ignored: [] };
+  return {
+    version: 1,
+    settings: {
+      gistId: '',
+      gistToken: '',
+      persona1Name: 'Persona 1',
+      persona2Name: 'Persona 2',
+      persona1OriginalName: '',
+      persona2OriginalName: '',
+      useOriginalNames: false,
+      lugar1Name: 'Piso',
+      lugar2Name: 'Mogor',
+      currentLugar: 'lugar1',
+      lastSync: null
+    },
+    lines: [],
+    shoppingList: [],
+    claritoPrices: {}
+  };
 }
 
-// ── SMART CATEGORIES ─────────────────────────────────────────────────
-const CATS = [
-  { n: 'Frutas', r: /manzana|pera|plátano|platano|naranja|uva|fresa|limón|limon|melón|melon|sandía|sandia|melocotón|melocoton|ciruela|cereza|mandarina|kiwi|piña|pina|aguacate|mango|higo|frambuesa|arandano/ },
-  { n: 'Verduras', r: /lechuga|tomate|zanahoria|cebolla|ajo|pimiento|calabacín|calabacin|brócoli|brocoli|espinaca|verdura|ensalada|pepino|berenjena|coliflor|alcachofa|espárrago|esparrago|champiñ|puerro|acelga|remolacha/ },
-  { n: 'Lácteos', r: /leche|yogur|queso|mantequilla|nata|kefir|requesón|requeson|cuajada/ },
-  { n: 'Huevos', r: /huevo/ },
-  { n: 'Carne', r: /pollo|ternera|cerdo|carne|jamón|jamon|salchich|chorizo|lomo|filete|pechuga|bacon|morcilla|costill|cordero|pavo|hamburguesa/ },
-  { n: 'Pescado', r: /merluza|salmon|atún|atun|bacalao|gambas|mejillon|pescado|marisco|sepia|calamar|langostino|boquerón|boqueron|sardina|anchoa|lubina|dorada/ },
-  { n: 'Panadería', r: /pan |baguette|hogaza|molde|tostada|brioche|croissant/ },
-  { n: 'Pasta y cereales', r: /pasta|arroz|espagueti|macarron|lenteja|garbanzo|alubia|legumbre|fideos|cuscús|cous|quinoa|avena|cereales/ },
-  { n: 'Bebidas', r: /agua|zumo|refresco|cerveza|vino|café|cafe|té |te |infusion|leche uht|nestea/ },
-  { n: 'Condimentos', r: /aceite|vinagre|sal |pimienta|especia|salsa|ketchup|mayonesa|mostaza|curry|oregano|pimenton|canela/ },
-  { n: 'Dulces', r: /galleta|chocolate|dulce|azúcar|azucar|mermelada|miel|donuts|bizcocho|cacao|nocilla|nutella|caramelo/ },
-  { n: 'Limpieza', r: /jabón|jabon|champú|champu|gel |papel |detergente|limpiador|fregaplatos|suavizante|higienico|lavavajilla|desinfect|bayeta|esponja|bolsa basura/ },
-  { n: 'Congelados', r: /congelad|pizza|helado/ },
-];
-function smartCat(name) {
-  const n = (name || '').toLowerCase();
-  for (const c of CATS) if (c.r.test(n)) return c.n;
-  return 'Otros';
-}
-
-// ── GIST API ─────────────────────────────────────────────────────────
+// ââ GIST API âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function gistFetch(gistId, token) {
-  const r = await fetch(GIST_API + gistId, { headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github+json' } });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const d = await r.json();
-  for (const f of Object.keys(d.files || {})) {
-    if (d.files[f].truncated && d.files[f].raw_url) {
-      const rr = await fetch(d.files[f].raw_url, { headers: { Authorization: 'token ' + token } });
-      if (rr.ok) d.files[f].content = await rr.text();
-    }
-  }
-  return d;
+  const resp = await fetch(GIST_API + gistId, {
+    headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github+json' }
+  });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  return resp.json();
 }
 
-// ── SYNC ─────────────────────────────────────────────────────────────
-async function syncFromClarito() {
+async function gistWrite(gistId, token, content) {
+  const resp = await fetch(GIST_API + gistId, {
+    method: 'PATCH',
+    headers: {
+      Authorization: 'token ' + token,
+      Accept: 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ files: { [LADESPENSA_FILE]: { content: JSON.stringify(content, null, 2) } } })
+  });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  return resp.json();
+}
+
+// ââ SYNC âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+async function syncFromGist(initial) {
   const bar = document.getElementById('syncBar');
-  bar.style.width = '30%'; bar.classList.add('syncing');
+  bar.style.width = '30%';
+  bar.classList.add('syncing');
+
   try {
-    const gd = await gistFetch(settings.gistId, settings.gistToken);
-    importClarito(gd);
+    const gistData = await gistFetch(settings.gistId, settings.gistToken);
+
+    if (gistData.files && gistData.files[LADESPENSA_FILE]) {
+      try {
+        const remote = JSON.parse(gistData.files[LADESPENSA_FILE].content);
+        if (remote && remote.version) {
+          DB.lines = remote.lines || [];
+          DB.shoppingList = remote.shoppingList || [];
+          if (remote.claritoPrices) DB.claritoPrices = remote.claritoPrices;
+        }
+      } catch(e) {}
+    }
+
+    importClarito(gistData);
+
     settings.lastSync = new Date().toISOString();
-    DB.settings = settings; saveLocal(DB);
+    DB.settings = settings;
+    saveLocal(DB);
+    bar.style.width = '70%';
+
+    await gistWrite(settings.gistId, settings.gistToken, DB);
+    settings.lastSync = new Date().toISOString();
+    DB.settings = settings;
+    saveLocal(DB);
+
     bar.style.width = '100%';
     showToast('Sincronizado');
-  } catch(e) { showToast('Error: ' + e.message); }
-  finally { setTimeout(() => { bar.style.width = '0%'; bar.classList.remove('syncing'); }, 600); }
+  } catch(e) {
+    showToast('Error al sincronizar: ' + e.message);
+  } finally {
+    setTimeout(() => { bar.style.width = '0%'; bar.classList.remove('syncing'); }, 600);
+  }
+
   renderAll();
 }
 
-function primaryStore(line) {
-  if (line.store) return line.store;
-  if (!line.purchases?.length) return '';
-  const c = {}; line.purchases.forEach(p => { if (p.store) c[p.store] = (c[p.store]||0)+1; });
-  const top = Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
-  return top ? top[0] : '';
-}
-
-function importClarito(gd) {
+function importClarito(gistData) {
   let clarito = null;
-  for (const f of Object.keys(gd.files || {})) {
-    if (f === 'clarito-data.json' || f.includes('clarito-data')) {
-      try { clarito = JSON.parse(gd.files[f].content); } catch(e) {} break;
+  for (const fname of Object.keys(gistData.files || {})) {
+    if (fname === 'db.json' || fname.endsWith('db.json')) {
+      try { clarito = JSON.parse(gistData.files[fname].content); } catch(e) {}
+      break;
     }
   }
-  if (!clarito?.tickets) return;
-  const ignoredSet = new Set((DB.ignored||[]).map(i=>(i.name||'').toLowerCase()));
-  const done = new Set();
-  DB.lines.forEach(l => (l.purchases||[]).forEach(p => { if (p.ticketId) done.add(p.ticketId); }));
-  const tickets = Object.values(clarito.tickets).filter(t => t.type==='ticket' && t.confirmed);
+  if (!clarito) return;
+
+  // Import original person names
+  if (clarito.persons && clarito.persons.length >= 1) {
+    settings.persona1OriginalName = clarito.persons[0].name || '';
+    if (clarito.persons.length >= 2) settings.persona2OriginalName = clarito.persons[1].name || '';
+  }
+
+  // Import prices from tickets
+  if (!DB.claritoPrices) DB.claritoPrices = {};
+  const tickets = Object.values(clarito.tickets || {}).filter(t => t.type === 'ticket' && t.confirmed);
   for (const ticket of tickets) {
-    if (done.has(ticket.id)) continue;
-    for (const prod of (ticket.products||[])) {
-      if (!prod.name || ignoredSet.has(prod.name.toLowerCase())) continue;
-      const persona = prod.assignedTo || 'comun';
-      let line = DB.lines.find(l => l.product===prod.name && l.persona===persona && l.lugar===settings.currentLugar);
-      if (!line) {
-        line = { id: uid(), product: prod.name, originalName: prod.name, persona, lugar: settings.currentLugar, store: ticket.store||'', purchases: [], manualStatus: null, addedToShoppingList: false, estimatedCadenceDays: null, isPuntual: false, lastUpdated: new Date().toISOString() };
-        DB.lines.push(line);
-      } else {
-        if (!line.originalName) line.originalName = line.product;
-        if (!line.store && ticket.store) line.store = ticket.store;
+    for (const prod of (ticket.products || [])) {
+      if (!prod.name) continue;
+      const unitPrice = prod.price != null ? (prod.price / (prod.qty || 1)) : null;
+      if (unitPrice != null && unitPrice > 0) {
+        if (!DB.claritoPrices[prod.name]) DB.claritoPrices[prod.name] = [];
+        DB.claritoPrices[prod.name].push(unitPrice);
       }
-      line.purchases.push({ date: ticket.date, qty: prod.qty||1, store: ticket.store||'', puntual: false, ticketId: ticket.id });
+    }
+  }
+
+  // Import ticket purchases
+  if (!clarito.tickets) return;
+
+  const processedIds = new Set();
+  DB.lines.forEach(line => {
+    (line.purchases || []).forEach(p => { if (p.ticketId) processedIds.add(p.ticketId); });
+  });
+
+  for (const ticket of tickets) {
+    if (processedIds.has(ticket.id)) continue;
+    for (const prod of (ticket.products || [])) {
+      if (!prod.name) continue;
+      const persona = prod.assignedTo || 'comun';
+      let line = DB.lines.find(l => l.product === prod.name && l.persona === persona && l.lugar === settings.currentLugar);
+      if (!line) {
+        line = {
+          id: uid(),
+          product: prod.name,
+          persona: persona,
+          lugar: settings.currentLugar,
+          purchases: [],
+          manualStatus: null,
+          addedToShoppingList: false,
+          estimatedCadenceDays: null,
+          lastUpdated: new Date().toISOString()
+        };
+        DB.lines.push(line);
+      }
+      line.purchases.push({
+        date: ticket.date,
+        qty: prod.qty || 1,
+        store: ticket.store || '',
+        capricho: false,
+        ticketId: ticket.id
+      });
       line.lastUpdated = new Date().toISOString();
     }
   }
 }
 
-function migrate(db) {
-  db.lines.forEach(l => {
-    (l.purchases||[]).forEach(p => { if (p.capricho!==undefined && p.puntual===undefined) { p.puntual=p.capricho; delete p.capricho; } });
-    if (!l.originalName) l.originalName = l.product;
-    if (!l.store) l.store = primaryStore(l);
-    if (l.isPuntual===undefined) l.isPuntual = false;
-  });
-  if (!db.ignored) db.ignored = [];
-  if (db.settings.showOriginalNames===undefined) db.settings.showOriginalNames = false;
-  if (db.settings.tutorialSeen===undefined) db.settings.tutorialSeen = false;
+// ââ PRICE HELPERS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function getAvgPrice(productName) {
+  const prices = (DB.claritoPrices || {})[productName];
+  if (!prices || !prices.length) return null;
+  return prices.reduce((s, p) => s + p, 0) / prices.length;
 }
 
-// ── PREDICTION ────────────────────────────────────────────────────────
-function median(a) {
-  if (!a.length) return null;
-  const s=[...a].sort((x,y)=>x-y), m=Math.floor(s.length/2);
-  return s.length%2 ? s[m] : (s[m-1]+s[m])/2;
+// ââ PREDICTION âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function median(arr) {
+  if (!arr.length) return null;
+  const s = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 !== 0 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
-function daysDiff(a,b) { return Math.round((new Date(a)-new Date(b))/86400000); }
+
+function dateDiffDays(a, b) {
+  return Math.round((new Date(a) - new Date(b)) / 86400000);
+}
 
 function predict(line) {
-  if (line.isPuntual) return { status:'puntual', daysRemaining:null, cadence:null };
-  const real = (line.purchases||[]).filter(p=>!p.puntual).sort((a,b)=>a.date<b.date?-1:1);
-  if (real.length>=2) {
-    const ivals=[];
-    for (let i=0;i<real.length-1;i++) ivals.push(daysDiff(real[i+1].date,real[i].date)/(real[i].qty||1));
-    const cad=median(ivals);
-    if (!cad||cad<=0) return {status:'tesconocido',daysRemaining:null,cadence:null};
-    const last=real[real.length-1];
-    const rem=Math.round((last.qty||1)*cad - daysDiff(new Date().toISOString().slice(0,10),last.date));
-    return {status:statusFromDays(rem,line.manualStatus),daysRemaining:rem,cadence:cad};
+  const real = (line.purchases || []).filter(p => !p.capricho).sort((a, b) => a.date < b.date ? -1 : 1);
+
+  if (real.length >= 2) {
+    const intervals = [];
+    for (let i = 0; i < real.length - 1; i++) {
+      const gap = dateDiffDays(real[i + 1].date, real[i].date);
+      const units = real[i].qty || 1;
+      intervals.push(gap / units);
+    }
+    const cadence = median(intervals);
+    if (cadence === null || cadence <= 0) return { status: 'desconocido', daysRemaining: null, cadence: null };
+
+    const last = real[real.length - 1];
+    const daysOnHand = (last.qty || 1) * cadence;
+    const elapsed = dateDiffDays(new Date().toISOString().slice(0, 10), last.date);
+    const remaining = Math.round(daysOnHand - elapsed);
+    return { status: statusFromDays(remaining, line.manualStatus), daysRemaining: remaining, cadence };
   }
-  const others=DB.lines.filter(l=>l.id!==line.id&&l.persona===line.persona&&l.estimatedCadenceDays);
+
+  const others = DB.lines.filter(l => l.id !== line.id && l.persona === line.persona && l.estimatedCadenceDays);
   if (others.length) {
-    const avg=others.reduce((s,l)=>s+l.estimatedCadenceDays,0)/others.length;
-    const last=real[real.length-1];
-    if (last) { const rem=Math.round((last.qty||1)*avg-daysDiff(new Date().toISOString().slice(0,10),last.date)); return {status:statusFromDays(rem,line.manualStatus),daysRemaining:rem,cadence:avg}; }
+    const avgCadence = others.reduce((s, l) => s + l.estimatedCadenceDays, 0) / others.length;
+    const last = real[real.length - 1];
+    if (last) {
+      const daysOnHand = (last.qty || 1) * avgCadence;
+      const elapsed = dateDiffDays(new Date().toISOString().slice(0, 10), last.date);
+      const remaining = Math.round(daysOnHand - elapsed);
+      return { status: statusFromDays(remaining, line.manualStatus), daysRemaining: remaining, cadence: avgCadence };
+    }
   }
-  return {status:line.manualStatus||'desconocido',daysRemaining:null,cadence:null};
-}
-function statusFromDays(d,m) {
-  if (m==='agotado') return 'agotado'; if (m==='agotandose') return 'urgente';
-  if (d<=0) return 'agotado'; if (d<=3) return 'urgente'; if (d<=7) return 'pronto'; if (d<=14) return 'visible'; return 'ok';
-}
-function fmtCountdown(p) {
-  if (p.status==='puntual') return 'Puntual';
-  if (p.status==='agotado') return 'Agotado';
-  if (p.status==='desconocido'||p.daysRemaining===null) return '—';
-  if (p.daysRemaining<=0) return 'Agotado';
-  if (p.daysRemaining===1) return 'Mañana';
-  return 'En '+p.daysRemaining+'d';
+
+  return { status: line.manualStatus || 'desconocido', daysRemaining: null, cadence: null };
 }
 
-// ── NAMES ─────────────────────────────────────────────────────────────
-function pName(p) { return p==='p1'?settings.persona1Name:p==='p2'?settings.persona2Name:'Común'; }
-function lName(l) { return l==='lugar1'?settings.lugar1Name:l==='lugar2'?settings.lugar2Name:l; }
-function dName(line) { return settings.showOriginalNames&&line.originalName ? line.originalName : line.product; }
+function statusFromDays(days, manualStatus) {
+  if (manualStatus === 'agotado') return 'agotado';
+  if (manualStatus === 'agotandose') return 'urgente';
+  if (manualStatus === 'puntual') return 'ok';
+  if (days <= 0) return 'agotado';
+  if (days <= 3) return 'urgente';
+  if (days <= 7) return 'pronto';
+  if (days <= 14) return 'visible';
+  return 'ok';
+}
 
-// ── RENDER ────────────────────────────────────────────────────────────
+function formatCountdown(pred) {
+  if (pred.status === 'agotado') return 'Agotado';
+  if (pred.status === 'desconocido') return 'Desconocido';
+  if (pred.daysRemaining === null) return 'Sin datos';
+  if (pred.daysRemaining <= 0) return 'Agotado';
+  if (pred.daysRemaining === 1) return 'MaÃ±ana';
+  return 'En ' + pred.daysRemaining + ' dÃ­as';
+}
+
+// ââ NAMES ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function getPersonaName(p) {
+  const useOrig = settings.useOriginalNames;
+  if (p === 'p1') return (useOrig && settings.persona1OriginalName) ? settings.persona1OriginalName : settings.persona1Name;
+  if (p === 'p2') return (useOrig && settings.persona2OriginalName) ? settings.persona2OriginalName : settings.persona2Name;
+  return 'ComÃºn';
+}
+function getLugarName(l) {
+  if (l === 'lugar1') return settings.lugar1Name;
+  if (l === 'lugar2') return settings.lugar2Name;
+  return l;
+}
+
+// ââ RENDER âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderAll() {
-  // Filters
-  document.querySelector('#filterPersona option[value="p1"]').textContent = settings.persona1Name;
-  document.querySelector('#filterPersona option[value="p2"]').textContent = settings.persona2Name;
+  // Update filter labels
+  document.querySelector('#filterPersona option[value="p1"]').textContent = getPersonaName('p1');
+  document.querySelector('#filterPersona option[value="p2"]').textContent = getPersonaName('p2');
   document.querySelector('#filterLugar option[value="lugar1"]').textContent = settings.lugar1Name;
   document.querySelector('#filterLugar option[value="lugar2"]').textContent = settings.lugar2Name;
-
-  const stores = new Set();
-  DB.lines.forEach(l => { const s=primaryStore(l); if(s) stores.add(s); });
-  const fs = document.getElementById('filterStore');
-  const fsv = fs.value;
-  fs.innerHTML = '<option value="all">Todas</option>';
-  [...stores].sort().forEach(s => { const o=document.createElement('option'); o.value=s; o.textContent=s; fs.appendChild(o); });
-  if (fsv) fs.value = fsv;
-
-  const lined = DB.lines.map(line => {
-    const pred = predict(line);
-    if (pred.cadence!==null) line.estimatedCadenceDays = pred.cadence;
-    return {line,pred};
-  }).filter(({line,pred}) => {
-    if (pred.status==='puntual') return true;
-    if (filters.persona!=='all'&&line.persona!==filters.persona) return false;
-    if (filters.lugar!=='all'&&line.lugar!==filters.lugar) return false;
-    if (filters.store!=='all'&&primaryStore(line)!==filters.store) return false;
-    return true;
-  });
-
-  const ord={agotado:0,urgente:1,pronto:2,visible:3,ok:4,desconocido:5,puntual:99};
-  lined.sort((a,b)=>{
-    const d=(ord[a.pred.status]??5)-(ord[b.pred.status]??5);
-    if(d) return d;
-    if(a.pred.daysRemaining!==null&&b.pred.daysRemaining!==null) return a.pred.daysRemaining-b.pred.daysRemaining;
-    return 0;
-  });
-
-  const G={agotado:[],urgente:[],pronto:[],visible:[],ok:[],desconocido:[],puntual:[]};
-  lined.forEach(item=>(G[item.pred.status]||G.desconocido).push(item));
-
-  const urgAll=[...G.agotado,...G.urgente];
-  renderSection('urgentSection','urgentList',urgAll,urgAll.length?(G.agotado.length?'Agotado / Urgente':'Urgente'):'');
-  renderSection('soonSection','soonList',G.pronto,'En breve');
-  renderSection('visibleSection','visibleList',G.visible,'Próximamente');
-  renderSection('okSection','okList',[...G.ok,...G.desconocido],'Sin alertas');
-  renderSection('puntualSection','puntualList',G.puntual,'');
-
-  document.getElementById('emptyState').style.display = lined.length===0?'block':'none';
-
-  const inList=DB.lines.filter(l=>l.addedToShoppingList).length;
-  const badge=document.getElementById('shoppingBadge');
-  badge.style.display=inList>0?'flex':'none'; badge.textContent=inList;
-
-  // Settings form
   document.getElementById('settingsP1Name').value = settings.persona1Name;
   document.getElementById('settingsP2Name').value = settings.persona2Name;
   document.getElementById('settingsL1Name').value = settings.lugar1Name;
@@ -687,370 +1178,658 @@ function renderAll() {
   document.getElementById('settingsCurrentLugar').value = settings.currentLugar;
   document.querySelector('#settingsCurrentLugar option[value="lugar1"]').textContent = settings.lugar1Name;
   document.querySelector('#settingsCurrentLugar option[value="lugar2"]').textContent = settings.lugar2Name;
-  document.getElementById('settingsGistId').textContent = settings.gistId ? settings.gistId.slice(0,8)+'...' : '-';
-  document.getElementById('settingsLastSync').textContent = settings.lastSync ? new Date(settings.lastSync).toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'}) : '-';
-  document.getElementById('toggleOriginalNames').classList.toggle('on', !!settings.showOriginalNames);
+  document.getElementById('settingsGistId').textContent = settings.gistId ? settings.gistId.slice(0, 8) + '...' : '-';
+  document.getElementById('settingsLastSync').textContent = settings.lastSync ? new Date(settings.lastSync).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+  document.getElementById('settingsOriginalNames').checked = !!settings.useOriginalNames;
 
-  // Add modal options
-  document.querySelector('#addPersona option[value="p1"]').textContent = settings.persona1Name;
-  document.querySelector('#addPersona option[value="p2"]').textContent = settings.persona2Name;
+  // Add persona options to add modal
+  document.querySelector('#addPersona option[value="p1"]').textContent = getPersonaName('p1');
+  document.querySelector('#addPersona option[value="p2"]').textContent = getPersonaName('p2');
   document.querySelector('#addLugar option[value="lugar1"]').textContent = settings.lugar1Name;
   document.querySelector('#addLugar option[value="lugar2"]').textContent = settings.lugar2Name;
 
-  updateSelectUI();
-}
+  // Collect stores for filter + datalist
+  const stores = new Set();
+  DB.lines.forEach(l => (l.purchases || []).forEach(p => { if (p.store) stores.add(p.store); }));
 
-function byStore(items) {
-  const g={};
-  items.forEach(item => { const s=primaryStore(item.line)||'Sin tienda'; if(!g[s])g[s]=[]; g[s].push(item); });
-  return g;
-}
-
-function renderSection(secId, listId, items, title) {
-  const sec=document.getElementById(secId), list=document.getElementById(listId);
-  if (!items.length) { sec.style.display='none'; return; }
-  sec.style.display='block';
-  if (title) { const t=sec.querySelector('.section-title,.puntual-section-title'); if(t) t.textContent=title; }
-  list.innerHTML='';
-
-  const storeGroups=byStore(items);
-  const storeNames=Object.keys(storeGroups).sort();
-  const multiStore=storeNames.length>1;
-
-  storeNames.forEach(storeName => {
-    const groupItems=storeGroups[storeName];
-    const gKey=secId+':'+storeName;
-    const isCollapsed=collapsedGroups.has(gKey);
-
-    let container;
-    if (multiStore) {
-      const groupDiv=document.createElement('div');
-      groupDiv.className='store-group'+(isCollapsed?' collapsed':'');
-
-      const hdr=document.createElement('div');
-      hdr.className='store-group-header';
-      hdr.innerHTML<`<span class="store-group-name">${esc(storeName)}</span><span class="store-group-count">${groupItems.length}</span><svg class="store-group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`;
-      hdr.addEventListener('click',()=>{
-        if(collapsedGroups.has(gKey)) collapsedGroups.delete(gKey); else collapsedGroups.add(gKey);
-        groupDiv.classList.toggle('collapsed');
-      });
-      groupDiv.appendChild(hdr);
-
-      const itemsWrap=document.createElement('div');
-      itemsWrap.className='store-group-items';
-      renderCategoryItems(itemsWrap, groupItems);
-      groupDiv.appendChild(itemsWrap);
-      list.appendChild(groupDiv);
-    } else {
-      renderCategoryItems(list, groupItems);
-    }
+  const storeSelect = document.getElementById('filterStore');
+  const storeVal = storeSelect.value;
+  storeSelect.innerHTML = '<option value="all">Todas</option>';
+  stores.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    storeSelect.appendChild(o);
   });
+  if (storeVal) storeSelect.value = storeVal;
+
+  // Update store datalist for add modal
+  const storeDatalist = document.getElementById('storeListAdd');
+  storeDatalist.innerHTML = '';
+  stores.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s;
+    storeDatalist.appendChild(o);
+  });
+
+  // Update product name datalist for add modal
+  const nameDatalist = document.getElementById('addNameList');
+  nameDatalist.innerHTML = '';
+  const productNames = new Set(DB.lines.map(l => l.product));
+  productNames.forEach(name => {
+    const o = document.createElement('option');
+    o.value = name;
+    nameDatalist.appendChild(o);
+  });
+
+  // Compute predictions and filter
+  const lined = DB.lines.map(line => {
+    const pred = predict(line);
+    if (pred.cadence !== null) line.estimatedCadenceDays = pred.cadence;
+    return { line, pred };
+  }).filter(({ line, pred }) => {
+    if (filters.persona !== 'all' && line.persona !== filters.persona) return false;
+    if (filters.lugar !== 'all' && line.lugar !== filters.lugar) return false;
+    if (filters.store !== 'all') {
+      const stores2 = (line.purchases || []).map(p => p.store);
+      if (!stores2.includes(filters.store)) return false;
+    }
+    return true;
+  });
+
+  const order = { agotado: 0, urgente: 1, pronto: 2, visible: 3, ok: 4, desconocido: 5 };
+  lined.sort((a, b) => {
+    const oa = order[a.pred.status] || 5, ob = order[b.pred.status] || 5;
+    if (oa !== ob) return oa - ob;
+    if (a.pred.daysRemaining !== null && b.pred.daysRemaining !== null) return a.pred.daysRemaining - b.pred.daysRemaining;
+    return 0;
+  });
+
+  const groups = { agotado: [], urgente: [], pronto: [], visible: [], ok: [], desconocido: [] };
+  lined.forEach(item => {
+    const g = item.pred.status;
+    (groups[g] || groups.desconocido).push(item);
+  });
+
+  const urgentAll = [...groups.agotado, ...groups.urgente];
+  renderSection('urgentSection', 'urgentList', urgentAll, urgentAll.length > 0 ? (groups.agotado.length ? 'Agotado / Urgente' : 'Urgente') : '');
+  renderSection('soonSection', 'soonList', groups.pronto, 'En breve (esta semana)');
+  renderSection('visibleSection', 'visibleList', groups.visible, 'PrÃ³ximamente');
+  renderSection('okSection', 'okList', [...groups.ok, ...groups.desconocido], 'Sin alertas');
+
+  const total = lined.length;
+  document.getElementById('emptyState').style.display = total === 0 ? 'block' : 'none';
+
+  const inList = DB.lines.filter(l => l.addedToShoppingList).length;
+  const badge = document.getElementById('shoppingBadge');
+  badge.style.display = inList > 0 ? 'flex' : 'none';
+  badge.textContent = inList;
 }
 
-function renderCategoryItems(container, items) {
-  const catGroups={};
-  items.forEach(item => { const c=smartCat(item.line.product); if(!catGroups[c])catGroups[c]=[]; catGroups[c].push(item); });
-  const multiCat=Object.keys(catGroups).length>1;
-  Object.entries(catGroups).sort(([a],[b])=>a.localeCompare(b)).forEach(([cat,catItems])=>{
-    if (multiCat) {
-      const lbl=document.createElement('div');
-      lbl.className='smart-cat-label'; lbl.textContent=cat;
-      container.appendChild(lbl);
-    }
-    catItems.forEach(({line,pred})=>{
-      const card=makeCard(line,pred);
-      container.appendChild(card);
-    });
-  });
+function renderSection(sectionId, listId, items, title) {
+  const section = document.getElementById(sectionId);
+  const list = document.getElementById(listId);
+  if (!items.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  if (title) {
+    const t = section.querySelector('.section-title');
+    if (t) t.textContent = title;
+  }
+  list.innerHTML = '';
+  items.forEach(({ line, pred }) => list.appendChild(makeCard(line, pred)));
 }
 
 function makeCard(line, pred) {
-  const card=document.createElement('div');
-  card.className='item-card'+(selectedIds.has(line.id)?' selected':'');
-  card.dataset.id=line.id;
-  const isExp=expandedId===line.id;
-  const store=primaryStore(line);
-  card.innerHTML=`
+  const card = document.createElement('div');
+  card.className = 'item-card';
+  card.dataset.id = line.id;
+
+  const isExpanded = expandedId === line.id;
+
+  card.innerHTML = `
     <div class="item-main">
-      <div class="select-checkbox"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
       <div class="status-dot ${pred.status}"></div>
       <div class="item-info">
-        <div class="item-name">${esc(dName(line))}</div>
+        <div class="item-name">${esc(line.product)}</div>
         <div class="item-meta">
-          <span>${esc(pName(line.persona))}</span>
-          ${store?'<span>'+esc(store)+'</span>':''}
-          ${pred.cadence?'<span>'+Math.round(pred.cadence)+'d/u</span>':''}
+          <span>${esc(getPersonaName(line.persona))}</span>
+          <span>${esc(getLugarName(line.lugar))}</span>
+          ${pred.cadence ? '<span>' + Math.round(pred.cadence) + 'd/u</span>' : ''}
         </div>
       </div>
-      <div class="item-countdown ${pred.status}">${fmtCountdown(pred)}</div>
-      <button class="add-btn${line.addedToShoppingList?' in-list':''}" data-action="toggle-list" title="${line.addedToShoppingList?'En lista':'Añadir a lista'}">
+      <div class="item-countdown ${pred.status}">${formatCountdown(pred)}</div>
+      <button class="add-btn ${line.addedToShoppingList ? 'in-list' : ''}" data-action="toggle-list" title="${line.addedToShoppingList ? 'En la lista' : 'AÃ±adir a lista'}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          ${line.addedToShoppingList?'<polyline points="20 6 9 17 4 12"/>':'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}
+          ${line.addedToShoppingList
+            ? '<polyline points="20 6 9 17 4 12"/>'
+            : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}
         </svg>
       </button>
     </div>
-    <div class="item-expanded${isExp?' open':''}">
+    <div class="item-expanded ${isExpanded ? 'open' : ''}">
       <div class="expand-grid">
-        <div class="expand-field"><span class="expand-label">Nombre</span><input class="expand-input" data-field="product" value="${esc(line.product)}"></div>
-        <div class="expand-field"><span class="expand-label">Tienda</span><input class="expand-input" data-field="store" value="${esc(store)}"></div>
+        <div class="expand-field">
+          <span class="expand-label">Producto</span>
+          <input class="expand-input" data-field="product" value="${esc(line.product)}">
+        </div>
         <div class="expand-field">
           <span class="expand-label">Persona</span>
           <select class="expand-select" data-field="persona">
-            <option value="p1"${line.persona==='p1'?' selected':''}>${esc(settings.persona1Name)}</option>
-            <option value="p2"${line.persona==='p2'?' selected':''}>${esc(settings.persona2Name)}</option>
-            <option value="comun"${line.persona==='comun'?' selected':''}>Común</option>
+            <option value="p1" ${line.persona === 'p1' ? 'selected' : ''}>${esc(getPersonaName('p1'))}</option>
+            <option value="p2" ${line.persona === 'p2' ? 'selected' : ''}>${esc(getPersonaName('p2'))}</option>
+            <option value="comun" ${line.persona === 'comun' ? 'selected' : ''}>ComÃºn</option>
           </select>
         </div>
         <div class="expand-field">
           <span class="expand-label">Lugar</span>
           <select class="expand-select" data-field="lugar">
-            <option value="lugar1"${line.lugar==='lugar1'?' selected':''}>${esc(settings.lugar1Name)}</option>
-            <option value="lugar2"${line.lugar==='lugar2'?' selected':''}>${esc(settings.lugar2Name)}</option>
+            <option value="lugar1" ${line.lugar === 'lugar1' ? 'selected' : ''}>${esc(settings.lugar1Name)}</option>
+            <option value="lugar2" ${line.lugar === 'lugar2' ? 'selected' : ''}>${esc(settings.lugar2Name)}</option>
           </select>
         </div>
       </div>
       <div class="expand-actions">
-        <button class="chip-btn${line.manualStatus==='agotandose'?' active':''}" data-action="mark" data-val="agotandose">Agotándose</button>
-        <button class="chip-btn${line.manualStatus==='agotado'?' active':''}" data-action="mark" data-val="agotado">Agotado</button>
-        <button class="chip-btn${line.isPuntual?' puntual-on':''}" data-action="toggle-puntual">Puntual</button>
-        <button class="chip-btn save-btn" data-action="save">Guardar</button>
+        <button class="chip-btn ${line.manualStatus === 'agotandose' ? 'active' : ''}" data-action="mark" data-val="agotandose">AgotÃ¡ndose</button>
+        <button class="chip-btn ${line.manualStatus === 'agotado' ? 'active' : ''}" data-action="mark" data-val="agotado">Agotado</button>
+        <button class="chip-btn ${line.manualStatus === 'puntual' ? 'active' : ''}" data-action="mark" data-val="puntual">Puntual</button>
         <button class="chip-btn danger" data-action="delete">Eliminar</button>
+        <button class="chip-btn" data-action="save">Guardar</button>
       </div>
-      ${line.originalName&&line.originalName!==line.product?'<div class="original-hint">Original: '+esc(line.originalName)+'</div>':''}
       <div style="margin-top:10px">
-        <span class="expand-label" style="display:block;margin-bottom:4px">Compras (${(line.purchases||[]).length})</span>
-        <div style="max-height:120px;overflow-y:auto">${renderPurchases(line)}</div>
+        <span class="expand-label">Compras (${(line.purchases || []).length})</span>
+        <div style="margin-top:6px;max-height:120px;overflow-y:uto">
+          ${renderPurchaseList(line)}
+        </div>
       </div>
-    </div>`;
+    </div>
+  `;
 
-  // Events
-  card.querySelector('.item-main').addEventListener('click', e => {
-    if (e.target.closest('[data-action]')||e.target.closest('.select-checkbox')) return;
-    if (selectMode) { toggleSel(line.id); return; }
-    expandedId = expandedId===line.id ? null : line.id;
+  card.querySelector('.item-main').addEventListener('click', (e) => {
+    if (e.target.closest('[data-action]')) return;
+    expandedId = expandedId === line.id ? null : line.id;
     renderAll();
   });
-  card.querySelector('.select-checkbox').addEventListener('click', e => { e.stopPropagation(); toggleSel(line.id); });
-  card.querySelector('[data-action="toggle-list"]').addEventListener('click', e => { e.stopPropagation(); line.addedToShoppingList=!line.addedToShoppingList; saveAndSync(); renderAll(); });
-  card.querySelectorAll('[data-action="mark"]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); line.manualStatus=line.manualStatus===b.dataset.val?null:b.dataset.val; saveAndSync(); renderAll(); }));
-  card.querySelector('[data-action="toggle-puntual"]').addEventListener('click', e => { e.stopPropagation(); line.isPuntual=!line.isPuntual; if(line.isPuntual){line.manualStatus=null;expandedId=null;} saveAndSync(); renderAll(); });
-  card.querySelector('[data-action="save"]').addEventListener('click', e => { e.stopPropagation(); line.product=card.querySelector('[data-field="product"]').value.trim()||line.product; line.store=card.querySelector('[data-field="store"]').value.trim(); line.persona=card.querySelector('[data-field="persona"]').value; line.lugar=card.querySelector('[data-field="lugar"]').value; line.lastUpdated=new Date().toISOString(); saveAndSync(); renderAll(); showToast('Guardado'); });
-  card.querySelector('[data-action="delete"]').addEventListener('click', e => { e.stopPropagation(); deleteProduct(line); });
-  card.querySelectorAll('[data-purchase-idx]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); const idx=parseInt(b.dataset.purchaseIdx); if(line.purchases[idx]){line.purchases[idx].puntual=!line.purchases[idx].puntual; saveAndSync(); renderAll();} }));
+
+  card.querySelector('[data-action="toggle-list"]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    line.addedToShoppingList = !line.addedToShoppingList;
+    saveAndSync();
+    renderAll();
+  });
+
+  const markBtns = card.querySelectorAll('[data-action="mark"]');
+  markBtns.forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const val = btn.dataset.val;
+    line.manualStatus = line.manualStatus === val ? null : val;
+    saveAndSync();
+    renderAll();
+  }));
+
+  card.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    customConfirm('Â¿Eliminar ' + line.product + '?', () => {
+      DB.lines = DB.lines.filter(l => l.id !== line.id);
+      if (expandedId === line.id) expandedId = null;
+      saveAndSync();
+      renderAll();
+    });
+  });
+
+  card.querySelector('[data-action="save"]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const nameInput = card.querySelector('[data-field="product"]');
+    const personaSelect = card.querySelector('[data-field="persona"]');
+    const lugarSelect = card.querySelector('[data-field="lugar"]');
+    line.product = nameInput.value.trim() || line.product;
+    line.persona = personaSelect.value;
+    line.lugar = lugarSelect.value;
+    line.lastUpdated = new Date().toISOString();
+    saveAndSync();
+    renderAll();
+    showToast('Guardado');
+  });
+
+  card.querySelectorAll('[data-purchase-idx]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.purchaseIdx);
+      if (line.purchases[idx]) {
+        line.purchases[idx].capricho = !line.purchases[idx].capricho;
+        saveAndSync();
+        renderAll();
+      }
+    });
+  });
+
   return card;
 }
 
-function renderPurchases(line) {
-  if (!line.purchases?.length) return '<span style="font-size:12px;color:var(--text2)">Sin compras</span>';
-  return line.purchases.slice().reverse().slice(0,5).map((p,ri)=>{
-    const idx=line.purchases.length-1-ri;
-    const isP=p.puntual||p.capricho||false;
+function renderPurchaseList(line) {
+  if (!line.purchases || !line.purchases.length) return '<span style="font-size:12px;color:var(--text2)">Sin compras registradas</span>';
+  return line.purchases.slice().reverse().slice(0, 5).map((p, ri) => {
+    const idx = line.purchases.length - 1 - ri;
     return `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px;border-bottom:1px solid var(--surface2)">
-      <span style="color:var(--text2)">${p.date}</span><span style="flex:1">${esc(p.store||'')}</span><span>x${p.qty||1}</span>
-      <button data-purchase-idx="${idx}" style="background:none;border:1px solid ${isP?'var(--accent)':'#3a3a42'};color:${isP?'var(--accent)':'var(--text2)'};border-radius:8px;padding:2px 8px;font-size:11px;cursor:pointer">Puntual</button>
+      <span style="color:var(--text2)">${p.date}</span>
+      <span style="flex:1">${esc(p.store || '')}</span>
+      <span>x${p.qty || 1}</span>
+      <button data-purchase-idx="${idx}" style="background:none;border:none;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:8px;${p.capricho ? 'background:var(--accent);color:white' : 'color:var(--text2)'}">capricho</button>
     </div>`;
   }).join('');
 }
 
-function deleteProduct(line) {
-  const dlg=document.createElement('div');
-  dlg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px';
-  dlg.innerHTML<`<div style="background:var(--surface);border-radius:16px;padding:24px;max-width:340px;width:100%">
-    <div style="font-size:17px;font-weight:600;margin-bottom:8px">Eliminar ${esc(line.product)}</div>
-    <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5">¿También ignorarlo en futuras syncs de Clarito?</div>
-    <button id="_deli" style="width:100%;background:var(--accent);border:none;border-radius:10px;color:#1a1a1f;font-size:15px;font-weight:600;padding:12px;cursor:pointer;margin-bottom:8px">Eliminar e ignorar</button>
-    <button id="_delo" style="width:100%;background:var(--surface2);border:1px solid #3a3a42;border-radius:10px;color:var(--text);font-size:14px;padding:10px;cursor:pointer;margin-bottom:8px">Solo eliminar</button>
-    <button id="_delc" style="width:100%;background:none;border:none;color:var(--text2);font-size:14px;padding:8px;cursor:pointer">Cancelar</button>
-  </div>`;
-  document.body.appendChild(dlg);
-  const go=(ignore)=>{
-    dlg.remove();
-    if(ignore){DB.ignored=DB.ignored||[];DB.ignored.push({name:line.originalName||line.product});}
-    DB.lines=DB.lines.filter(l=>l.id!==line.id);
-    if(expandedId===line.id)expandedId=null;
-    saveAndSync(); renderAll();
-    showToast(ignore?'Eliminado e ignorado':'Eliminado');
-  };
-  dlg.querySelector('#_deli').onclick=()=>go(true);
-  dlg.querySelector('#_delo').onclick=()=>go(false);
-  dlg.querySelector('#_delc').onclick=()=>dlg.remove();
-}
-
-// ── SHOPPING LIST ─────────────────────────────────────────────────────
+// ââ SHOPPING LIST ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderShoppingList() {
-  const items=DB.lines.filter(l=>l.addedToShoppingList);
-  const content=document.getElementById('shoppingContent');
-  if (!items.length) { content.innerHTML='<p style="color:var(--text2);padding:16px 0">Lista vacía</p>'; return; }
-  const sg={};
-  items.forEach(l=>{ const s=primaryStore(l)||'Sin tienda', c=smartCat(l.product); if(!sg[s])sg[s]={}; if(!sg[s][c])sg[s][c]=[]; sg[s][c].push(l); });
-  content.innerHTML=Object.entries(sg).sort(([a],[b])=>a.localeCompare(b)).map(([store,cats])=>`
-    <div class="shop-store-section">
-      <div class="shop-store-name">${esc(store)}</div>
-      ${Object.entries(cats).sort(([a],[b])=>a.localeCompare(b)).map(([cat,lines])=>`
-        <div class="shop-cat-label">${esc(cat)}</div>
-        ${lines.map(l=>`<div class="shop-item"><span class="shop-item-name">${esc(dName(l))}</span><span class="shop-item-meta">${esc(pName(l.persona))}</span><button class="shop-remove" data-remove="${l.id}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}
-      `).join('')}
-    </div>
-  `).join('');
-  content.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>{
-    const l=DB.lines.find(x=>x.id===b.dataset.remove);
-    if(l){l.addedToShoppingList=false;saveAndSync();renderAll();renderShoppingList();}
-  }));
-}
+  const items = DB.lines.filter(l => l.addedToShoppingList);
+  const content = document.getElementById('shoppingContent');
+  const totalEl = document.getElementById('shoppingTotal');
 
-// ── SELECT ────────────────────────────────────────────────────────────
-function toggleSel(id) {
-  if(selectedIds.has(id))selectedIds.delete(id); else selectedIds.add(id);
-  const card=document.querySelector(`[data-id="${id}"]`);
-  if(card)card.classList.toggle('selected',selectedIds.has(id));
-  updateSelectUI();
-}
-function updateSelectUI() {
-  document.getElementById('app').classList.toggle('select-mode',selectMode);
-  const tb=document.getElementById('selectToolbar');
-  tb.classList.toggle('open',selectMode&&selectedIds.size>0);
-  document.getElementById('selectCount').textContent=selectedIds.size+' seleccionado'+(selectedIds.size!==1?'s':'');
-  document.getElementById('selectModeBtn').classList.toggle('active',selectMode);
-}
+  if (!items.length) {
+    content.innerHTML = '<p style="color:var(--text2);font-size:15px;padding:12px 0">Lista vacÃ­a</p>';
+    totalEl.style.display = 'none';
+    return;
+  }
 
-// ── TUTORIAL ──────────────────────────────────────────────────────────
-function openTutorial() {
-  tutStep=0; renderTutStep();
-  document.getElementById('tutorialOverlay').classList.add('open');
-}
-function renderTutStep() {
-  document.querySelectorAll('.tutorial-step').forEach((el,i)=>el.classList.toggle('active',i===tutStep));
-  document.getElementById('tutorialDots').innerHTML=Array.from({length:TUTORIAL_TOTAL},(_,i)=>`<div class="tutorial-dot${i===tutStep?' active':''}"></div>`).join('');
-  document.getElementById('tutorialNext').textContent=tutStep===TUTORIAL_TOTAL-1?'Cerrar':'Siguiente';
-}
-function closeTutorial() {
-  if(document.getElementById('tutorialDontShow').checked){settings.tutorialSeen=true;DB.settings=settings;saveLocal(DB);}
-  document.getElementById('tutorialOverlay').classList.remove('open');
-}
+  // Separate: unticked first, ticked (comprados) last
+  const unticked = items.filter(l => !shoppingTicked.has(l.id));
+  const ticked = items.filter(l => shoppingTicked.has(l.id));
+  const ordered = [...unticked, ...ticked];
 
-// ── SAVE ─────────────────────────────────────────────────────────────
-function saveAndSync() { DB.settings=settings; saveLocal(DB); }
+  content.innerHTML = ordered.map(l => {
+    const isTicked = shoppingTicked.has(l.id);
+    const avgPrice = getAvgPrice(l.product);
+    const priceStr = avgPrice != null ? avgPrice.toFixed(2) + 'â¬' : '';
+    return `<div class="shopping-item ${isTicked ? 'ticked' : ''}" data-sid="${l.id}">
+      <button class="shopping-tick ${isTicked ? 'checked' : ''}" data-tick="${l.id}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </button>
+      <div class="shopping-item-info">
+        <div class="shopping-item-name">${esc(l.product)}</div>
+        <div class="shopping-item-sub">${esc(getPersonaName(l.persona))}</div>
+      </div>
+      ${priceStr ? `<div class="shopping-item-price">~${priceStr}</div>` : ''}
+      <button class="shopping-remove" data-remove="${l.id}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>`;
+  }).join('');
 
-// ── SETUP ────────────────────────────────────────────────────────────
-function showSetup(){document.getElementById('setupOverlay').style.display='flex';document.getElementById('app').style.display='none';}
-function showApp(){document.getElementById('setupOverlay').style.display='none';const a=document.getElementById('app');a.style.display='flex';a.style.flexDirection='column';}
-
-async function runSetupConnect() {
-  const gistId=document.getElementById('setupGistId').value.trim();
-  const token=document.getElementById('setupToken').value.trim();
-  const err=document.getElementById('setupError'), btn=document.getElementById('setupConnectBtn');
-  if(!gistId||!token){err.textContent='Rellena ambos campos';err.style.display='block';return;}
-  btn.textContent='Conectando…';btn.disabled=true;err.style.display='none';
-  try {
-    const gd=await gistFetch(gistId,token);
-    let p1='Persona 1',p2='Persona 2';
-    for(const f of Object.keys(gd.files||{})){if(f==='clarito-data.json'||f.includes('clarito-data')){try{const c=JSON.parse(gd.files[f].content);if(c.persons?.length>=2){p1=c.persons[0].name||p1;p2=c.persons[1].name||p2;}}catch(e){}break;}}
-    DB=defaultDB(); DB.settings.gistId=gistId; DB.settings.gistToken=token; settings=DB.settings;
-    document.getElementById('setupP1Name').value=p1; document.getElementById('setupP2Name').value=p2;
-    document.getElementById('step1').classList.remove('active'); document.getElementById('step2').classList.add('active');
-  } catch(e){err.textContent='No se pudo conectar: '+e.message;err.style.display='block';}
-  finally{btn.textContent='Conectar';btn.disabled=false;}
-}
-function setupNamesNext(){
-  settings.persona1Name=document.getElementById('setupP1Name').value.trim()||'Persona 1';
-  settings.persona2Name=document.getElementById('setupP2Name').value.trim()||'Persona 2';
-  settings.lugar1Name=document.getElementById('setupL1Name').value.trim()||'Piso';
-  settings.lugar2Name=document.getElementById('setupL2Name').value.trim()||'Mogor';
-  document.getElementById('setupLugarQ').textContent='¿Dónde estás ahora?';
-  document.getElementById('setupLugar1Btn').textContent=settings.lugar1Name;
-  document.getElementById('setupLugar2Btn').textContent=settings.lugar2Name;
-  document.getElementById('step2').classList.remove('active'); document.getElementById('step3').classList.add('active');
-}
-function finishSetup(k){
-  settings.currentLugar=k; DB.settings=settings; saveLocal(DB);
-  showApp(); syncFromClarito().then(()=>{ if(!settings.tutorialSeen) openTutorial(); });
-}
-
-// ── SETTINGS ─────────────────────────────────────────────────────────
-function saveSettings(){
-  settings.persona1Name=document.getElementById('settingsP1Name').value.trim()||settings.persona1Name;
-  settings.persona2Name=document.getElementById('settingsP2Name').value.trim()||settings.persona2Name;
-  settings.lugar1Name=document.getElementById('settingsL1Name').value.trim()||settings.lugar1Name;
-  settings.lugar2Name=document.getElementById('settingsL2Name').value.trim()||settings.lugar2Name;
-  settings.currentLugar=document.getElementById('settingsCurrentLugar').value;
-  DB.settings=settings; saveAndSync(); closeOverlay('settingsOverlay'); renderAll(); showToast('Guardado');
-}
-
-// ── OVERLAYS ─────────────────────────────────────────────────────────
-function openOverlay(id){document.getElementById(id).classList.add('open');}
-function closeOverlay(id){document.getElementById(id).classList.remove('open');}
-
-// ── UTILS ─────────────────────────────────────────────────────────────
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
-
-// ── INIT ──────────────────────────────────────────────────────────────
-function init() {
-  const saved=loadLocal();
-
-  document.getElementById('setupConnectBtn').addEventListener('click',runSetupConnect);
-  document.getElementById('setupNamesNext').addEventListener('click',setupNamesNext);
-  document.getElementById('setupLugar1Btn').addEventListener('click',()=>finishSetup('lugar1'));
-  document.getElementById('setupLugar2Btn').addEventListener('click',()=>finishSetup('lugar2'));
-
-  document.getElementById('headerTitle').addEventListener('click',()=>{
-    if(selectMode)return;
-    expandedId=null; filters={persona:'all',lugar:'all',store:'all'};
-    ['filterPersona','filterLugar','filterStore'].forEach(id=>document.getElementById(id).value='all');
-    document.getElementById('filterBar').classList.remove('open');
-    document.getElementById('filterBtn').classList.remove('active');
-    renderAll();
+  // Tick buttons
+  content.querySelectorAll('[data-tick]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.tick;
+      if (shoppingTicked.has(id)) shoppingTicked.delete(id);
+      else shoppingTicked.add(id);
+      renderShoppingList();
+    });
   });
 
-  document.getElementById('filterBtn').addEventListener('click',()=>{ document.getElementById('filterBar').classList.toggle('open'); document.getElementById('filterBtn').classList.toggle('active'); });
-  document.getElementById('filterPersona').addEventListener('change',e=>{filters.persona=e.target.value;renderAll();});
-  document.getElementById('filterLugar').addEventListener('change',e=>{filters.lugar=e.target.value;renderAll();});
-  document.getElementById('filterStore').addEventListener('change',e=>{filters.store=e.target.value;renderAll();});
-
-  document.getElementById('syncBtn').addEventListener('click',()=>{ if(settings?.gistId) syncFromClarito(); else showToast('Configura el Gist primero'); });
-  document.getElementById('settingsBtn').addEventListener('click',()=>{renderAll();openOverlay('settingsOverlay');});
-  document.getElementById('settingsSaveBtn').addEventListener('click',saveSettings);
-  document.getElementById('settingsCloseBtn').addEventListener('click',()=>closeOverlay('settingsOverlay'));
-  document.getElementById('settingsResetBtn').addEventListener('click',()=>{if(confirm('¿Reiniciar la app? Se perderán todos los datos.')){localStorage.removeItem(LS_KEY);location.reload();}});
-  document.getElementById('tutorialBtn').addEventListener('click',()=>{closeOverlay('settingsOverlay');openTutorial();});
-  document.getElementById('toggleOriginalNames').addEventListener('click',function(){settings.showOriginalNames=!settings.showOriginalNames;this.classList.toggle('on',settings.showOriginalNames);DB.settings=settings;saveLocal(DB);renderAll();});
-
-  document.getElementById('tutorialNext').addEventListener('click',()=>{ tutStep++; if(tutStep>=TUTORIAL_TOTAL){closeTutorial();return;} renderTutStep(); });
-
-  document.getElementById('selectModeBtn').addEventListener('click',()=>{ selectMode=!selectMode; if(!selectMode)selectedIds.clear(); renderAll(); });
-  document.getElementById('selectCancelBtn').addEventListener('click',()=>{selectMode=false;selectedIds.clear();renderAll();});
-  document.getElementById('selectAddListBtn').addEventListener('click',()=>{DB.lines.filter(l=>selectedIds.has(l.id)).forEach(l=>l.addedToShoppingList=true);saveAndSync();selectMode=false;selectedIds.clear();renderAll();showToast('Añadidos a la lista');});
-  document.getElementById('selectDeleteBtn').addEventListener('click',()=>{if(!selectedIds.size)return;if(confirm('¿Eliminar '+selectedIds.size+' producto(s)?')){DB.lines=DB.lines.filter(l=>!selectedIds.has(l.id));saveAndSync();selectMode=false;selectedIds.clear();renderAll();}});
-
-  document.getElementById('shoppingListBtn').addEventListener('click',()=>{renderShoppingList();openOverlay('shoppingOverlay');});
-  document.getElementById('shoppingCloseBtn').addEventListener('click',()=>closeOverlay('shoppingOverlay'));
-
-  document.getElementById('fabAdd').addEventListener('click',()=>openOverlay('addOverlay'));
-  document.getElementById('addCancelBtn').addEventListener('click',()=>closeOverlay('addOverlay'));
-  document.getElementById('addConfirmBtn').addEventListener('click',()=>{
-    const name=document.getElementById('addName').value.trim();
-    if(!name){showToast('Escribe un nombre');return;}
-    const store=document.getElementById('addStore').value.trim();
-    DB.lines.push({id:uid(),product:name,originalName:name,persona:document.getElementById('addPersona').value,lugar:document.getElementById('addLugar').value,store,purchases:[],manualStatus:null,addedToShoppingList:false,estimatedCadenceDays:null,isPuntual:false,lastUpdated:new Date().toISOString()});
-    document.getElementById('addName').value=''; document.getElementById('addStore').value='';
-    closeOverlay('addOverlay'); saveAndSync(); renderAll(); showToast('Añadido');
+  // Remove buttons
+  content.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const l = DB.lines.find(x => x.id === btn.dataset.remove);
+      if (l) {
+        l.addedToShoppingList = false;
+        shoppingTicked.delete(l.id);
+        saveAndSync();
+        renderAll();
+        renderShoppingList();
+      }
+    });
   });
 
-  ['addOverlay','shoppingOverlay','settingsOverlay'].forEach(id=>document.getElementById(id).addEventListener('click',e=>{if(e.target.id===id)closeOverlay(id);}));
-
-  if (saved?.settings?.gistId) {
-    DB=saved; migrate(DB); settings=DB.settings;
-    showApp(); renderAll();
-    if(!settings.tutorialSeen) openTutorial();
-    if(settings.gistId&&settings.gistToken) setTimeout(()=>syncFromClarito(),1000);
+  // Total
+  let total = 0;
+  let hasAnyPrice = false;
+  items.forEach(l => {
+    const p = getAvgPrice(l.product);
+    if (p != null) { total += p; hasAnyPrice = true; }
+  });
+  if (hasAnyPrice) {
+    totalEl.style.display = 'block';
+    totalEl.textContent = 'Total aprox.: ' + total.toFixed(2) + 'â¬';
   } else {
-    DB=defaultDB(); settings=DB.settings; showSetup();
+    totalEl.style.display = 'none';
   }
 }
 
-document.readyState==='loading' ? document.addEventListener('DOMContentLoaded',init) : init();
-if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+// ââ SAVE & SYNC ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+let syncTimer = null;
+function saveAndSync() {
+  DB.settings = settings;
+  saveLocal(DB);
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => { if (settings.gistId && settings.gistToken) gistWriteOnly(); }, 3000);
+}
+
+async function gistWriteOnly() {
+  try {
+    await gistWrite(settings.gistId, settings.gistToken, DB);
+    settings.lastSync = new Date().toISOString();
+    DB.settings = settings;
+    saveLocal(DB);
+  } catch(e) { showToast('Error al guardar en Gist'); }
+}
+
+// ââ SETUP ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function showSetup() {
+  document.getElementById('setupOverlay').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function showApp() {
+  document.getElementById('setupOverlay').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+  app.style.flexDirection = 'column';
+}
+
+async function runSetupConnect() {
+  const gistId = document.getElementById('setupGistId').value.trim();
+  const token = document.getElementById('setupToken').value.trim();
+  const errEl = document.getElementById('setupError');
+  const btn = document.getElementById('setupConnectBtn');
+
+  if (!gistId || !token) { errEl.textContent = 'Rellena ambos campos'; errEl.style.display = 'block'; return; }
+
+  btn.textContent = 'Conectando...';
+  btn.disabled = true;
+  errEl.style.display = 'none';
+
+  try {
+    const gistData = await gistFetch(gistId, token);
+
+    let p1 = 'Persona 1', p2 = 'Persona 2';
+    let origP1 = '', origP2 = '';
+    for (const fname of Object.keys(gistData.files || {})) {
+      if (fname.endsWith('db.json') || fname === 'db.json') {
+        try {
+          const clarito = JSON.parse(gistData.files[fname].content);
+          if (clarito.persons && clarito.persons.length >= 2) {
+            p1 = clarito.persons[0].name || p1;
+            p2 = clarito.persons[1].name || p2;
+            origP1 = p1;
+            origP2 = p2;
+          }
+        } catch(e) {}
+        break;
+      }
+    }
+
+    DB = defaultDB();
+    DB.settings.gistId = gistId;
+    DB.settings.gistToken = token;
+    DB.settings.persona1OriginalName = origP1;
+    DB.settings.persona2OriginalName = origP2;
+    settings = DB.settings;
+
+    if (gistData.files && gistData.files[LADESPENSA_FILE]) {
+      try {
+        const remote = JSON.parse(gistData.files[LADESPENSA_FILE].content);
+        if (remote && remote.version) {
+          DB = remote;
+          DB.settings.gistId = gistId;
+          DB.settings.gistToken = token;
+          if (!DB.settings.persona1OriginalName) DB.settings.persona1OriginalName = origP1;
+          if (!DB.settings.persona2OriginalName) DB.settings.persona2OriginalName = origP2;
+          settings = DB.settings;
+          saveLocal(DB);
+          showApp();
+          syncFromGist(false);
+          return;
+        }
+      } catch(e) {}
+    }
+
+    document.getElementById('setupP1Name').value = p1;
+    document.getElementById('setupP2Name').value = p2;
+
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step2').classList.add('active');
+
+  } catch(e) {
+    errEl.textContent = 'No se pudo conectar: ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = 'Conectar';
+    btn.disabled = false;
+  }
+}
+
+function setupNamesNext() {
+  settings.persona1Name = document.getElementById('setupP1Name').value.trim() || 'Persona 1';
+  settings.persona2Name = document.getElementById('setupP2Name').value.trim() || 'Persona 2';
+  settings.lugar1Name = document.getElementById('setupL1Name').value.trim() || 'Piso';
+  settings.lugar2Name = document.getElementById('setupL2Name').value.trim() || 'Mogor';
+
+  document.getElementById('setupLugarQ').textContent = 'Â¿En quÃ© casa estÃ¡s ahora?';
+  document.getElementById('setupLugar1Btn').textContent = settings.lugar1Name;
+  document.getElementById('setupLugar2Btn').textContent = settings.lugar2Name;
+
+  document.getElementById('step2').classList.remove('active');
+  document.getElementById('step3').classList.add('active');
+}
+
+function finishSetup(lugarKey) {
+  settings.currentLugar = lugarKey;
+  DB.settings = settings;
+  saveLocal(DB);
+  showApp();
+  syncFromGist(true);
+}
+
+// ââ SETTINGS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function openSettings() {
+  renderAll();
+  openOverlay('settingsOverlay');
+}
+
+function saveSettings() {
+  settings.persona1Name = document.getElementById('settingsP1Name').value.trim() || settings.persona1Name;
+  settings.persona2Name = document.getElementById('settingsP2Name').value.trim() || settings.persona2Name;
+  settings.lugar1Name = document.getElementById('settingsL1Name').value.trim() || settings.lugar1Name;
+  settings.lugar2Name = document.getElementById('settingsL2Name').value.trim() || settings.lugar2Name;
+  settings.currentLugar = document.getElementById('settingsCurrentLugar').value;
+  settings.useOriginalNames = document.getElementById('settingsOriginalNames').checked;
+  DB.settings = settings;
+  saveAndSync();
+  closeOverlay('settingsOverlay');
+  renderAll();
+  showToast('Ajustes guardados');
+}
+
+// ââ OVERLAY HELPERS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function openOverlay(id) { document.getElementById(id).classList.add('open'); }
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+
+// ââ UTILS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ââ INIT âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function init() {
+  const saved = loadLocal();
+
+  // Custom confirm modal
+  document.getElementById('confirmCancelBtn').addEventListener('click', () => {
+    document.getElementById('confirmOverlay').classList.remove('open');
+    _confirmCallback = null;
+  });
+  document.getElementById('confirmOkBtn').addEventListener('click', () => {
+    document.getElementById('confirmOverlay').classList.remove('open');
+    if (_confirmCallback) { _confirmCallback(); _confirmCallback = null; }
+  });
+
+  // Setup close button (only shown when DB already has data)
+  document.getElementById('setupCloseBtn').addEventListener('click', () => {
+    if (DB && settings && settings.gistId) {
+      showApp();
+      renderAll();
+    }
+  });
+
+  // Setup wizard
+  document.getElementById('setupConnectBtn').addEventListener('click', runSetupConnect);
+  document.getElementById('setupNamesNext').addEventListener('click', setupNamesNext);
+  document.getElementById('setupLugar1Btn').addEventListener('click', () => finishSetup('lugar1'));
+  document.getElementById('setupLugar2Btn').addEventListener('click', () => finishSetup('lugar2'));
+
+  // Filters
+  document.getElementById('filterBtn').addEventListener('click', () => {
+    const bar = document.getElementById('filterBar');
+    const btn = document.getElementById('filterBtn');
+    bar.classList.toggle('open');
+    btn.classList.toggle('active');
+  });
+  document.getElementById('filterPersona').addEventListener('change', (e) => { filters.persona = e.target.value; renderAll(); });
+  document.getElementById('filterLugar').addEventListener('change', (e) => { filters.lugar = e.target.value; renderAll(); });
+  document.getElementById('filterStore').addEventListener('change', (e) => { filters.store = e.target.value; renderAll(); });
+
+  // Sync button
+  document.getElementById('syncBtn').addEventListener('click', () => {
+    if (settings && settings.gistId) syncFromGist(false);
+    else showToast('Configura el Gist primero');
+  });
+
+  // Settings
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
+  document.getElementById('settingsSaveBtn').addEventListener('click', saveSettings);
+  document.getElementById('settingsCloseBtn').addEventListener('click', () => closeOverlay('settingsOverlay'));
+  document.getElementById('settingsResetBtn').addEventListener('click', () => {
+    customConfirm('Â¿Reiniciar la app? Se perderÃ¡n los ajustes locales.', () => {
+      localStorage.removeItem('ladespensa');
+      location.reload();
+    });
+    // Override ok button label for this context
+    document.getElementById('confirmOkBtn').textContent = 'Reiniciar';
+  });
+
+  // FAB / Add product
+  document.getElementById('fabAdd').addEventListener('click', () => openOverlay('addOverlay'));
+  document.getElementById('addCancelBtn').addEventListener('click', () => closeOverlay('addOverlay'));
+  document.getElementById('addConfirmBtn').addEventListener('click', () => {
+    const name = document.getElementById('addName').value.trim();
+    if (!name) { showToast('Escribe un nombre'); return; }
+    const status = document.getElementById('addStatus').value || null;
+    const store = document.getElementById('addStore').value.trim();
+    const line = {
+      id: uid(),
+      product: name,
+      persona: document.getElementById('addPersona').value,
+      lugar: document.getElementById('addLugar').value,
+      purchases: [],
+      manualStatus: status,
+      addedToShoppingList: false,
+      estimatedCadenceDays: null,
+      lastUpdated: new Date().toISOString()
+    };
+    // If store provided, add an initial entry-less record
+    if (store) {
+      // Store will appear in datalist next time
+      const today = new Date().toISOString().slice(0, 10);
+      // Don't add fake purchase; just store reference for autocomplete via a tag
+      line.lastStore = store;
+    }
+    DB.lines.push(line);
+    document.getElementById('addName').value = '';
+    document.getElementById('addStatus').value = '';
+    document.getElementById('addStore').value = '';
+    closeOverlay('addOverlay');
+    saveAndSync();
+    renderAll();
+    showToast('Producto aÃ±adido');
+  });
+
+  // Shopping list
+  document.getElementById('shoppingListBtn').addEventListener('click', () => {
+    shoppingTicked.clear();
+    renderShoppingList();
+    openOverlay('shoppingOverlay');
+  });
+  document.getElementById('shoppingCloseBtn').addEventListener('click', () => {
+    shoppingTicked.clear();
+    closeOverlay('shoppingOverlay');
+  });
+
+  document.getElementById('selectAllBtn').addEventListener('click', () => {
+    DB.lines.filter(l => l.addedToShoppingList).forEach(l => shoppingTicked.add(l.id));
+    renderShoppingList();
+  });
+
+  document.getElementById('compraMadaBtn').addEventListener('click', () => {
+    if (!shoppingTicked.size) {
+      showToast('Marca los productos comprados primero');
+      return;
+    }
+    DB.lines.forEach(l => {
+      if (shoppingTicked.has(l.id)) l.addedToShoppingList = false;
+    });
+    shoppingTicked.clear();
+    saveAndSync();
+    renderAll();
+    renderShoppingList();
+    showToast("Â¡Compra registrada!');
+  });
+
+  // Close overlays on backdrop click
+  ['addOverlay', 'shoppingOverlay', 'settingsOverlay].forEach(id => {
+    document.getElementById(id).addEventListener('click', (e) => {
+      if (e.target.id === id) closeOverlay(id);
+    });
+  });
+
+  // Init data
+  if (saved && saved.settings && saved.settings.gistId) {
+    DB = saved;
+    // Migrate: ensure claritoPrices exists
+    if (!DB.claritoPrices) DB.claritoPrices = {};
+    // Migrate: ensure original names exist
+    if (DB.settings.persona1OriginalName === undefined) DB.settings.persona1OriginalName = '';
+    if (DB.settings.persona2OriginalName === undefined) DB.settings.persona2OriginalName = '';
+    if (DB.settings.useOriginalNames === undefined) DB.settings.useOriginalNames = false;
+    settings = DB.settings;
+    // Show close button since we have existing data
+    document.getElementById('setupCloseBtn').style.display = 'block';
+
+    showApp();
+    renderAll();
+    if (settings.gistId && settings.gistToken) {
+      setTimeout(() => syncFromGist(false), 1000);
+    }
+  } else {
+    DB = defaultDB();
+    settings = DB.settings;
+    showSetup();
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+// ââ SERVICE WORKER âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
