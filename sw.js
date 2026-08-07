@@ -1,11 +1,17 @@
-const CACHE = 'ladespensa-v1.3';
+const CACHE = 'ladespensa-v1.4';
 const ASSETS = ['./', './index.html', './manifest.json'];
+
+
+
 
 self.addEventListener('install', e => {
     e.waitUntil(
           caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
         );
 });
+
+
+
 
 self.addEventListener('activate', e => {
     e.waitUntil(
@@ -14,6 +20,9 @@ self.addEventListener('activate', e => {
                                  ).then(() => self.clients.claim())
         );
 });
+
+
+
 
 self.addEventListener('fetch', e => {
     if (e.request.url.includes('api.github.com')) return; // don't cache API calls
@@ -27,3 +36,6 @@ self.addEventListener('fetch', e => {
                               }))
                             );
 });
+
+
+
