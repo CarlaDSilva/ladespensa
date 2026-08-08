@@ -621,7 +621,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.1 · Sol</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.3 · Sol</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -904,13 +904,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.5.1</div>
+<div class="version-tag">v1.5.3v1.5.3</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.5.1-dbg';
+const VERSION = '1.5.3';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -979,6 +979,9 @@ async function gistFetch(gistId, token) {
 }
 
 async function gistWrite(gistId, token, content) {
+  // Strip token before writing to Gist (GitHub auto-revokes exposed credentials)
+  const safe = JSON.parse(JSON.stringify(content));
+  if (safe.settings) { delete safe.settings.gistToken; delete safe.settings.gistId; }
   const resp = await fetch(GIST_API + gistId, {
     method: 'PATCH',
     headers: {
@@ -986,7 +989,7 @@ async function gistWrite(gistId, token, content) {
       Accept: 'application/vnd.github+json',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ files: { [LADESPENSA_FILE]: { content: JSON.stringify(content, null, 2) } } })
+    body: JSON.stringify({ files: { [LADESPENSA_FILE]: { content: JSON.stringify(safe, null, 2) } } })
   });
   if (!resp.ok) throw new Error('HTTP ' + resp.status);
   return resp.json();
@@ -1556,36 +1559,24 @@ function showApp() {
   app.style.flexDirection = 'column';
 }
 
-function _dbg(msg) {
-  let p = document.getElementById('_dbgPanel');
-  if (!p) {
-    p = document.createElement('div');
-    p.id = '_dbgPanel';
-    p.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;font:12px monospace;padding:8px;max-height:40vh;overflow-y:auto;z-index:99999;white-space:pre-wrap;word-break:break-all';
-    document.body.appendChild(p);
-  }
-  p.textContent += '\n' + new Date().toISOString().slice(11,19) + ' ' + msg;
-  p.scrollTop = p.scrollHeight;
-}
-
+function 
 async function runSetupConnect() {
-  _dbg('CLICK recibido');
   const gistId = document.getElementById('setupGistId').value.trim();
   const token = document.getElementById('setupToken').value.trim();
-  _dbg('gistId len=' + gistId.length + ' token len=' + token.length);
+  
   const errEl = document.getElementById('setupError');
   const btn = document.getElementById('setupConnectBtn');
 
-  if (!gistId || !token) { errEl.textContent = 'Rellena ambos campos'; errEl.style.display = 'block'; _dbg('VACÍO - campos sin rellenar'); return; }
+  if (!gistId || !token) { errEl.textContent = 'Rellena ambos campos'; errEl.style.display = 'block'; return; }
 
   btn.textContent = 'Conectando...';
   btn.disabled = true;
   errEl.style.display = 'none';
 
   try {
-    _dbg('fetch iniciado → ' + GIST_API + gistId.slice(0,8) + '...');
+    
     const gistData = await gistFetch(gistId, token);
-    _dbg('fetch OK, files: ' + Object.keys(gistData.files || {}).join(', '));
+    
 
     let p1 = 'Persona 1', p2 = 'Persona 2';
     let origP1 = '', origP2 = '';
@@ -1637,15 +1628,14 @@ async function runSetupConnect() {
 
   } catch(e) {
     const msg = 'Error al conectar: ' + (e.message || e);
-    _dbg('ERROR: ' + msg + ' | stack: ' + (e.stack || ''));
+    
     errEl.textContent = msg;
     errEl.style.display = 'block';
     showToast(msg);
   } finally {
     btn.textContent = 'Conectar';
     btn.disabled = false;
-    _dbg('finally ejecutado');
-  }
+    }
 }
 
 function setupNamesNext() {
@@ -1742,6 +1732,7 @@ function mergeDuplicates(silent) {
 // ── TUTORIAL ────────────────────────────────────────────────────────────────
 function showTutorial() { openOverlay('tutorialOverlay'); }
 function initTutorial() {
+  document.getElementById('tutorialXBtn').addEventListener('click', () => { closeOverlay('tutorialOverlay'); });
   document.getElementById('tutorialCloseBtn').addEventListener('click', () => {
     if (document.getElementById('tutorialDontShow').checked) {
       localStorage.setItem('ladespensa_tutorial_done', '1');
@@ -1952,18 +1943,49 @@ if ('serviceWorker' in navigator) {
 
 <!-- TUTORIAL OVERLAY -->
 <div class="overlay" id="tutorialOverlay">
-  <div class="sheet" style="max-height:90vh;overflow-y:auto;">
+  <div class="sheet" style="max-height:90vh;overflow-y:auto;position:relative;">
+    <button id="tutorialXBtn" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;color:var(--text2);padding:4px" title="Cerrar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
     <div class="sheet-title">¿Cómo funciona?</div>
     <div style="display:flex;flex-direction:column;gap:20px;margin:16px 0;">
-      <div><svg style="width:24px;height:24px;margin-bottom:6px;color:var(--accent)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="4"/><path d="M12 15h8M16 12v6"/></svg><div style="font-weight:700;margin-bottom:4px">Configuración inicial</div><div style="color:var(--text2);font-size:14px">Necesitas un Gist de GitHub y un token con permisos <em>gist</em>. Introdúcelos en la pantalla de conexión.</div></div>
-      <div><svg style="width:24px;height:24px;margin-bottom:6px;color:var(--accent)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><div style="font-weight:700;margin-bottom:4px">Añadir productos</div><div style="color:var(--text2);font-size:14px">Pulsa el botón <strong>+</strong> inferior derecho para añadir un producto.</div></div>
-      <div><svg style="width:24px;height:24px;margin-bottom:6px;color:var(--accent)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg><div style="font-weight:700;margin-bottom:4px">Lista de la compra</div><div style="color:var(--text2);font-size:14px">Toca el icono <strong>+</strong> en cada producto para añadirlo a la lista. Luego abre el carrito.</div></div>
-      <div><svg style="width:24px;height:24px;margin-bottom:6px;color:var(--accent)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg><div style="font-weight:700;margin-bottom:4px">Sincronización</div><div style="color:var(--text2);font-size:14px">Pulsa el icono de sincronización para actualizar desde el Gist.</div></div>
-      <div><svg style="width:24px;height:24px;margin-bottom:6px;color:var(--accent)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><div style="font-weight:700;margin-bottom:4px">Filtros</div><div style="color:var(--text2);font-size:14px">Pulsa el embudo para filtrar. Toca <strong>LADESPENSA</strong> para resetear los filtros.</div></div>
-    </div>
-    <label style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer;color:var(--text2);font-size:14px">
-      <input type="checkbox" id="tutorialDontShow" style="width:18px;height:18px">
-      No volver a mostrar
+      <div><svg style="width:24px;height:24px;margin-bottom:6px;color:var(--accent)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="4"/><path d="M12 15h8M16 12v6"/></svg><div style="font-weight:700;margin-bottom:4px">Configuración inicial</div><div style="color:var(--text2);font-size:14px">Necesitas un Gist de GitHub y un token clásico con permiso "gist". Introdúcelos en la pantalla de conexión para empezar.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="background:var(--surface2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </div>
+        <div>
+          <p style="font-size:14px;font-weight:600;margin-bottom:4px">Añadir productos</p>
+          <p style="font-size:13px;color:var(--text2)">Pulsa el botón + (abajo a la derecha) para añadir un producto. Indica quién lo compra, en qué casa y el supermercado habitual.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="background:var(--surface2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        </div>
+        <div>
+          <p style="font-size:14px;font-weight:600;margin-bottom:4px">Lista de la compra</p>
+          <p style="font-size:13px;color:var(--text2)">Toca el icono + junto a un producto para añadirlo a la lista. Ábrela con el icono de cesta en la cabecera. Marca "Compra hecha" cuando termines.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="background:var(--surface2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        </div>
+        <div>
+          <p style="font-size:14px;font-weight:600;margin-bottom:4px">Sincronización</p>
+          <p style="font-size:13px;color:var(--text2)">Pulsa el icono de flechas circulares para subir y descargar cambios desde el Gist compartido. Los cambios de otro dispositivo llegan al sincronizar.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="background:var(--surface2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        </div>
+        <div>
+          <p style="font-size:14px;font-weight:600;margin-bottom:4px">Filtros</p>
+          <p style="font-size:13px;color:var(--text2)">Pulsa el embudo para filtrar por persona, lugar o tienda. Toca el título LADESPENSA para quitar todos los filtros de golpe.No volver a mostrar
     </label>
     <button class="btn-primary" id="tutorialCloseBtn">Entendido</button>
   </div>
