@@ -190,7 +190,8 @@
     flex-shrink: 0;
     transition: background 0.15s, color 0.15s;
   }
-  .add-btn:hover, .add-btn.in-list { background: var(--accent); color: var(--text); }
+  .add-btn.in-list { background: var(--accent); color: var(--text); }
+  @media (hover: hover) { .add-btn:hover { background: var(--accent); color: var(--text); } }
   .add-btn svg { width: 18px; height: 18px; }
 
   /* ── ITEM EXPANDED ── */
@@ -621,7 +622,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.3 · Sol</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.4 · Sol</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -904,13 +905,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.5.3v1.5.3</div>
+<div class="version-tag">v1.5.4v1.5.4</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.5.3';
+const VERSION = '1.5.4';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
