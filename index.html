@@ -345,6 +345,9 @@
   #buscadorOverlay.open { display:flex; }
   .buscador-header { display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid var(--surface2);flex-shrink:0; }
   .buscador-input { flex:1;background:var(--surface2);border:1px solid #3a3a42;border-radius:10px;color:var(--text);padding:10px 14px;font-size:16px; }
+  .buscador-suggestions { position:absolute;left:0;right:60px;top:calc(100% + 4px);background:var(--surface2);border:1px solid #3a3a42;border-radius:10px;z-index:10;max-height:200px;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.4); }
+  .buscador-suggestion { padding:10px 14px;cursor:pointer;font-size:15px; }
+  .buscador-suggestion:active { background:var(--surface); }
   .buscador-input:focus { outline:none;border-color:var(--accent); }
   #buscadorResults { flex:1;overflow-y:auto;padding:0 16px 32px; }
   .buscador-result-item { background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:8px; }
@@ -668,7 +671,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.6.0 · Sol</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.6.1 · Sol</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -798,8 +801,12 @@
       <div class="item-list" id="visibleList"></div>
     </div>
     <div id="okSection" style="display:none">
-      <div class="section-title">Bien por ahora</div>
+      <div class="section-title">Queda / Hay stock</div>
       <div class="item-list" id="okList"></div>
+    </div>
+    <div id="unknownSection" style="display:none">
+      <div class="section-title">Sin datos</div>
+      <div class="item-list" id="unknownList"></div>
     </div>
     <div id="emptyState" class="empty-state" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -890,7 +897,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">1.6.0 · Sol</span>
+        <span class="settings-row-value">1.6.1 · Sol</span>
       </div>
       <div class="settings-row">
         <span class="settings-row-label">Gist ID</span>
@@ -967,7 +974,7 @@
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.6.0';
+const VERSION = '1.6.1';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -1131,7 +1138,8 @@ async function importClarito(gistData) {
   for (const ticket of tickets) {
     for (const prod of (ticket.products || [])) {
       if (!prod.name) continue;
-      const unitPrice = prod.price != null ? (prod.price / (prod.qty || 1)) : null;
+      const _rawPrice = prod.price != null ? prod.price : (prod.total_price != null ? prod.total_price : (prod.unit_price != null ? (prod.unit_price * (prod.qty || 1)) : null));
+      const unitPrice = _rawPrice != null ? (_rawPrice / (prod.qty || 1)) : null;
       if (unitPrice != null && unitPrice > 0) {
         if (!DB.claritoPrices[prod.name]) DB.claritoPrices[prod.name] = [];
         DB.claritoPrices[prod.name].push(unitPrice);
@@ -1175,7 +1183,8 @@ async function importClarito(gistData) {
         };
         DB.lines.push(line);
       }
-      const _unitP = prod.price != null ? (prod.price / (prod.qty || 1)) : null;
+      const _rawP2 = prod.price != null ? prod.price : (prod.total_price != null ? prod.total_price : null);
+      const _unitP = _rawP2 != null ? (_rawP2 / (prod.qty || 1)) : null;
       line.purchases.push({
         date: ticket.date,
         qty: prod.qty || 1,
@@ -1184,6 +1193,7 @@ async function importClarito(gistData) {
         ticketId: ticket.id,
         price: _unitP
       });
+      if (line.manualStatus === 'agotado' || line.manualStatus === 'agotandose') line.manualStatus = null;
       line.lastUpdated = new Date().toISOString();
     }
   }
@@ -1394,7 +1404,8 @@ function renderAll() {
   renderSection('urgentSection', 'urgentList', urgentAll, urgentAll.length > 0 ? ((groups.agotado.length ? 'Agotado / Urgente' : 'Urgente') + ' (' + urgentAll.length + ')') : '');
   renderSection('soonSection', 'soonList', groups.pronto, groups.pronto.length ? 'Esta semana (' + groups.pronto.length + ')' : 'Esta semana');
   renderSection('visibleSection', 'visibleList', groups.visible, groups.visible.length ? 'Próximamente (' + groups.visible.length + ')' : 'Próximamente');
-  const okAll = [...groups.ok, ...groups.desconocido]; renderSection('okSection', 'okList', okAll, okAll.length ? 'Sin alertas (' + okAll.length + ')' : 'Sin alertas');
+  renderSection('okSection', 'okList', groups.ok, groups.ok.length ? 'Queda / Hay stock (' + groups.ok.length + ')' : 'Queda / Hay stock');
+  renderSection('unknownSection', 'unknownList', groups.desconocido, groups.desconocido.length ? 'Sin datos (' + groups.desconocido.length + ')' : 'Sin datos');
 
   const total = lined.length;
   document.getElementById('emptyState').style.display = total === 0 ? 'block' : 'none';
@@ -2142,36 +2153,49 @@ function _initInner() {
     document.getElementById('buscadorInput').value = '';
   });
   const _buscadorEl = document.getElementById('buscadorInput');
-  _buscadorEl.addEventListener('input', (e) => renderBuscador(e.target.value));
-  _buscadorEl.addEventListener('keyup', (e) => renderBuscador(e.target.value));
+  function _showBuscSugg(q) {
+    let drop = document.getElementById('_buscSugg');
+    if (!q.trim()) { if (drop) drop.remove(); return; }
+    const names = [...new Set((DB && DB.lines || []).map(l => l.product).filter(n => n.toLowerCase().includes(q.toLowerCase())))].slice(0, 8);
+    if (!names.length) { if (drop) drop.remove(); return; }
+    if (!drop) { drop = document.createElement('div'); drop.id = '_buscSugg'; drop.className = 'buscador-suggestions'; _buscadorEl.parentElement.style.position='relative'; _buscadorEl.parentElement.appendChild(drop); }
+    drop.innerHTML = names.map(n => `<div class="buscador-suggestion">${esc(n)}</div>`).join('');
+    drop.querySelectorAll('.buscador-suggestion').forEach(el => {
+      el.addEventListener('mousedown', (e) => { e.preventDefault(); _buscadorEl.value = el.textContent; drop.remove(); renderBuscador(el.textContent); });
+      el.addEventListener('touchend', (e) => { e.preventDefault(); _buscadorEl.value = el.textContent; drop.remove(); renderBuscador(el.textContent); });
+    });
+  }
+  _buscadorEl.addEventListener('input', (e) => { renderBuscador(e.target.value); _showBuscSugg(e.target.value); });
+  _buscadorEl.addEventListener('keyup', (e) => { if (e.key !== 'Enter') _showBuscSugg(e.target.value); });
 
-  // Scroll FAB — dual scroll detection for iOS
+  // Scroll FAB — detect position at click time
   const mainContent = document.getElementById('mainContent');
   const scrollFab = document.getElementById('scrollFab');
-  let _atBottom = false;
-  function _checkScroll() {
-    const mcTop = mainContent.scrollTop;
-    const wTop = window.scrollY || window.pageYOffset || 0;
-    const scrollPos = mcTop > 0 ? mcTop : wTop;
-    const scrollH = mcTop > 0
+  function _fabClick() {
+    const mcScrollable = mainContent.scrollHeight > mainContent.clientHeight + 10;
+    const pos = mcScrollable ? mainContent.scrollTop : (window.scrollY || 0);
+    const max = mcScrollable
       ? mainContent.scrollHeight - mainContent.clientHeight
       : document.documentElement.scrollHeight - window.innerHeight;
-    _atBottom = scrollPos >= scrollH - 80;
-    scrollFab.textContent = _atBottom ? '↑' : '↓';
-    scrollFab.title = _atBottom ? 'Ir arriba' : 'Ir abajo';
-  }
-  mainContent.addEventListener('scroll', _checkScroll, { passive: true });
-  window.addEventListener('scroll', _checkScroll, { passive: true });
-  scrollFab.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (_atBottom) {
+    const atBottom = pos >= max - 80;
+    scrollFab.textContent = atBottom ? '↑' : '↓';
+    if (atBottom) {
       mainContent.scrollTo({ top: 0, behavior: 'smooth' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       mainContent.scrollTo({ top: mainContent.scrollHeight, behavior: 'smooth' });
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
-  });
+  }
+  mainContent.addEventListener('scroll', () => {
+    const atB = mainContent.scrollTop >= mainContent.scrollHeight - mainContent.clientHeight - 80;
+    scrollFab.textContent = atB ? '↑' : '↓';
+  }, { passive: true });
+  window.addEventListener('scroll', () => {
+    const atB = window.scrollY >= document.documentElement.scrollHeight - window.innerHeight - 80;
+    scrollFab.textContent = atB ? '↑' : '↓';
+  }, { passive: true });
+  scrollFab.addEventListener('click', (e) => { e.stopPropagation(); _fabClick(); });
 
   document.getElementById('settingsUpdateTokenBtn').addEventListener('click', () => {
     const newToken = document.getElementById('settingsNewToken').value.trim();
