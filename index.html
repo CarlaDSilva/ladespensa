@@ -53,10 +53,10 @@
     padding-bottom: 12px;
   }
   .header-title {
-    font-size: 22px;
+    font-size: 14px;
     font-weight: 700;
-    letter-spacing: 2px;
-    color: var(--text);
+    letter-spacing: 1.5px;
+    color: var(--text2);
   }
   .header-actions { display: flex; gap: 8px; }
   .icon-btn {
@@ -105,7 +105,7 @@
   }
 
   /* ── MAIN ── */
-  .main { flex: 1; padding: 16px; overflow-y: auto; padding-bottom: 100px; }
+  .main { flex: 1; padding: 16px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 100px; }
 
   .section-title {
     font-size: 11px;
@@ -345,7 +345,7 @@
   .buscador-result-row { display:flex;gap:8px;font-size:12px;color:var(--text2);padding:3px 0;border-bottom:1px solid var(--surface2);align-items:center; }
   .buscador-result-row:last-child { border-bottom:none; }
   .buscador-result-price { margin-left:auto;color:var(--accent);font-weight:600; }
-  .scroll-fab { position:fixed;bottom:92px;right:20px;width:40px;height:40px;border-radius:50%;background:var(--surface2);border:1px solid #3a3a42;color:var(--text);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:40;transition:background 0.15s; }
+  .scroll-fab { position:fixed;bottom:92px;right:20px;width:40px;height:40px;border-radius:50%;background:var(--surface2);border:1px solid #3a3a42;color:var(--text);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:55;transition:background 0.15s; }
   .scroll-fab:hover { background:var(--surface); }
   .shopping-price-input { width:70px;background:var(--surface2);border:1px solid #3a3a42;border-radius:6px;color:var(--text);padding:4px 6px;font-size:12px;text-align:right;flex-shrink:0; }
   .shopping-price-input:focus { outline:none;border-color:var(--accent); }
@@ -661,7 +661,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.9 · Sol</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.10 · Sol</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -730,13 +730,6 @@
         <button class="icon-btn" id="filterBtn" title="Filtros">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-          </svg>
-        </button>
-        <button class="icon-btn" id="syncBtn" title="Sincronizar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="23 4 23 10 17 10"/>
-            <polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
           </svg>
         </button>
         <button class="icon-btn" id="searchBtn" title="Buscar">
@@ -890,7 +883,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">1.5.1 · Sol</span>
+        <span class="settings-row-value">1.5.10 · Sol</span>
       </div>
       <div class="settings-row">
         <span class="settings-row-label">Gist ID</span>
@@ -905,6 +898,10 @@
         <input class="sheet-input" id="settingsNewToken" type="password" placeholder="ghp_... nuevo token" autocomplete="off">
       </div>
       <button class="btn-secondary" id="settingsUpdateTokenBtn" style="margin-top:4px">Guardar nuevo token</button>
+      <button class="btn-secondary" id="syncBtn" style="margin-top:8px;display:flex;align-items:center;gap:6px;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Sincronizar ahora
+      </button>
     </div>
     <div class="settings-section">
       <div class="settings-section-title">Personas</div>
@@ -963,7 +960,7 @@
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.5.9';
+const VERSION = '1.5.10';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -1069,7 +1066,7 @@ async function syncFromGist(initial) {
       } catch(e) {}
     }
 
-    importClarito(gistData);
+    await importClarito(gistData);
 
     settings.lastSync = new Date().toISOString();
     DB.settings = settings;
@@ -1092,13 +1089,21 @@ async function syncFromGist(initial) {
   renderAll();
 }
 
-function importClarito(gistData) {
+async function importClarito(gistData) {
   // If user disabled Clarito dependency, skip import
   if (settings && settings.dependOnClarito === false) return;
   let clarito = null;
   for (const fname of Object.keys(gistData.files || {})) {
     if (fname === 'db.json' || fname.endsWith('db.json')) {
-      try { clarito = JSON.parse(gistData.files[fname].content); } catch(e) {}
+      try {
+        const fileData = gistData.files[fname];
+        if (fileData.truncated && fileData.raw_url) {
+          const rawResp = await fetch(fileData.raw_url);
+          clarito = await rawResp.json();
+        } else {
+          clarito = JSON.parse(fileData.content || 'null');
+        }
+      } catch(e) { console.warn('Clarito parse error:', e); }
       break;
     }
   }
@@ -1366,10 +1371,10 @@ function renderAll() {
   });
 
   const urgentAll = [...groups.agotado, ...groups.urgente];
-  renderSection('urgentSection', 'urgentList', urgentAll, urgentAll.length > 0 ? (groups.agotado.length ? 'Agotado / Urgente' : 'Urgente') : '');
-  renderSection('soonSection', 'soonList', groups.pronto, 'En breve (esta semana)');
-  renderSection('visibleSection', 'visibleList', groups.visible, 'Próximamente');
-  renderSection('okSection', 'okList', [...groups.ok, ...groups.desconocido], 'Sin alertas');
+  renderSection('urgentSection', 'urgentList', urgentAll, urgentAll.length > 0 ? ((groups.agotado.length ? 'Agotado / Urgente' : 'Urgente') + ' (' + urgentAll.length + ')') : '');
+  renderSection('soonSection', 'soonList', groups.pronto, groups.pronto.length ? 'Esta semana (' + groups.pronto.length + ')' : 'Esta semana');
+  renderSection('visibleSection', 'visibleList', groups.visible, groups.visible.length ? 'Próximamente (' + groups.visible.length + ')' : 'Próximamente');
+  const okAll = [...groups.ok, ...groups.desconocido]; renderSection('okSection', 'okList', okAll, okAll.length ? 'Sin alertas (' + okAll.length + ')' : 'Sin alertas');
 
   const total = lined.length;
   document.getElementById('emptyState').style.display = total === 0 ? 'block' : 'none';
@@ -1930,7 +1935,6 @@ function _tutSteps() {
     { id: 'headerTitle',    title: 'Resetear filtros',    desc: 'Toca el título LADESPENSA para quitar todos los filtros activos de golpe.' },
     { id: 'fabAdd',         title: 'Añadir productos',    desc: `Pulsa aquí para añadir un producto nuevo. Tienes ${total} productos registrados${agotados ? ', ' + agotados + ' agotado' + (agotados > 1 ? 's' : '') : ''}${urgentes ? ' y ' + urgentes + ' agotándose' : ''}.` },
     { id: 'shoppingListBtn',title: 'Lista de la compra',  desc: `Toca el icono + en cualquier producto para añadirlo a la lista.${enLista ? ' Ahora hay ' + enLista + ' producto' + (enLista > 1 ? 's' : '') + ' en la lista.' : ' Cuando termines la compra, márcala como hecha.'}` },
-    { id: 'syncBtn',        title: 'Sincronizar',         desc: 'Sube y descarga cambios entre dispositivos. Úsalo al cambiar de móvil o tras importar tickets.' },
     { id: 'filterBtn',      title: 'Filtros',             desc: 'Filtra por persona, lugar o tienda. Toca LADESPENSA arriba para quitar todos los filtros a la vez.' },
     { id: 'settingsBtn',    title: 'Ajustes',             desc: 'Personaliza nombres, actualiza el token de GitHub, fusiona duplicados o relanza este tutorial.' }
   ].filter(s => document.getElementById(s.id));
@@ -2107,7 +2111,9 @@ function _initInner() {
     document.getElementById('buscadorOverlay').classList.remove('open');
     document.getElementById('buscadorInput').value = '';
   });
-  document.getElementById('buscadorInput').addEventListener('input', (e) => renderBuscador(e.target.value));
+  const _buscadorEl = document.getElementById('buscadorInput');
+  _buscadorEl.addEventListener('input', (e) => renderBuscador(e.target.value));
+  _buscadorEl.addEventListener('keyup', (e) => renderBuscador(e.target.value));
 
   // Scroll FAB
   const mainContent = document.getElementById('mainContent');
@@ -2119,7 +2125,8 @@ function _initInner() {
     scrollFab.textContent = nearBottom ? '↑' : '↓';
     scrollFab.title = nearBottom ? 'Ir arriba' : 'Ir abajo';
   });
-  scrollFab.addEventListener('click', () => {
+  scrollFab.addEventListener('click', (e) => {
+    e.stopPropagation();
     if (_atBottom) mainContent.scrollTo({ top: 0, behavior: 'smooth' });
     else mainContent.scrollTo({ top: mainContent.scrollHeight, behavior: 'smooth' });
   });
