@@ -970,7 +970,11 @@ async function gistFetch(gistId, token) {
   const resp = await fetch(GIST_API + gistId, {
     headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github+json' }
   });
-  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  if (!resp.ok) {
+    let _detail = '';
+    try { const _j = await resp.clone().json(); _detail = _j.message ? ' | ' + _j.message : ''; } catch(_e) {}
+    throw new Error('HTTP ' + resp.status + _detail);
+  }
   return resp.json();
 }
 
@@ -1557,7 +1561,7 @@ function _dbg(msg) {
   if (!p) {
     p = document.createElement('div');
     p.id = '_dbgPanel';
-    p.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font:12px monospace;padding:8px;max-height:40vh;overflow-y:auto;z-index:99999;white-space:pre-wrap;word-break:break-all';
+    p.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;font:12px monospace;padding:8px;max-height:40vh;overflow-y:auto;z-index:99999;white-space:pre-wrap;word-break:break-all';
     document.body.appendChild(p);
   }
   p.textContent += '\n' + new Date().toISOString().slice(11,19) + ' ' + msg;
@@ -1941,7 +1945,7 @@ if (document.readyState === 'loading') {
 // ── SERVICE WORKER ─────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
   });
 }
 </script>
