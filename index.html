@@ -114,7 +114,14 @@
     text-transform: uppercase;
     letter-spacing: 1.5px;
     margin-bottom: 10px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
+  .section-title::after { content: '▾'; font-size: 10px; }
+  .section-title.collapsed::after { content: '▸'; }
 
   /* ── ITEMS ── */
   .item-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
@@ -661,7 +668,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.10 · Sol</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.11 · Sol</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -883,7 +890,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">1.5.10 · Sol</span>
+        <span class="settings-row-value">1.5.11 · Sol</span>
       </div>
       <div class="settings-row">
         <span class="settings-row-label">Gist ID</span>
@@ -960,7 +967,7 @@
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.5.10';
+const VERSION = '1.5.11';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -970,6 +977,7 @@ let settings = null;
 let expandedId = null;
 let filters = { persona: 'all', lugar: 'all', store: 'all' };
 let shoppingTicked = new Set(); // ids ticked in current shopping session
+const _collapsedSections = new Set();
 
 // ── CONFIRM MODAL ──────────────────────────────────────────────────────────
 let _confirmCallback = null;
@@ -1098,7 +1106,9 @@ async function importClarito(gistData) {
       try {
         const fileData = gistData.files[fname];
         if (fileData.truncated && fileData.raw_url) {
-          const rawResp = await fetch(fileData.raw_url);
+          const rawHeaders = {};
+          if (settings && settings.gistToken) rawHeaders['Authorization'] = 'token ' + settings.gistToken;
+          const rawResp = await fetch(fileData.raw_url, { headers: rawHeaders });
           clarito = await rawResp.json();
         } else {
           clarito = JSON.parse(fileData.content || 'null');
@@ -1129,6 +1139,14 @@ async function importClarito(gistData) {
     }
   }
 
+  // Rebuild claritoPrices from all existing purchases (data recovery)
+  DB.lines.forEach(line => {
+    (line.purchases || []).filter(p => p.price != null && p.price > 0).forEach(p => {
+      if (!DB.claritoPrices[line.product]) DB.claritoPrices[line.product] = [];
+      DB.claritoPrices[line.product].push(p.price);
+    });
+  });
+
   // Import ticket purchases
   if (!clarito.tickets) return;
 
@@ -1157,12 +1175,14 @@ async function importClarito(gistData) {
         };
         DB.lines.push(line);
       }
+      const _unitP = prod.price != null ? (prod.price / (prod.qty || 1)) : null;
       line.purchases.push({
         date: ticket.date,
         qty: prod.qty || 1,
         store: ticket.store || '',
         capricho: false,
-        ticketId: ticket.id
+        ticketId: ticket.id,
+        price: _unitP
       });
       line.lastUpdated = new Date().toISOString();
     }
@@ -1411,12 +1431,22 @@ function renderSection(sectionId, listId, items, title) {
   const list = document.getElementById(listId);
   if (!items.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
+  const isCollapsed = _collapsedSections.has(sectionId);
   if (title) {
     const t = section.querySelector('.section-title');
-    if (t) t.textContent = title;
+    if (t) {
+      t.textContent = title;
+      t.classList.toggle('collapsed', isCollapsed);
+      t.onclick = () => {
+        if (_collapsedSections.has(sectionId)) _collapsedSections.delete(sectionId);
+        else _collapsedSections.add(sectionId);
+        renderAll();
+      };
+    }
   }
+  list.style.display = isCollapsed ? 'none' : '';
+  if (isCollapsed) return;
   list.innerHTML = '';
-  // Group by category
   const catMap = {};
   items.forEach(item => {
     const cat = detectCategory(item.line.product);
@@ -2115,20 +2145,32 @@ function _initInner() {
   _buscadorEl.addEventListener('input', (e) => renderBuscador(e.target.value));
   _buscadorEl.addEventListener('keyup', (e) => renderBuscador(e.target.value));
 
-  // Scroll FAB
+  // Scroll FAB — dual scroll detection for iOS
   const mainContent = document.getElementById('mainContent');
   const scrollFab = document.getElementById('scrollFab');
   let _atBottom = false;
-  mainContent.addEventListener('scroll', () => {
-    const nearBottom = mainContent.scrollTop + mainContent.clientHeight >= mainContent.scrollHeight - 50;
-    _atBottom = nearBottom;
-    scrollFab.textContent = nearBottom ? '↑' : '↓';
-    scrollFab.title = nearBottom ? 'Ir arriba' : 'Ir abajo';
-  });
+  function _checkScroll() {
+    const mcTop = mainContent.scrollTop;
+    const wTop = window.scrollY || window.pageYOffset || 0;
+    const scrollPos = mcTop > 0 ? mcTop : wTop;
+    const scrollH = mcTop > 0
+      ? mainContent.scrollHeight - mainContent.clientHeight
+      : document.documentElement.scrollHeight - window.innerHeight;
+    _atBottom = scrollPos >= scrollH - 80;
+    scrollFab.textContent = _atBottom ? '↑' : '↓';
+    scrollFab.title = _atBottom ? 'Ir arriba' : 'Ir abajo';
+  }
+  mainContent.addEventListener('scroll', _checkScroll, { passive: true });
+  window.addEventListener('scroll', _checkScroll, { passive: true });
   scrollFab.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (_atBottom) mainContent.scrollTo({ top: 0, behavior: 'smooth' });
-    else mainContent.scrollTo({ top: mainContent.scrollHeight, behavior: 'smooth' });
+    if (_atBottom) {
+      mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      mainContent.scrollTo({ top: mainContent.scrollHeight, behavior: 'smooth' });
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
   });
 
   document.getElementById('settingsUpdateTokenBtn').addEventListener('click', () => {
