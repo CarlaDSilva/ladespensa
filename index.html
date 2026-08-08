@@ -163,18 +163,39 @@
     display: flex;
     gap: 8px;
   }
-  .item-countdown {
-    font-size: 13px;
-    font-weight: 600;
-    text-align: right;
+  /* stock bar replaces item-countdown */
+  .stock-bar-wrap {
+    width: 44px;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
   }
-  .item-countdown.urgente { color: var(--urgent); }
-  .item-countdown.pronto { color: var(--soon); }
-  .item-countdown.visible { color: var(--visible); }
-  .item-countdown.ok { color: var(--ok); }
-  .item-countdown.agotado { color: var(--urgent); }
-  .item-countdown.desconocido { color: var(--text2); }
+  .stock-bar-track {
+    width: 36px;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .stock-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+  .stock-bar-fill.agotado   { background: var(--urgent); }
+  .stock-bar-fill.urgente   { background: var(--urgent); }
+  .stock-bar-fill.pronto    { background: var(--soon); }
+  .stock-bar-fill.visible   { background: var(--visible); }
+  .stock-bar-fill.ok        { background: var(--ok); }
+  .stock-bar-fill.desconocido { background: var(--text2); }
+  .stock-bar-days {
+    font-size: 10px;
+    color: var(--text2);
+    white-space: nowrap;
+  }
 
   .add-btn {
     background: var(--surface2);
@@ -622,7 +643,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.5 · Sol</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.6 · Sol</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -905,13 +926,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.5.5v1.5.5</div>
+<div class="version-tag">v1.5.6 · Sol</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.5.5';
+const VERSION = '1.5.6';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -1175,6 +1196,16 @@ function statusFromDays(days, manualStatus) {
   return 'ok';
 }
 
+function stockBarPct(pred) {
+  const s = pred.status;
+  if (s === 'agotado')    return 8;
+  if (s === 'urgente')    return 28;
+  if (s === 'pronto')     return 55;
+  if (s === 'visible')    return 75;
+  if (s === 'ok')         return 100;
+  return 40;
+}
+
 function formatCountdown(pred) {
   if (pred.status === 'agotado') return 'Agotado';
   if (pred.status === 'desconocido') return 'Desconocido';
@@ -1329,7 +1360,10 @@ function makeCard(line, pred) {
           ${pred.cadence ? '<span>' + Math.round(pred.cadence) + 'd/u</span>' : ''}
         </div>
       </div>
-      <div class="item-countdown ${pred.status}">${formatCountdown(pred)}</div>
+      <div class="stock-bar-wrap">
+        <div class="stock-bar-track"><div class="stock-bar-fill ${pred.status}" style="width:${stockBarPct(pred)}%"></div></div>
+        <div class="stock-bar-days">${formatCountdown(pred)}</div>
+      </div>
       <button class="add-btn ${line.addedToShoppingList ? 'in-list' : ''}" data-action="toggle-list" title="${line.addedToShoppingList ? 'En la lista' : 'Añadir a lista'}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           ${line.addedToShoppingList
@@ -1683,7 +1717,7 @@ function saveSettings() {
   settings.currentLugar = document.getElementById('settingsCurrentLugar').value;
   settings.useOriginalNames = document.getElementById('settingsOriginalNames').checked;
   DB.settings = settings;
-  saveAndSync();
+  saveLocal(DB); // settings are local-only, no Gist sync
   closeOverlay('settingsOverlay');
   renderAll();
   showToast('Ajustes guardados');
@@ -1779,13 +1813,18 @@ function initAutocompletes() {
 
 // ── TUTORIAL INTERACTIVO ───────────────────────────────────────────────────────
 function _tutSteps() {
+  const lines = (DB && DB.lines) || [];
+  const agotados = lines.filter(l => predict(l).status === 'agotado').length;
+  const urgentes = lines.filter(l => predict(l).status === 'urgente').length;
+  const enLista  = lines.filter(l => l.addedToShoppingList).length;
+  const total    = lines.length;
   return [
-    { id: 'headerTitle', title: 'Resetear filtros', desc: 'Toca el título LADESPENSA para quitar todos los filtros activos de golpe.' },
-    { id: 'fabAdd', title: 'Añadir productos', desc: 'Pulsa aquí para añadir un producto nuevo. Indica quién lo compra, en qué casa y el supermercado.' },
-    { id: 'shoppingListBtn', title: 'Lista de la compra', desc: 'Toca el icono + en cualquier producto para añadirlo a la lista. Cuando termines la compra, márcala como hecha.' },
-    { id: 'syncBtn', title: 'Sincronizar', desc: 'Sube y descarga cambios desde el Gist compartido. Úsalo al cambiar de dispositivo o tras importar tickets.' },
-    { id: 'filterBtn', title: 'Filtros', desc: 'Filtra por persona, lugar o tienda. Toca LADESPENSA arriba para quitar todos los filtros a la vez.' },
-    { id: 'settingsBtn', title: 'Ajustes', desc: 'Personaliza nombres, actualiza el token de GitHub, fusiona duplicados o relanza este tutorial.' }
+    { id: 'headerTitle',    title: 'Resetear filtros',    desc: 'Toca el título LADESPENSA para quitar todos los filtros activos de golpe.' },
+    { id: 'fabAdd',         title: 'Añadir productos',    desc: `Pulsa aquí para añadir un producto nuevo. Tienes ${total} productos registrados${agotados ? ', ' + agotados + ' agotado' + (agotados > 1 ? 's' : '') : ''}${urgentes ? ' y ' + urgentes + ' agotándose' : ''}.` },
+    { id: 'shoppingListBtn',title: 'Lista de la compra',  desc: `Toca el icono + en cualquier producto para añadirlo a la lista.${enLista ? ' Ahora hay ' + enLista + ' producto' + (enLista > 1 ? 's' : '') + ' en la lista.' : ' Cuando termines la compra, márcala como hecha.'}` },
+    { id: 'syncBtn',        title: 'Sincronizar',         desc: 'Sube y descarga cambios entre dispositivos. Úsalo al cambiar de móvil o tras importar tickets.' },
+    { id: 'filterBtn',      title: 'Filtros',             desc: 'Filtra por persona, lugar o tienda. Toca LADESPENSA arriba para quitar todos los filtros a la vez.' },
+    { id: 'settingsBtn',    title: 'Ajustes',             desc: 'Personaliza nombres, actualiza el token de GitHub, fusiona duplicados o relanza este tutorial.' }
   ].filter(s => document.getElementById(s.id));
 }
 
@@ -1837,12 +1876,14 @@ function _startInteractiveTutorial() {
         <button id="_tutNext" style="background:var(--accent);border:none;border-radius:8px;color:white;padding:7px 14px;cursor:pointer;font-size:13px;font-weight:600">${isLast?'Entendido':'Siguiente'}</button>
       </div>
     </div>`;
-    document.getElementById('_tutX').addEventListener('click', close);
-    document.getElementById('_tutNext').addEventListener('click', () => {
-      if (isLast) { close(); localStorage.setItem('ladespensa_tutorial_done','1'); }
+    document.getElementById('_tutX').addEventListener('click', e => { e.stopPropagation(); close(); });
+    document.getElementById('_tutNext').addEventListener('click', e => {
+      e.stopPropagation();
+      if (isLast) { localStorage.setItem('ladespensa_tutorial_done','1'); close(); }
       else { idx++; render(); }
     });
-    if (idx>0) document.getElementById('_tutPrev').addEventListener('click', () => { idx--; render(); });
+    if (idx>0) document.getElementById('_tutPrev').addEventListener('click', e => { e.stopPropagation(); idx--; render(); });
+    box.addEventListener('click', e => e.stopPropagation());
   }
   render();
 }
@@ -2062,9 +2103,6 @@ if ('serviceWorker' in navigator) {
     </button>
     <div class="sheet-title">¿Cómo funciona?</div>
     <div style="display:flex;flex-direction:column;gap:20px;margin:16px 0;">
-      <div><svg style="width:24px;height:24px;margin-bottom:6px;color:var(--accent)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="4"/><path d="M12 15h8M16 12v6"/></svg><div style="font-weight:700;margin-bottom:4px">Configuración inicial</div><div style="color:var(--text2);font-size:14px">Necesitas un Gist de GitHub y un token clásico con permiso "gist". Introdúcelos en la pantalla de conexión para empezar.</p>
-        </div>
-      </div>
       <div style="display:flex;gap:12px;align-items:flex-start">
         <div style="background:var(--surface2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
