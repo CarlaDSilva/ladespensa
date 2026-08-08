@@ -321,16 +321,34 @@
     overflow-y: auto;
   }
   .overlay.open .sheet { transform: translateY(0); }
-  #shoppingOverlay .sheet {
-    max-height: 94vh;
-    border-radius: 20px 20px 0 0;
-    display: flex;
-    flex-direction: column;
-  }
-  #shoppingOverlay #shoppingContent {
-    flex: 1;
-    overflow-y: auto;
-  }
+  #shoppingOverlay { background:var(--bg);align-items:stretch;justify-content:stretch; }
+  #shoppingOverlay .sheet { border-radius:0;max-height:100vh;max-width:100%;transform:none!important;padding:0;display:flex;flex-direction:column;background:var(--bg); }
+  #shoppingOverlay #shoppingContent { flex:1;overflow-y:auto;padding:0 16px; }
+  .shopping-header { display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid var(--surface2);flex-shrink:0; }
+  .shopping-header-title { font-size:20px;font-weight:700; }
+  .shopping-close-x { background:var(--surface2);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:22px;line-height:1; }
+  .shopping-footer { flex-shrink:0;padding:12px 16px 32px;border-top:1px solid var(--surface2);display:flex;flex-direction:column;gap:8px; }
+  .shopping-compra-btn { width:100%;background:var(--accent);border:none;border-radius:var(--radius);color:white;font-size:18px;font-weight:700;padding:16px;cursor:pointer;transition:background 0.15s; }
+  .category-hdr { font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;padding:8px 0 4px;border-bottom:1px solid var(--surface2);margin-top:8px;margin-bottom:4px; }
+  .stats-bar { padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--surface2);background:var(--bg); }
+  .stats-chip { font-size:12px;color:var(--text2);background:var(--surface);border-radius:20px;padding:4px 10px;display:flex;align-items:center;gap:4px; }
+  .stats-chip b { color:var(--text);font-weight:600; }
+  .stats-chip.urgent b { color:var(--urgent); }
+  #buscadorOverlay { position:fixed;inset:0;background:var(--bg);z-index:250;display:none;flex-direction:column; }
+  #buscadorOverlay.open { display:flex; }
+  .buscador-header { display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid var(--surface2);flex-shrink:0; }
+  .buscador-input { flex:1;background:var(--surface2);border:1px solid #3a3a42;border-radius:10px;color:var(--text);padding:10px 14px;font-size:16px; }
+  .buscador-input:focus { outline:none;border-color:var(--accent); }
+  #buscadorResults { flex:1;overflow-y:auto;padding:0 16px 32px; }
+  .buscador-result-item { background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:8px; }
+  .buscador-result-name { font-size:15px;font-weight:600;margin-bottom:6px; }
+  .buscador-result-row { display:flex;gap:8px;font-size:12px;color:var(--text2);padding:3px 0;border-bottom:1px solid var(--surface2);align-items:center; }
+  .buscador-result-row:last-child { border-bottom:none; }
+  .buscador-result-price { margin-left:auto;color:var(--accent);font-weight:600; }
+  .scroll-fab { position:fixed;bottom:92px;right:20px;width:40px;height:40px;border-radius:50%;background:var(--surface2);border:1px solid #3a3a42;color:var(--text);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:40;transition:background 0.15s; }
+  .scroll-fab:hover { background:var(--surface); }
+  .shopping-price-input { width:70px;background:var(--surface2);border:1px solid #3a3a42;border-radius:6px;color:var(--text);padding:4px 6px;font-size:12px;text-align:right;flex-shrink:0; }
+  .shopping-price-input:focus { outline:none;border-color:var(--accent); }
 
   .sheet-title {
     font-size: 18px;
@@ -643,7 +661,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.8 · Sol</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.9 · Sol</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -721,6 +739,9 @@
             <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
           </svg>
         </button>
+        <button class="icon-btn" id="searchBtn" title="Buscar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
         <button class="icon-btn" id="settingsBtn" title="Ajustes">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"/>
@@ -760,6 +781,8 @@
     </div>
   </div>
 
+  <!-- Stats bar -->
+  <div class="stats-bar" id="statsBar"></div>
   <!-- Main content -->
   <div class="main" id="mainContent">
     <div id="urgentSection" style="display:none">
@@ -788,6 +811,7 @@
     </div>
   </div>
 
+  <button class="scroll-fab" id="scrollFab" title="Ir abajo">↓</button>
   <!-- FAB -->
   <button class="fab" id="fabAdd" title="Añadir producto">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -843,14 +867,18 @@
 <!-- SHOPPING LIST MODAL -->
 <div class="overlay" id="shoppingOverlay">
   <div class="sheet">
-    <div class="sheet-title">Lista de la compra</div>
-    <div class="shopping-actions">
+    <div class="shopping-header">
+      <span class="shopping-header-title">Lista de la compra</span>
+      <button class="shopping-close-x" id="shoppingCloseBtn" aria-label="Cerrar">×</button>
+    </div>
+    <div style="padding:8px 16px;flex-shrink:0;display:flex;gap:8px;align-items:center">
       <button class="chip-btn" id="selectAllBtn">Seleccionar todos</button>
-      <button class="chip-btn" id="compraMadaBtn" style="background:var(--accent);border-color:var(--accent);color:white">Compra hecha ✓</button>
+      <div class="shopping-total" id="shoppingTotal" style="font-size:13px;color:var(--text2);margin-left:auto"></div>
     </div>
     <div id="shoppingContent"></div>
-    <div class="shopping-total" id="shoppingTotal" style="display:none"></div>
-    <button class="btn-secondary" id="shoppingCloseBtn" style="margin-top:16px">Cerrar</button>
+    <div class="shopping-footer">
+      <button class="shopping-compra-btn" id="compraMadaBtn">Compra hecha ✓</button>
+    </div>
   </div>
 </div>
 
@@ -911,10 +939,11 @@
       <div class="settings-section-title">Preferencias</div>
       <div class="settings-row">
         <span class="settings-row-label">Nombres originales (Clarito)</span>
-        <label class="toggle">
-          <input type="checkbox" id="settingsOriginalNames">
-          <span class="toggle-slider"></span>
-        </label>
+        <label class="toggle"><input type="checkbox" id="settingsOriginalNames"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="settings-row">
+        <div><span class="settings-row-label">Depender de Clarito</span><div style="font-size:11px;color:var(--text2);margin-top:2px">OFF = tickets de Clarito no se importan (evita duplicados)</div></div>
+        <label class="toggle" style="flex-shrink:0;margin-left:12px"><input type="checkbox" id="settingsDependClarito"><span class="toggle-slider"></span></label>
       </div>
     </div>
     <button class="btn-primary" id="settingsSaveBtn">Guardar</button>
@@ -925,14 +954,16 @@
   </div>
 </div>
 
+<!-- BUSCADOR -->
+<div id="buscadorOverlay"><div class="buscador-header"><input class="buscador-input" id="buscadorInput" placeholder="Buscar producto..." autocomplete="off" spellcheck="false"><button class="shopping-close-x" id="buscadorCloseBtn">×</button></div><div id="buscadorResults"></div></div>
 <!-- Version -->
-<div class="version-tag">v1.5.8 · Sol</div>
+<div class="version-tag">v1.5.9 · Sol</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.5.8';
+const VERSION = '1.5.9';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -1062,6 +1093,8 @@ async function syncFromGist(initial) {
 }
 
 function importClarito(gistData) {
+  // If user disabled Clarito dependency, skip import
+  if (settings && settings.dependOnClarito === false) return;
   let clarito = null;
   for (const fname of Object.keys(gistData.files || {})) {
     if (fname === 'db.json' || fname.endsWith('db.json')) {
@@ -1148,6 +1181,23 @@ function median(arr) {
 
 function dateDiffDays(a, b) {
   return Math.round((new Date(a) - new Date(b)) / 86400000);
+}
+
+function detectCategory(name) {
+  const n = (name || '').toLowerCase();
+  if (/leche|yogur|queso|mantequilla|nata|kéfir|lácteo/.test(n)) return 'Lácteos';
+  if (/manzana|pera|naranja|plátano|uva|fresa|limón|mandarina|melón|sandía|piña|mango|kiwi|melocotón|ciruela|cereza|fruta/.test(n)) return 'Fruta';
+  if (/lechuga|tomate|cebolla|ajo|zanahoria|patata|pimiento|calabacín|berenjena|espinaca|brócoli|coliflor|pepino|judía|guisante|verdura|ensalada|acelga|puerro|seta|champiñón/.test(n)) return 'Verdura';
+  if (/huevo/.test(n)) return 'Huevos';
+  if (/pan|baguette|bollo|croissant|tostada/.test(n)) return 'Pan';
+  if (/pasta|arroz|cereal|avena|quinoa|cuscús|harina|legumbre|lenteja|garbanzo|alubia/.test(n)) return 'Cereales y legumbres';
+  if (/pollo|carne|ternera|cerdo|cordero|pavo|jamón|chorizo|salchich|lomo|costilla|bacon/.test(n)) return 'Carne';
+  if (/pescado|salmón|atún|sardina|merluza|bacalao|gamba|marisco|calamar|mejillón/.test(n)) return 'Pescado';
+  if (/aceite|vinagre|sal\b|azúcar|levadura|salsa|mayonesa|ketchup|mostaza|especias|caldo|conserva/.test(n)) return 'Despensa';
+  if (/café|té|infusión|zumo|refresco|agua|cerveza|vino|alcohol|batido/.test(n)) return 'Bebidas';
+  if (/helado|chocolate|galleta|bizcocho|magdalena|caramelo|gominola|snack|chip|dulce/.test(n)) return 'Dulces';
+  if (/champú|gel|jabón|dentífrico|diente|papel|pañal|limpiador|detergente|suavizante|fregaplatos|colonia|crema|higiene/.test(n)) return 'Higiene y limpieza';
+  return 'Otros';
 }
 
 function predict(line) {
@@ -1245,6 +1295,7 @@ function renderAll() {
   document.getElementById('settingsGistId').textContent = settings.gistId ? settings.gistId.slice(0, 8) + '...' : '-';
   document.getElementById('settingsLastSync').textContent = settings.lastSync ? new Date(settings.lastSync).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) : '-';
   document.getElementById('settingsOriginalNames').checked = !!settings.useOriginalNames;
+  document.getElementById('settingsDependClarito').checked = settings.dependOnClarito !== false; // default true
 
   // Add persona options to add modal
   document.querySelector('#addPersona option[value="p1"]').textContent = getPersonaName('p1');
@@ -1327,6 +1378,27 @@ function renderAll() {
   const badge = document.getElementById('shoppingBadge');
   badge.style.display = inList > 0 ? 'flex' : 'none';
   badge.textContent = inList;
+
+  // Stats bar
+  const allLines = DB.lines;
+  function placeStats(lugarKey, lugarName) {
+    const lines = allLines.filter(l => l.lugar === lugarKey);
+    const ag = lines.filter(l => predict(l).status === 'agotado').length;
+    const urg = lines.filter(l => predict(l).status === 'urgente').length;
+    return { lugarName, ag, urg, total: lines.length };
+  }
+  const s1 = placeStats('lugar1', settings.lugar1Name);
+  const s2 = placeStats('lugar2', settings.lugar2Name);
+  const totalAll = allLines.length;
+  const statsBar = document.getElementById('statsBar');
+  statsBar.innerHTML = [s1, s2].map(s =>
+    `<div class="stats-chip${s.ag || s.urg ? ' urgent' : ''}">
+      <span>${esc(s.lugarName)}</span>
+      ${s.ag ? `<b>${s.ag} ag.</b>` : ''}
+      ${s.urg ? `<b style="color:var(--soon)">${s.urg} urgente${s.urg>1?'s':''}</b>` : ''}
+      ${!s.ag && !s.urg ? '<span style="color:var(--ok)">✓</span>' : ''}
+    </div>`
+  ).join('') + `<div class="stats-chip" style="margin-left:auto"><b>${totalAll}</b> productos</div>`;
 }
 
 function renderSection(sectionId, listId, items, title) {
@@ -1339,7 +1411,24 @@ function renderSection(sectionId, listId, items, title) {
     if (t) t.textContent = title;
   }
   list.innerHTML = '';
-  items.forEach(({ line, pred }) => list.appendChild(makeCard(line, pred)));
+  // Group by category
+  const catMap = {};
+  items.forEach(item => {
+    const cat = detectCategory(item.line.product);
+    if (!catMap[cat]) catMap[cat] = [];
+    catMap[cat].push(item);
+  });
+  const cats = Object.keys(catMap).sort();
+  const showCats = cats.length > 1;
+  cats.forEach(cat => {
+    if (showCats) {
+      const hdr = document.createElement('div');
+      hdr.className = 'category-hdr';
+      hdr.textContent = cat;
+      list.appendChild(hdr);
+    }
+    catMap[cat].forEach(({ line, pred }) => list.appendChild(makeCard(line, pred)));
+  });
 }
 
 function makeCard(line, pred) {
@@ -1489,62 +1578,80 @@ function renderPurchaseList(line) {
 }
 
 // ── SHOPPING LIST ──────────────────────────────────────────────────────────
+const _shoppingPrices = {};
+
 function renderShoppingList() {
   const items = DB.lines.filter(l => l.addedToShoppingList);
   const content = document.getElementById('shoppingContent');
   const totalEl = document.getElementById('shoppingTotal');
 
   if (!items.length) {
-    content.innerHTML = '<p style="color:var(--text2);font-size:15px;padding:12px 0">Lista vacía</p>';
+    content.innerHTML = '<p style="color:var(--text2);font-size:15px;padding:16px 0">Lista vacía — toca + en cualquier producto para añadirlo</p>';
     totalEl.style.display = 'none';
     return;
   }
 
-  // Separate: unticked first, ticked (comprados) last
+  // Group by category, unticked first
   const unticked = items.filter(l => !shoppingTicked.has(l.id));
-  const ticked = items.filter(l => shoppingTicked.has(l.id));
-  const ordered = [...unticked, ...ticked];
+  const ticked   = items.filter(l =>  shoppingTicked.has(l.id));
 
-  content.innerHTML = ordered.map(l => {
-    const isTicked = shoppingTicked.has(l.id);
-    const avgPrice = getAvgPrice(l.product);
-    const priceStr = avgPrice != null ? avgPrice.toFixed(2) + '€' : '';
-    return `<div class="shopping-item ${isTicked ? 'ticked' : ''}" data-sid="${l.id}">
-      <button class="shopping-tick ${isTicked ? 'checked' : ''}" data-tick="${l.id}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-      </button>
-      <div class="shopping-item-info">
-        <div class="shopping-item-name">${esc(l.product)}</div>
-        <div class="shopping-item-sub">${esc(getPersonaName(l.persona))}</div>
-      </div>
-      ${priceStr ? `<div class="shopping-item-price">~${priceStr}</div>` : ''}
-      <button class="shopping-remove" data-remove="${l.id}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>`;
-  }).join('');
+  function renderGroup(list, isDone) {
+    if (!list.length) return '';
+    const catMap = {};
+    list.forEach(l => { const c = detectCategory(l.product); if (!catMap[c]) catMap[c]=[]; catMap[c].push(l); });
+    const showCats = Object.keys(catMap).length > 1;
+    return Object.keys(catMap).sort().map(cat => {
+      const hdr = showCats ? `<div class="category-hdr" style="${isDone?'opacity:0.4':''}">▸ ${cat}</div>` : '';
+      return hdr + catMap[cat].map(l => {
+        const isTicked = shoppingTicked.has(l.id);
+        return `<div class="shopping-item ${isTicked ? 'ticked' : ''}" data-sid="${l.id}">
+          <button class="shopping-tick ${isTicked ? 'checked' : ''}" data-tick="${l.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <div class="shopping-item-info">
+            <div class="shopping-item-name">${esc(l.product)}</div>
+            <div class="shopping-item-sub">${esc(getPersonaName(l.persona))} · ${esc(getLugarName(l.lugar))}</div>
+          </div>
+          <input class="shopping-price-input" type="number" min="0" step="0.01" placeholder="€" data-price-id="${l.id}" value="${_shoppingPrices[l.id] != null ? _shoppingPrices[l.id] : ''}" inputmode="decimal">
+          <button class="shopping-remove" data-remove="${l.id}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>`;
+      }).join('');
+    }).join('');
+  }
 
-  // Tick buttons
+  const tickedLabel = ticked.length ? `<div class="category-hdr" style="margin-top:16px;color:var(--ok)">✓ Comprados (${ticked.length})</div>` : '';
+  content.innerHTML = renderGroup(unticked, false) + tickedLabel + renderGroup(ticked, true);
+
+  // Events: tick
   content.querySelectorAll('[data-tick]').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.tick;
+      const pi = content.querySelector(`[data-price-id="${id}"]`);
+      if (pi && pi.value !== '') _shoppingPrices[id] = parseFloat(pi.value);
       if (shoppingTicked.has(id)) shoppingTicked.delete(id);
       else shoppingTicked.add(id);
       renderShoppingList();
     });
   });
 
-  // Remove buttons
+  // Events: price input persist
+  content.querySelectorAll('.shopping-price-input').forEach(inp => {
+    inp.addEventListener('change', () => {
+      if (inp.value !== '') _shoppingPrices[inp.dataset.priceId] = parseFloat(inp.value);
+      else delete _shoppingPrices[inp.dataset.priceId];
+    });
+  });
+
+  // Events: remove
   content.querySelectorAll('[data-remove]').forEach(btn => {
     btn.addEventListener('click', () => {
       const l = DB.lines.find(x => x.id === btn.dataset.remove);
       if (l) {
         l.addedToShoppingList = false;
         shoppingTicked.delete(l.id);
+        delete _shoppingPrices[l.id];
         saveAndSync();
         renderAll();
         renderShoppingList();
@@ -1552,14 +1659,14 @@ function renderShoppingList() {
     });
   });
 
-  // Total
-  let total = 0;
-  let hasAnyPrice = false;
+  // Total from price inputs
+  let total = 0, hasPrices = false;
   items.forEach(l => {
-    const p = getAvgPrice(l.product);
-    if (p != null) { total += p; hasAnyPrice = true; }
+    const p = _shoppingPrices[l.id];
+    if (p != null) { total += p; hasPrices = true; }
+    else { const ap = getAvgPrice(l.product); if (ap != null) { total += ap; hasPrices = true; } }
   });
-  if (hasAnyPrice) {
+  if (hasPrices) {
     totalEl.style.display = 'block';
     totalEl.textContent = 'Total aprox.: ' + total.toFixed(2) + '€';
   } else {
@@ -1716,6 +1823,7 @@ function saveSettings() {
   settings.lugar2Name = document.getElementById('settingsL2Name').value.trim() || settings.lugar2Name;
   settings.currentLugar = document.getElementById('settingsCurrentLugar').value;
   settings.useOriginalNames = document.getElementById('settingsOriginalNames').checked;
+  settings.dependOnClarito = document.getElementById('settingsDependClarito').checked;
   DB.settings = settings;
   saveLocal(DB); // settings are local-only, no Gist sync
   closeOverlay('settingsOverlay');
@@ -1898,6 +2006,45 @@ function initTutorial() {
   });
 }
 
+// ── BUSCADOR ───────────────────────────────────────────────────────────────
+function renderBuscador(query) {
+  const results = document.getElementById('buscadorResults');
+  const q = (query || '').trim().toLowerCase();
+  if (!q) {
+    results.innerHTML = '<p style="color:var(--text2);padding:16px;font-size:14px">Escribe el nombre de un producto</p>';
+    return;
+  }
+  const matches = (DB && DB.lines || []).filter(l => l.product.toLowerCase().includes(q));
+  if (!matches.length) {
+    results.innerHTML = '<p style="color:var(--text2);padding:16px;font-size:14px">Sin resultados</p>';
+    return;
+  }
+  results.innerHTML = matches.map(l => {
+    const purchases = (l.purchases || []).filter(p => !p.capricho).slice().reverse();
+    const rows = purchases.length
+      ? purchases.slice(0, 10).map(p => {
+          const priceStr = p.price != null ? (+(p.price)).toFixed(2) + '€' : '—';
+          return `<div class="buscador-result-row">
+            <span>${p.date}</span>
+            <span>${esc(p.store || '—')}</span>
+            <span>x${p.qty || 1}</span>
+            <span class="buscador-result-price">${priceStr}</span>
+          </div>`;
+        }).join('')
+      : '<div class="buscador-result-row" style="color:var(--text2)">Sin compras registradas</div>';
+    const pred = predict(l);
+    const statusColors = { agotado:'var(--urgent)', urgente:'var(--urgent)', pronto:'var(--soon)', visible:'var(--visible)', ok:'var(--ok)', desconocido:'var(--text2)' };
+    return `<div class="buscador-result-item">
+      <div class="buscador-result-name">
+        <span style="color:${statusColors[pred.status]||'var(--text2)'}">●</span>
+        ${esc(l.product)}
+        <span style="font-size:12px;color:var(--text2);font-weight:400"> · ${esc(getPersonaName(l.persona))} · ${esc(getLugarName(l.lugar))}</span>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────
 function init() {
   try { _initInner(); } catch(e) { showToast('Error al arrancar: ' + e.message); console.error('init error:', e); }
@@ -1951,6 +2098,32 @@ function _initInner() {
   document.getElementById('settingsSaveBtn').addEventListener('click', saveSettings);
   document.getElementById('settingsCloseBtn').addEventListener('click', () => closeOverlay('settingsOverlay'));
   document.getElementById('settingsTutorialBtn').addEventListener('click', () => { closeOverlay('settingsOverlay'); showTutorial(); });
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    document.getElementById('buscadorOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('buscadorInput').focus(), 100);
+    renderBuscador('');
+  });
+  document.getElementById('buscadorCloseBtn').addEventListener('click', () => {
+    document.getElementById('buscadorOverlay').classList.remove('open');
+    document.getElementById('buscadorInput').value = '';
+  });
+  document.getElementById('buscadorInput').addEventListener('input', (e) => renderBuscador(e.target.value));
+
+  // Scroll FAB
+  const mainContent = document.getElementById('mainContent');
+  const scrollFab = document.getElementById('scrollFab');
+  let _atBottom = false;
+  mainContent.addEventListener('scroll', () => {
+    const nearBottom = mainContent.scrollTop + mainContent.clientHeight >= mainContent.scrollHeight - 50;
+    _atBottom = nearBottom;
+    scrollFab.textContent = nearBottom ? '↑' : '↓';
+    scrollFab.title = nearBottom ? 'Ir arriba' : 'Ir abajo';
+  });
+  scrollFab.addEventListener('click', () => {
+    if (_atBottom) mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+    else mainContent.scrollTo({ top: mainContent.scrollHeight, behavior: 'smooth' });
+  });
+
   document.getElementById('settingsUpdateTokenBtn').addEventListener('click', () => {
     const newToken = document.getElementById('settingsNewToken').value.trim();
     if (!newToken) { showToast('Introduce el nuevo token'); return; }
@@ -2039,13 +2212,31 @@ function _initInner() {
       showToast('Marca los productos comprados primero');
       return;
     }
+    // Capture prices from current inputs before clearing
+    document.querySelectorAll('.shopping-price-input').forEach(inp => {
+      if (inp.value !== '') _shoppingPrices[inp.dataset.priceId] = parseFloat(inp.value);
+    });
     DB.lines.forEach(l => {
-      if (shoppingTicked.has(l.id)) l.addedToShoppingList = false;
+      if (shoppingTicked.has(l.id)) {
+        l.addedToShoppingList = false;
+        // Record purchase with price if entered
+        const price = _shoppingPrices[l.id];
+        if (price != null) {
+          if (!l.purchases) l.purchases = [];
+          l.purchases.push({ date: new Date().toISOString().slice(0,10), qty: 1, price, store: '', capricho: false });
+          delete _shoppingPrices[l.id];
+        }
+      }
     });
     shoppingTicked.clear();
+    // Reset filters
+    filters = { persona: 'all', lugar: 'all', store: 'all' };
+    document.getElementById('filterPersona').value = 'all';
+    document.getElementById('filterLugar').value = 'all';
+    document.getElementById('filterStore').value = 'all';
     saveAndSync();
+    closeOverlay('shoppingOverlay');
     renderAll();
-    renderShoppingList();
     showToast('¡Compra registrada!');
   });
 
