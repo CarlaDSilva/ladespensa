@@ -622,7 +622,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.4 · Sol</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.5 · Sol</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -905,13 +905,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.5.4v1.5.4</div>
+<div class="version-tag">v1.5.5v1.5.5</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.5.4';
+const VERSION = '1.5.5';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -1382,6 +1382,10 @@ function makeCard(line, pred) {
     renderAll();
   });
 
+  // Autocomplete on expanded product input
+  const _prodInput = card.querySelector('[data-field="product"]');
+  if (_prodInput) makeAutocomplete(_prodInput, getProductNames);
+
   card.querySelector('[data-action="toggle-list"]').addEventListener('click', (e) => {
     e.stopPropagation();
     line.addedToShoppingList = !line.addedToShoppingList;
@@ -1558,6 +1562,10 @@ function showApp() {
   const app = document.getElementById('app');
   app.style.display = 'flex';
   app.style.flexDirection = 'column';
+  setTimeout(initAutocompletes, 100);
+  if (!localStorage.getItem('ladespensa_tutorial_done')) {
+    setTimeout(_startInteractiveTutorial, 800);
+  }
 }
 
 function _dbg() {}
@@ -1731,7 +1739,114 @@ function mergeDuplicates(silent) {
 }
 
 // ── TUTORIAL ────────────────────────────────────────────────────────────────
-function showTutorial() { openOverlay('tutorialOverlay'); }
+// ── AUTOCOMPLETE ──────────────────────────────────────────────────────────────
+function makeAutocomplete(inputEl, getFn) {
+  let drop = null;
+  function removeDrop() { if (drop) { drop.remove(); drop = null; } }
+  inputEl.addEventListener('input', () => {
+    removeDrop();
+    const val = (inputEl.value || '').trim().toLowerCase();
+    if (!val) return;
+    const opts = [...new Set(getFn().filter(o => o && o.toLowerCase().includes(val) && o.toLowerCase() !== val.toLowerCase()))].slice(0,6);
+    if (!opts.length) return;
+    drop = document.createElement('div');
+    drop.style.cssText = 'position:absolute;left:0;right:0;top:calc(100% + 2px);background:var(--surface2);border:1px solid #3a3a42;border-radius:8px;z-index:9500;max-height:180px;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.5)';
+    opts.forEach(o => {
+      const item = document.createElement('div');
+      item.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #3a3a42;color:var(--text)';
+      item.textContent = o;
+      item.addEventListener('mousedown', e => { e.preventDefault(); inputEl.value = o; removeDrop(); inputEl.focus(); });
+      drop.appendChild(item);
+    });
+    const parent = inputEl.parentElement;
+    if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+    parent.appendChild(drop);
+  });
+  inputEl.addEventListener('blur', () => setTimeout(removeDrop, 200));
+}
+function getProductNames() { return (DB&&DB.lines||[]).map(l=>l.product).filter(Boolean); }
+function getStoreNames() {
+  const s = new Set();
+  (DB&&DB.lines||[]).forEach(l=>(l.purchases||[]).forEach(p=>{ if(p.store) s.add(p.store); }));
+  return [...s];
+}
+function initAutocompletes() {
+  const addName = document.getElementById('addName');
+  if (addName) makeAutocomplete(addName, getProductNames);
+  const addStore = document.getElementById('addStore');
+  if (addStore) makeAutocomplete(addStore, getStoreNames);
+}
+
+// ── TUTORIAL INTERACTIVO ───────────────────────────────────────────────────────
+function _tutSteps() {
+  return [
+    { id: 'headerTitle', title: 'Resetear filtros', desc: 'Toca el título LADESPENSA para quitar todos los filtros activos de golpe.' },
+    { id: 'fabAdd', title: 'Añadir productos', desc: 'Pulsa aquí para añadir un producto nuevo. Indica quién lo compra, en qué casa y el supermercado.' },
+    { id: 'shoppingListBtn', title: 'Lista de la compra', desc: 'Toca el icono + en cualquier producto para añadirlo a la lista. Cuando termines la compra, márcala como hecha.' },
+    { id: 'syncBtn', title: 'Sincronizar', desc: 'Sube y descarga cambios desde el Gist compartido. Úsalo al cambiar de dispositivo o tras importar tickets.' },
+    { id: 'filterBtn', title: 'Filtros', desc: 'Filtra por persona, lugar o tienda. Toca LADESPENSA arriba para quitar todos los filtros a la vez.' },
+    { id: 'settingsBtn', title: 'Ajustes', desc: 'Personaliza nombres, actualiza el token de GitHub, fusiona duplicados o relanza este tutorial.' }
+  ].filter(s => document.getElementById(s.id));
+}
+
+function showTutorial() {
+  if (document.getElementById('app') && document.getElementById('app').style.display !== 'none') {
+    _startInteractiveTutorial();
+  } else {
+    openOverlay('tutorialOverlay');
+  }
+}
+
+function _startInteractiveTutorial() {
+  const steps = _tutSteps();
+  if (!steps.length) return;
+  let idx = 0;
+  const overlay = document.createElement('div');
+  overlay.id = '_tutOvr';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:8990';
+  const spot = document.createElement('div');
+  spot.id = '_tutSpot';
+  spot.style.cssText = 'position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.78);z-index:8991;pointer-events:none;transition:all 0.25s ease;outline:2px solid var(--accent);outline-offset:2px';
+  const box = document.createElement('div');
+  box.id = '_tutBox';
+  box.style.cssText = 'position:fixed;background:var(--surface);border-radius:14px;padding:18px 18px 14px;width:min(270px,90vw);z-index:8992;box-shadow:0 8px 30px rgba(0,0,0,0.6);transition:top 0.25s ease,left 0.25s ease';
+  document.body.append(overlay, spot, box);
+  function close() { overlay.remove(); spot.remove(); box.remove(); }
+  overlay.addEventListener('click', close);
+  function render() {
+    const step = steps[idx];
+    const el = document.getElementById(step.id);
+    if (!el) { idx < steps.length-1 ? (idx++, render()) : close(); return; }
+    const r = el.getBoundingClientRect(), pad = 8;
+    spot.style.cssText = spot.style.cssText.replace(/left:[^;]+;|top:[^;]+;|width:[^;]+;|height:[^;]+;/g,'');
+    Object.assign(spot.style, { left:(r.left-pad)+'px', top:(r.top-pad)+'px', width:(r.width+pad*2)+'px', height:(r.height+pad*2)+'px' });
+    const boxL = Math.max(8, Math.min(r.left, window.innerWidth-278));
+    const belowY = r.bottom+pad+10;
+    const boxT = belowY+155 < window.innerHeight ? belowY : Math.max(8, r.top-pad-170);
+    Object.assign(box.style, { left:boxL+'px', top:boxT+'px' });
+    const isLast = idx === steps.length-1;
+    box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+      <span style="font-size:15px;font-weight:700;flex:1">${step.title}</span>
+      <button id="_tutX" style="background:none;border:none;cursor:pointer;color:var(--text2);padding:0 0 0 8px;font-size:22px;line-height:1;flex-shrink:0">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:14px">${step.desc}</p>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:var(--text2)">${idx+1} / ${steps.length}</span>
+      <div style="display:flex;gap:8px">
+        ${idx>0?'<button id="_tutPrev" style="background:var(--surface2);border:none;border-radius:8px;color:var(--text);padding:7px 12px;cursor:pointer;font-size:13px">Anterior</button>':''}
+        <button id="_tutNext" style="background:var(--accent);border:none;border-radius:8px;color:white;padding:7px 14px;cursor:pointer;font-size:13px;font-weight:600">${isLast?'Entendido':'Siguiente'}</button>
+      </div>
+    </div>`;
+    document.getElementById('_tutX').addEventListener('click', close);
+    document.getElementById('_tutNext').addEventListener('click', () => {
+      if (isLast) { close(); localStorage.setItem('ladespensa_tutorial_done','1'); }
+      else { idx++; render(); }
+    });
+    if (idx>0) document.getElementById('_tutPrev').addEventListener('click', () => { idx--; render(); });
+  }
+  render();
+}
+
 function initTutorial() {
   document.getElementById('tutorialXBtn').addEventListener('click', () => { closeOverlay('tutorialOverlay'); });
   document.getElementById('tutorialCloseBtn').addEventListener('click', () => {
@@ -1922,9 +2037,6 @@ function _initInner() {
     DB = defaultDB();
     settings = DB.settings;
     showSetup();
-    if (!localStorage.getItem('ladespensa_tutorial_done')) {
-      setTimeout(() => showTutorial(), 800);
-    }
   }
 }
 
