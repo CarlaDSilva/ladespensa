@@ -34,7 +34,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.6.4 · Perla</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.7.0 · Perla</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -105,13 +105,6 @@
         <button class="icon-btn" id="filterBtn" title="Filtros">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-          </svg>
-        </button>
-        <button class="icon-btn" id="syncBtn" title="Sincronizar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="23 4 23 10 17 10"/>
-            <polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
           </svg>
         </button>
         <button class="icon-btn" id="searchBtn" title="Buscar">
@@ -267,7 +260,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">1.6.4 · Perla</span>
+        <span class="settings-row-value">v1.7.0 · Perla</span>
       </div>
       <div class="settings-row">
         <span class="settings-row-label">Gist ID</span>
@@ -277,6 +270,7 @@
         <span class="settings-row-label">Última sync</span>
         <span class="settings-row-value" id="settingsLastSync">-</span>
       </div>
+      <button class="btn-secondary" id="settingsSyncBtn" style="margin-top:8px">↻ Sincronizar ahora</button>
       <div class="sheet-field" style="margin-top:12px">
         <label class="sheet-label">Actualizar token</label>
         <input class="sheet-input" id="settingsNewToken" type="password" placeholder="ghp_... nuevo token" autocomplete="current-password">
@@ -358,13 +352,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.6.4 · Perla</div>
+<div class="version-tag">v1.7.0 · Perla</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.6.4';
+const VERSION = '1.7.0';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -374,6 +368,7 @@ let settings = null;
 let expandedId = null;
 let filters = { persona: 'all', lugar: 'all', store: 'all' };
 let shoppingTicked = new Set(); // ids ticked in current shopping session
+let collapsedSections = new Set(); // collapsed section ids
 
 // ── CONFIRM MODAL ──────────────────────────────────────────────────────────
 let _confirmCallback = null;
@@ -812,10 +807,16 @@ function renderSection(sectionId, listId, items, title) {
   const list = document.getElementById(listId);
   if (!items.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
+  const isCollapsed = collapsedSections.has(sectionId);
   if (title) {
     const t = section.querySelector('.section-title');
-    if (t) t.textContent = title;
+    if (t) {
+      t.innerHTML = '<span class="section-toggle-label">' + title + ' <span class="section-count">(' + items.length + ')</span></span><span class="section-chevron">' + (isCollapsed ? '▶' : '▼') + '</span>';
+      t.style.cursor = 'pointer';
+      t.onclick = () => { if (collapsedSections.has(sectionId)) collapsedSections.delete(sectionId); else collapsedSections.add(sectionId); renderAll(); };
+    }
   }
+  if (isCollapsed) { list.innerHTML = ''; return; }
   list.innerHTML = '';
   // Group by category
   const catMap = {};
@@ -1325,6 +1326,8 @@ function initAutocompletes() {
   if (addName) makeAutocomplete(addName, getProductNames);
   const addStore = document.getElementById('addStore');
   if (addStore) makeAutocomplete(addStore, getStoreNames);
+  const buscadorIn = document.getElementById('buscadorInput');
+  if (buscadorIn) makeAutocomplete(buscadorIn, getProductNames);
 }
 
 // ── TUTORIAL INTERACTIVO ───────────────────────────────────────────────────────
@@ -1496,16 +1499,15 @@ function _initInner() {
   document.getElementById('filterLugar').addEventListener('change', (e) => { filters.lugar = e.target.value; renderAll(); });
   document.getElementById('filterStore').addEventListener('change', (e) => { filters.store = e.target.value; renderAll(); });
 
-  // Sync button
-  document.getElementById('syncBtn').addEventListener('click', () => {
-    if (settings && settings.gistId) syncFromGist(false);
-    else showToast('Configura el Gist primero');
-  });
-
   // Settings
   document.getElementById('settingsBtn').addEventListener('click', openSettings);
   document.getElementById('settingsSaveBtn').addEventListener('click', saveSettings);
   document.getElementById('settingsCloseBtn').addEventListener('click', () => closeOverlay('settingsOverlay'));
+  document.getElementById('settingsSyncBtn').addEventListener('click', () => {
+    closeOverlay('settingsOverlay');
+    if (settings && settings.gistId) syncFromGist(false);
+    else showToast('Configura el Gist primero');
+  });
   document.getElementById('settingsTutorialBtn').addEventListener('click', () => { closeOverlay('settingsOverlay'); showTutorial(); });
 
   // Search / buscador
@@ -1674,9 +1676,7 @@ function _initInner() {
     document.getElementById('setupCloseBtn').style.display = 'block';
     showApp();
     renderAll();
-    if (settings.gistId && settings.gistToken) {
-      setTimeout(() => syncFromGist(false), 1000);
-    }
+    // No auto-sync at startup (v1.7.0)
   } else {
     DB = defaultDB();
     settings = DB.settings;
