@@ -1,5 +1,5 @@
-const CACHE = 'ladespensa-v4';
-const ASSETS = ['./', './index.html', './manifest.json'];
+const CACHE = 'ladespensa-v5';
+const ASSETS = ['./', './index.html', './manifest.json', './styles.css'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
