@@ -8,768 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>LADESPENSA</title>
 <link rel="manifest" href="manifest.json">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  button, a, select, input { touch-action: manipulation; }
-
-  :root {
-    --bg: #1a1a1f;
-    --surface: #242429;
-    --surface2: #2e2e35;
-    --accent: #e2e8f0;
-    --accent-light: #ffffff;
-    --accent-text: #0f172a;
-    --text: #f0f0f5;
-    --text2: #9999aa;
-    --radius: 14px;
-    --urgent: #c0392b;
-    --soon: #e67e22;
-    --visible: #f1c40f;
-    --ok: #27ae60;
-  }
-
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: system-ui, sans-serif;
-    overflow-x: hidden;
-  }
-
-  body { display: flex; flex-direction: column; }
-
-  /* ââ HEADER ââ */
-  .header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: var(--bg);
-    padding: 16px 16px 0;
-    border-bottom: 1px solid #2e2e35;
-  }
-  .header-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 12px;
-  }
-  .header-title {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: var(--text);
-  }
-  .header-actions { display: flex; gap: 8px; }
-  .icon-btn {
-    background: var(--surface);
-    border: none;
-    border-radius: 10px;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--text2);
-    transition: background 0.15s, color 0.15s;
-  }
-  .icon-btn:hover, .icon-btn.active { background: var(--surface2); color: var(--text); }
-  .icon-btn svg { width: 20px; height: 20px; }
-
-  /* ââ FILTER BAR ââ */
-  .filter-bar {
-    overflow: hidden;
-    max-height: 0;
-    transition: max-height 0.25s ease;
-    background: var(--bg);
-    padding: 0 16px;
-  }
-  .filter-bar.open { max-height: 200px; padding-bottom: 12px; }
-  .filter-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding-top: 10px;
-  }
-  .filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 100px; }
-  .filter-label { font-size: 13px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
-  .filter-select {
-    font-size: 14px;
-    background: var(--surface);
-    border: 1px solid var(--surface2);
-    border-radius: 8px;
-    color: var(--text);
-    padding: 6px 10px;
-    font-size: 13px;
-    appearance: none;
-    cursor: pointer;
-  }
-
-  /* ââ MAIN ââ */
-  .main { flex: 1; padding: 16px; overflow-y: auto; padding-bottom: 100px; }
-
-  .section-title {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text2);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 10px;
-  }
-
-  /* ââ ITEMS ââ */
-  .item-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
-
-  .item-card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    overflow: hidden;
-    transition: box-shadow 0.15s;
-  }
-  .item-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
-
-  .item-main {
-    display: flex;
-    align-items: center;
-    padding: 14px 14px 14px 16px;
-    gap: 12px;
-    cursor: pointer;
-  }
-
-  .status-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .status-dot.urgente { background: var(--urgent); box-shadow: 0 0 6px var(--urgent); }
-  .status-dot.pronto { background: var(--soon); }
-  .status-dot.visible { background: var(--visible); }
-  .status-dot.ok { background: var(--ok); }
-  .status-dot.agotado { background: var(--urgent); }
-  .status-dot.desconocido { background: var(--text2); }
-
-  .item-info { flex: 1; min-width: 0; }
-  .item-name {
-    font-size: 16px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .item-meta {
-    font-size: 12px;
-    color: var(--text2);
-    margin-top: 2px;
-    display: flex;
-    gap: 8px;
-  }
-  /* stock bar replaces item-countdown */
-  .stock-bar-wrap {
-    width: 44px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 3px;
-  }
-  .stock-bar-track {
-    width: 36px;
-    height: 6px;
-    background: var(--surface2);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .stock-bar-fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.3s ease;
-  }
-  .stock-bar-fill.agotado   { background: var(--urgent); }
-  .stock-bar-fill.urgente   { background: var(--urgent); }
-  .stock-bar-fill.pronto    { background: var(--soon); }
-  .stock-bar-fill.visible   { background: var(--visible); }
-  .stock-bar-fill.ok        { background: var(--ok); }
-  .stock-bar-fill.desconocido { background: #555560; width: 100% !important; }
-  .stock-bar-days {
-    font-size: 10px;
-    color: var(--text2);
-    white-space: nowrap;
-  }
-
-  .add-btn {
-    background: var(--surface2);
-    border: none;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--text2);
-    flex-shrink: 0;
-    transition: background 0.15s, color 0.15s;
-  }
-  .add-btn.in-list { background: var(--accent); color: var(--text); }
-  @media (hover: hover) { .add-btn:hover { background: var(--accent); color: var(--text); } }
-  .add-btn svg { width: 18px; height: 18px; }
-
-  /* ââ ITEM EXPANDED ââ */
-  .item-expanded {
-    display: none;
-    padding: 10px 16px 14px;
-    border-top: 1px solid var(--surface2);
-  }
-  .item-expanded.open { display: block; }
-
-  .expand-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-  .expand-field { display: flex; flex-direction: column; gap: 4px; }
-  .expand-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; }
-  .expand-input, .expand-select {
-    background: var(--surface2);
-    border: 1px solid #3a3a42;
-    border-radius: 8px;
-    color: var(--text);
-    padding: 7px 10px;
-    font-size: 13px;
-    width: 100%;
-    appearance: none;
-  }
-  .expand-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 4px;
-  }
-  .chip-btn {
-    background: var(--surface2);
-    border: 1px solid #3a3a42;
-    border-radius: 20px;
-    color: var(--text2);
-    padding: 5px 12px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .chip-btn:hover { border-color: var(--accent); color: var(--text); }
-  .chip-btn.active { background: var(--accent); border-color: var(--accent); color: var(--text); }
-  .chip-btn.danger { border-color: transparent; }
-  .chip-btn.danger:hover { background: #c0392b; border-color: #c0392b; color: white; }
-
-  /* ââ EMPTY STATE ââ */
-  .empty-state {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--text2);
-  }
-  .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
-  .empty-state p { font-size: 15px; }
-
-  /* ââ FAB ââ */
-  .fab {
-    position: fixed;
-    bottom: 24px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 18px;
-    background: var(--accent);
-    border: none;
-    color: white;
-    font-size: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(226,232,240,0.25);
-    transition: background 0.15s, transform 0.15s;
-    z-index: 50;
-  }
-  .fab:hover { background: var(--accent-light); transform: scale(1.05); }
-  .fab svg { width: 28px; height: 28px; }
-
-  /* ââ MODALS ââ */
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 200;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-  }
-  .overlay.open { opacity: 1; pointer-events: all; }
-
-  .sheet {
-    background: var(--surface);
-    border-radius: 20px 20px 0 0;
-    padding: 20px 20px 40px;
-    width: 100%;
-    max-width: 500px;
-    transform: translateY(100%);
-    transition: transform 0.25s ease;
-    max-height: 85vh;
-    overflow-y: auto;
-  }
-  .overlay.open .sheet { transform: translateY(0); }
-
-  /* Shopping list: fullscreen */
-  #shoppingOverlay {
-    background: var(--bg);
-    align-items: stretch;
-    justify-content: stretch;
-  }
-  #shoppingOverlay .sheet {
-    border-radius: 0;
-    max-height: 100vh;
-    max-width: 100%;
-    transform: none !important;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg);
-  }
-  #shoppingOverlay #shoppingContent {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 16px;
-  }
-  .shopping-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 16px 12px;
-    border-bottom: 1px solid var(--surface2);
-    flex-shrink: 0;
-  }
-  .shopping-header-title { font-size: 20px; font-weight: 700; }
-  .shopping-close-x {
-    background: var(--surface2);
-    border: none;
-    border-radius: 50%;
-    width: 40px; height: 40px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    color: var(--text);
-    font-size: 22px;
-    line-height: 1;
-  }
-  .shopping-footer {
-    flex-shrink: 0;
-    padding: 12px 16px 32px;
-    border-top: 1px solid var(--surface2);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .shopping-compra-btn {
-    width: 100%;
-    background: var(--accent);
-    border: none;
-    border-radius: var(--radius);
-    color: white;
-    font-size: 18px;
-    font-weight: 700;
-    padding: 16px;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .shopping-compra-btn:hover { opacity: 0.9; }
-
-  /* Category headers in lists */
-  .category-hdr {
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--text2);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    padding: 8px 0 4px;
-    border-bottom: 1px solid var(--surface2);
-    margin-top: 8px;
-    margin-bottom: 4px;
-  }
-
-  /* Stats bar */
-  .stats-bar {
-    padding: 10px 16px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    border-bottom: 1px solid var(--surface2);
-    background: var(--bg);
-  }
-  .stats-chip {
-    font-size: 12px;
-    color: var(--text2);
-    background: var(--surface);
-    border-radius: 20px;
-    padding: 4px 10px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .stats-chip b { color: var(--text); font-weight: 600; }
-  .stats-chip.urgent b { color: var(--urgent); }
-
-  /* Buscador overlay */
-  #buscadorOverlay {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    z-index: 250;
-    display: none;
-    flex-direction: column;
-  }
-  #buscadorOverlay.open { display: flex; }
-  .buscador-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 16px;
-    border-bottom: 1px solid var(--surface2);
-    flex-shrink: 0;
-  }
-  .buscador-input {
-    flex: 1;
-    background: var(--surface2);
-    border: 1px solid #3a3a42;
-    border-radius: 10px;
-    color: var(--text);
-    padding: 10px 14px;
-    font-size: 16px;
-  }
-  .buscador-input:focus { outline: none; border-color: var(--accent); }
-  #buscadorResults { flex: 1; overflow-y: auto; padding: 0 16px 32px; }
-  .buscador-result-item {
-    background: var(--surface);
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-  }
-  .buscador-result-name { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-  .buscador-result-row {
-    display: flex;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--text2);
-    padding: 3px 0;
-    border-bottom: 1px solid var(--surface2);
-    align-items: center;
-  }
-  .buscador-result-row:last-child { border-bottom: none; }
-  .buscador-result-price { margin-left: auto; color: var(--accent); font-weight: 600; }
-
-  /* Price input in shopping list */
-  .shopping-price-input {
-    width: 70px;
-    background: var(--surface2);
-    border: 1px solid #3a3a42;
-    border-radius: 6px;
-    color: var(--text);
-    padding: 4px 6px;
-    font-size: 12px;
-    text-align: right;
-    flex-shrink: 0;
-  }
-  .shopping-price-input:focus { outline: none; border-color: var(--accent); }
-
-  .sheet-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    color: var(--text);
-  }
-  .sheet-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-  .sheet-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; }
-  .sheet-input, .sheet-select {
-    background: var(--surface2);
-    border: 1px solid #3a3a42;
-    border-radius: 10px;
-    color: var(--text);
-    padding: 12px 14px;
-    font-size: 15px;
-    width: 100%;
-    appearance: none;
-  }
-  .sheet-input:focus, .sheet-select:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-
-  .btn-primary {
-    width: 100%;
-    background: var(--accent);
-    border: none;
-    border-radius: var(--radius);
-    color: var(--accent-text);
-    font-size: 16px;
-    font-weight: 600;
-    padding: 14px;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: background 0.15s;
-  }
-  .btn-primary:hover { background: var(--accent-light); }
-  .btn-secondary {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid #3a3a42;
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 15px;
-    padding: 12px;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: background 0.15s;
-  }
-  .btn-secondary:hover { background: #38383f; }
-
-  /* ââ SETUP WIZARD ââ */
-  #setupOverlay {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    z-index: 300;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .setup-card {
-    background: var(--surface);
-    border-radius: 20px;
-    padding: 28px 24px;
-    width: 100%;
-    max-width: 400px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-  }
-  .setup-close-btn {
-    position: absolute;
-    top: 14px;
-    right: 16px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text2);
-    font-size: 26px;
-    line-height: 1;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: color 0.15s, background 0.15s;
-  }
-  .setup-close-btn:hover { color: var(--text); background: var(--surface2); }
-  .setup-logo {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: 3px;
-    color: var(--text);
-    margin-bottom: 6px;
-  }
-  .setup-subtitle {
-    font-size: 14px;
-    color: var(--text2);
-    margin-bottom: 24px;
-    line-height: 1.5;
-  }
-  .setup-step { display: none; }
-  .setup-step.active { display: block; }
-
-  /* ââ SETTINGS ââ */
-  .settings-section { margin-bottom: 24px; }
-  .settings-section-title {
-    font-size: 11px;
-    color: var(--text2);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 10px;
-  }
-  .settings-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--surface2);
-  }
-  .settings-row:last-child { border-bottom: none; }
-  .settings-row-label { font-size: 14px; color: var(--text); }
-  .settings-row-value { font-size: 13px; color: var(--text2); }
-
-  /* Toggle switch */
-  .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider {
-    position: absolute; inset: 0;
-    background: var(--surface2); border-radius: 24px;
-    transition: background 0.2s; cursor: pointer;
-  }
-  .toggle-slider::before {
-    content: '';
-    position: absolute;
-    width: 18px; height: 18px;
-    left: 3px; top: 3px;
-    background: var(--text2);
-    border-radius: 50%;
-    transition: transform 0.2s, background 0.2s;
-  }
-  .toggle input:checked + .toggle-slider { background: var(--accent); }
-  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: white; }
-
-  /* ââ VERSION ââ */
-  .version-tag {
-    position: fixed;
-    bottom: 8px;
-    left: 12px;
-    font-size: 10px;
-    color: #44444e;
-    z-index: 10;
-    pointer-events: none;
-  }
-
-  /* ââ SHOPPING LIST ââ */
-  .shopping-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: var(--accent);
-    color: white;
-    font-size: 10px;
-    font-weight: 700;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .header-btn-wrap { position: relative; }
-
-  /* Shopping list items */
-  .shopping-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--surface2);
-    transition: opacity 0.2s;
-    cursor: pointer;
-  }
-  .shopping-item.ticked { opacity: 0.38; }
-  .shopping-tick {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    border: 2px solid var(--text2);
-    background: none;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.15s;
-    color: transparent;
-  }
-  .shopping-tick.checked { background: var(--ok); border-color: var(--ok); color: white; }
-  .shopping-tick svg { width: 14px; height: 14px; }
-  .shopping-item-info { flex: 1; min-width: 0; }
-  .shopping-item-name { font-size: 17px; font-weight: 500; }
-  .shopping-item-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
-  .shopping-item-price { font-size: 14px; color: var(--text2); flex-shrink: 0; }
-  .shopping-remove { background: none; border: none; cursor: pointer; color: var(--text2); flex-shrink: 0; padding: 4px; }
-
-  .shopping-actions {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-  }
-  .shopping-total {
-    padding: 12px 0 4px;
-    font-size: 16px;
-    font-weight: 600;
-    text-align: right;
-    border-top: 1px solid var(--surface2);
-    margin-top: 8px;
-  }
-
-  /* ââ CUSTOM CONFIRM ââ */
-  .confirm-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-  }
-  .confirm-overlay.open { opacity: 1; pointer-events: all; }
-  .confirm-box {
-    background: var(--surface);
-    border-radius: 18px;
-    padding: 28px 24px 20px;
-    width: 100%;
-    max-width: 320px;
-    text-align: center;
-  }
-  .confirm-msg {
-    font-size: 16px;
-    line-height: 1.5;
-    margin-bottom: 22px;
-    color: var(--text);
-  }
-  .confirm-btns { display: flex; gap: 10px; }
-  .confirm-btns button { flex: 1; padding: 13px; border-radius: 12px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; }
-  .confirm-cancel-btn { background: var(--surface2); color: var(--text); }
-  .confirm-ok-btn { background: #c0392b; color: white; }
-
-  /* ââ SYNC indicator ââ */
-  .sync-bar {
-    height: 2px;
-    background: var(--accent);
-    width: 0%;
-    transition: width 0.4s;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 999;
-  }
-  .sync-bar.syncing { animation: syncpulse 1s infinite; }
-  @keyframes syncpulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.4; }
-    100% { opacity: 1; }
-  }
-
-  .toast {
-    position: fixed;
-    bottom: 90px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--surface2);
-    color: var(--text);
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-size: 13px;
-    opacity: 0;
-    transition: opacity 0.2s, transform 0.2s;
-    z-index: 400;
-    white-space: nowrap;
-    pointer-events: none;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -782,7 +21,7 @@
 <!-- CUSTOM CONFIRM MODAL -->
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-box">
-    <div class="confirm-msg" id="confirmMsg">Â¿Eliminar este producto?</div>
+    <div class="confirm-msg" id="confirmMsg">¿Eliminar este producto?</div>
     <div class="confirm-btns">
       <button class="confirm-cancel-btn" id="confirmCancelBtn">Cancelar</button>
       <button class="confirm-ok-btn" id="confirmOkBtn">Eliminar</button>
@@ -793,9 +32,9 @@
 <!-- SETUP WIZARD -->
 <div id="setupOverlay">
   <div class="setup-card">
-    <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">Ã</button>
+    <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.8 Â· Sol</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.5.8 · Sol</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -838,7 +77,7 @@
 
     <!-- Step 3: Lugar actual -->
     <div class="setup-step" id="step3">
-      <p class="setup-subtitle" id="setupLugarQ">Â¿En quÃ© casa estÃ¡s ahora?</p>
+      <p class="setup-subtitle" id="setupLugarQ">¿En qué casa estás ahora?</p>
       <button class="btn-primary" id="setupLugar1Btn">Piso</button>
       <button class="btn-secondary" id="setupLugar2Btn">Mogor</button>
     </div>
@@ -865,7 +104,7 @@
         </div>
         <button class="icon-btn" id="filterBtn" title="Filtros">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 16 12.46 22 3"/>
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
           </svg>
         </button>
         <button class="icon-btn" id="syncBtn" title="Sincronizar">
@@ -898,7 +137,7 @@
             <option value="all">Todos</option>
             <option value="p1">Persona 1</option>
             <option value="p2">Persona 2</option>
-            <option value="comun">ComÃºn</option>
+            <option value="comun">Común</option>
           </select>
         </div>
         <div class="filter-group">
@@ -946,12 +185,12 @@
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
       <p>No hay productos que mostrar</p>
-      <p style="font-size:13px;margin-top:6px">Pulsa + para aÃ±adir uno</p>
+      <p style="font-size:13px;margin-top:6px">Pulsa + para añadir uno</p>
     </div>
   </div>
 
   <!-- FAB -->
-  <button class="fab" id="fabAdd" title="AÃ±adir producto">
+  <button class="fab" id="fabAdd" title="Añadir producto">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <line x1="12" y1="5" x2="12" y2="19"/>
       <line x1="5" y1="12" x2="19" y2="12"/>
@@ -962,7 +201,7 @@
 <!-- ADD PRODUCT MODAL -->
 <div class="overlay" id="addOverlay">
   <div class="sheet">
-    <div class="sheet-title">AÃ±adir producto</div>
+    <div class="sheet-title">Añadir producto</div>
     <div class="sheet-field">
       <label class="sheet-label">Nombre</label>
       <input class="sheet-input" id="addName" placeholder="Ej: Leche entera 1L" list="addNameList" autocomplete="off">
@@ -973,7 +212,7 @@
       <select class="sheet-select" id="addPersona">
         <option value="p1">Persona 1</option>
         <option value="p2">Persona 2</option>
-        <option value="comun">ComÃºn</option>
+        <option value="comun">Común</option>
       </select>
     </div>
     <div class="sheet-field">
@@ -987,7 +226,7 @@
       <label class="sheet-label">Estado inicial</label>
       <select class="sheet-select" id="addStatus">
         <option value="">Normal</option>
-        <option value="agotandose">AgotÃ¡ndose</option>
+        <option value="agotandose">Agotándose</option>
         <option value="agotado">Agotado</option>
         <option value="puntual">Puntual (compra ocasional)</option>
       </select>
@@ -997,7 +236,7 @@
       <input class="sheet-input" id="addStore" list="storeListAdd" placeholder="Mercadona, Lidl..." autocomplete="off">
       <datalist id="storeListAdd"></datalist>
     </div>
-    <button class="btn-primary" id="addConfirmBtn">AÃ±adir</button>
+    <button class="btn-primary" id="addConfirmBtn">Añadir</button>
     <button class="btn-secondary" id="addCancelBtn">Cancelar</button>
   </div>
 </div>
@@ -1007,7 +246,7 @@
   <div class="sheet">
     <div class="shopping-header">
       <span class="shopping-header-title">Lista de la compra</span>
-      <button class="shopping-close-x" id="shoppingCloseBtn" aria-label="Cerrar">Ã</button>
+      <button class="shopping-close-x" id="shoppingCloseBtn" aria-label="Cerrar">×</button>
     </div>
     <div style="padding:8px 16px;flex-shrink:0;display:flex;gap:8px;align-items:center">
       <button class="chip-btn" id="selectAllBtn">Seleccionar todos</button>
@@ -1015,7 +254,7 @@
     </div>
     <div id="shoppingContent"></div>
     <div class="shopping-footer">
-      <button class="shopping-compra-btn" id="compraMadaBtn">Compra hecha â</button>
+      <button class="shopping-compra-btn" id="compraMadaBtn">Compra hecha ✓</button>
     </div>
   </div>
 </div>
@@ -1025,17 +264,17 @@
   <div class="sheet">
     <div class="sheet-title">Ajustes</div>
     <div class="settings-section">
-      <div class="settings-section-title">ConexiÃ³n</div>
+      <div class="settings-section-title">Conexión</div>
       <div class="settings-row">
-        <span class="settings-row-label">VersiÃ³n</span>
-        <span class="settings-row-value">1.5.1 Â· Sol</span>
+        <span class="settings-row-label">Versión</span>
+        <span class="settings-row-value">1.5.1 · Sol</span>
       </div>
       <div class="settings-row">
         <span class="settings-row-label">Gist ID</span>
         <span class="settings-row-value" id="settingsGistId">-</span>
       </div>
       <div class="settings-row">
-        <span class="settings-row-label">Ãltima sync</span>
+        <span class="settings-row-label">Última sync</span>
         <span class="settings-row-value" id="settingsLastSync">-</span>
       </div>
       <div class="sheet-field" style="margin-top:12px">
@@ -1085,7 +324,7 @@
       <div class="settings-row">
         <div>
           <span class="settings-row-label">Depender de Clarito</span>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">Si estÃ¡ OFF, los tickets de Clarito no se importan (evita duplicados)</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Si está OFF, los tickets de Clarito no se importan (evita duplicados)</div>
         </div>
         <label class="toggle" style="flex-shrink:0;margin-left:12px">
           <input type="checkbox" id="settingsDependClarito">
@@ -1099,8 +338,8 @@
     <div class="settings-section" style="margin-top:16px">
       <div class="settings-section-title">Copia de seguridad</div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Exporta todos tus datos a un archivo JSON. Si borras la app, puedes restaurarlos importando ese archivo.</div>
-      <button class="btn-secondary" id="exportDataBtn">â¬ Exportar datos</button>
-      <label class="btn-secondary" id="importDataLabel" style="display:block;text-align:center;cursor:pointer;margin-top:8px">â¬ Importar datos
+      <button class="btn-secondary" id="exportDataBtn">⬇ Exportar datos</button>
+      <label class="btn-secondary" id="importDataLabel" style="display:block;text-align:center;cursor:pointer;margin-top:8px">⬆ Importar datos
         <input type="file" id="importDataInput" accept=".json" style="display:none">
       </label>
     </div>
@@ -1113,30 +352,30 @@
 <div id="buscadorOverlay">
   <div class="buscador-header">
     <input class="buscador-input" id="buscadorInput" placeholder="Buscar producto..." autocomplete="off" autocorrect="off" spellcheck="false">
-    <button class="shopping-close-x" id="buscadorCloseBtn" aria-label="Cerrar">Ã</button>
+    <button class="shopping-close-x" id="buscadorCloseBtn" aria-label="Cerrar">×</button>
   </div>
   <div id="buscadorResults"></div>
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.6.3 Â· Sol</div>
+<div class="version-tag">v1.6.3 · Perla</div>
 
 <script>
 'use strict';
 
-// ââ CONSTANTS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
 const VERSION = '1.6.3';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
-// ââ STATE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── STATE ──────────────────────────────────────────────────────────────────
 let DB = null;
 let settings = null;
 let expandedId = null;
 let filters = { persona: 'all', lugar: 'all', store: 'all' };
 let shoppingTicked = new Set(); // ids ticked in current shopping session
 
-// ââ CONFIRM MODAL ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── CONFIRM MODAL ──────────────────────────────────────────────────────────
 let _confirmCallback = null;
 
 function customConfirm(msg, onOk) {
@@ -1145,7 +384,7 @@ function customConfirm(msg, onOk) {
   document.getElementById('confirmOverlay').classList.add('open');
 }
 
-// ââ STORAGE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── STORAGE ────────────────────────────────────────────────────────────────
 function loadLocal() {
   try {
     const raw = localStorage.getItem('ladespensa');
@@ -1180,7 +419,7 @@ function defaultDB() {
   };
 }
 
-// ââ GIST API âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── GIST API ───────────────────────────────────────────────────────────────
 async function gistFetch(gistId, token) {
   const resp = await fetch(GIST_API + gistId, {
     headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github+json' }
@@ -1210,7 +449,7 @@ async function gistWrite(gistId, token, content) {
   return resp.json();
 }
 
-// ââ SYNC âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SYNC ───────────────────────────────────────────────────────────────────
 async function syncFromGist(initial) {
   const bar = document.getElementById('syncBar');
   bar.style.width = '30%';
@@ -1331,14 +570,14 @@ function importClarito(gistData) {
   }
 }
 
-// ââ PRICE HELPERS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── PRICE HELPERS ──────────────────────────────────────────────────────────
 function getAvgPrice(productName) {
   const prices = (DB.claritoPrices || {})[productName];
   if (!prices || !prices.length) return null;
   return prices.reduce((s, p) => s + p, 0) / prices.length;
 }
 
-// ââ PREDICTION âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── PREDICTION ─────────────────────────────────────────────────────────────
 function median(arr) {
   if (!arr.length) return null;
   const s = [...arr].sort((a, b) => a - b);
@@ -1352,18 +591,18 @@ function dateDiffDays(a, b) {
 
 function detectCategory(name) {
   const n = (name || '').toLowerCase();
-  if (/leche|yogur|queso|mantequilla|nata|kÃ©fir|lÃ¡cteo/.test(n)) return 'LÃ¡cteos';
-  if (/manzana|pera|naranja|plÃ¡tano|uva|fresa|limÃ³n|mandarina|melÃ³n|sandÃ­a|piÃ±a|mango|kiwi|melocotÃ³n|ciruela|cereza|fruta/.test(n)) return 'Fruta';
-  if (/lechuga|tomate|cebolla|ajo|zanahoria|patata|pimiento|calabacÃ­n|berenjena|espinaca|brÃ³coli|coliflor|pepino|judÃ­a|guisante|verdura|ensalada|acelga|puerro|seta|champiÃ±Ã³n/.test(n)) return 'Verdura';
+  if (/leche|yogur|queso|mantequilla|nata|kéfir|lácteo/.test(n)) return 'Lácteos';
+  if (/manzana|pera|naranja|plátano|uva|fresa|limón|mandarina|melón|sandía|piña|mango|kiwi|melocotón|ciruela|cereza|fruta/.test(n)) return 'Fruta';
+  if (/lechuga|tomate|cebolla|ajo|zanahoria|patata|pimiento|calabacín|berenjena|espinaca|brócoli|coliflor|pepino|judía|guisante|verdura|ensalada|acelga|puerro|seta|champiñón/.test(n)) return 'Verdura';
   if (/huevo/.test(n)) return 'Huevos';
   if (/pan|baguette|bollo|croissant|tostada/.test(n)) return 'Pan';
-  if (/pasta|arroz|cereal|avena|quinoa|cuscÃºs|harina|legumbre|lenteja|garbanzo|alubia/.test(n)) return 'Cereales y legumbres';
-  if (/pollo|carne|ternera|cerdo|cordero|pavo|jamÃ³n|chorizo|salchich|lomo|costilla|bacon/.test(n)) return 'Carne';
-  if (/pescado|salmÃ³n|atÃºn|sardina|merluza|bacalao|gamba|marisco|calamar|mejillÃ³n/.test(n)) return 'Pescado';
-  if (/aceite|vinagre|sal\b|azÃºcar|levadura|salsa|mayonesa|ketchup|mostaza|especias|caldo|conserva/.test(n)) return 'Despensa';
-  if (/cafÃ©|tÃ©|infusiÃ³n|zumo|refresco|agua|cerveza|vino|alcohol|batido/.test(n)) return 'Bebidas';
+  if (/pasta|arroz|cereal|avena|quinoa|cuscús|harina|legumbre|lenteja|garbanzo|alubia/.test(n)) return 'Cereales y legumbres';
+  if (/pollo|carne|ternera|cerdo|cordero|pavo|jamón|chorizo|salchich|lomo|costilla|bacon/.test(n)) return 'Carne';
+  if (/pescado|salmón|atún|sardina|merluza|bacalao|gamba|marisco|calamar|mejillón/.test(n)) return 'Pescado';
+  if (/aceite|vinagre|sal\b|azúcar|levadura|salsa|mayonesa|ketchup|mostaza|especias|caldo|conserva/.test(n)) return 'Despensa';
+  if (/café|té|infusión|zumo|refresco|agua|cerveza|vino|alcohol|batido/.test(n)) return 'Bebidas';
   if (/helado|chocolate|galleta|bizcocho|magdalena|caramelo|gominola|snack|chip|dulce/.test(n)) return 'Dulces';
-  if (/champÃº|gel|jabÃ³n|dentÃ­frico|diente|papel|paÃ±al|limpiador|detergente|suavizante|fregaplatos|colonia|crema|higiene/.test(n)) return 'Higiene y limpieza';
+  if (/champú|gel|jabón|dentífrico|diente|papel|pañal|limpiador|detergente|suavizante|fregaplatos|colonia|crema|higiene/.test(n)) return 'Higiene y limpieza';
   return 'Otros';
 }
 
@@ -1428,16 +667,16 @@ function formatCountdown(pred) {
   if (pred.status === 'desconocido') return 'Desconocido';
   if (pred.daysRemaining === null) return 'Sin datos';
   if (pred.daysRemaining <= 0) return 'Agotado';
-  if (pred.daysRemaining === 1) return 'MaÃ±ana';
-  return 'En ' + pred.daysRemaining + ' dÃ­as';
+  if (pred.daysRemaining === 1) return 'Mañana';
+  return 'En ' + pred.daysRemaining + ' días';
 }
 
-// ââ NAMES ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── NAMES ──────────────────────────────────────────────────────────────────
 function getPersonaName(p) {
   const useOrig = settings.useOriginalNames;
   if (p === 'p1') return (useOrig && settings.persona1OriginalName) ? settings.persona1OriginalName : settings.persona1Name;
   if (p === 'p2') return (useOrig && settings.persona2OriginalName) ? settings.persona2OriginalName : settings.persona2Name;
-  return 'ComÃºn';
+  return 'Común';
 }
 function getLugarName(l) {
   if (l === 'lugar1') return settings.lugar1Name;
@@ -1445,7 +684,7 @@ function getLugarName(l) {
   return l;
 }
 
-// ââ RENDER âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── RENDER ─────────────────────────────────────────────────────────────────
 function renderAll() {
   // Update filter labels
   document.querySelector('#filterPersona option[value="p1"]').textContent = getPersonaName('p1');
@@ -1535,7 +774,7 @@ function renderAll() {
   const urgentAll = [...groups.agotado, ...groups.urgente];
   renderSection('urgentSection', 'urgentList', urgentAll, urgentAll.length > 0 ? (groups.agotado.length ? 'Agotado / Urgente' : 'Urgente') : '');
   renderSection('soonSection', 'soonList', groups.pronto, 'En breve (esta semana)');
-  renderSection('visibleSection', 'visibleList', groups.visible, 'PrÃ³ximamente');
+  renderSection('visibleSection', 'visibleList', groups.visible, 'Próximamente');
   renderSection('okSection', 'okList', [...groups.ok, ...groups.desconocido], 'Sin alertas');
 
   const total = lined.length;
@@ -1563,7 +802,7 @@ function renderAll() {
       <span>${esc(s.lugarName)}</span>
       ${s.ag ? `<b>${s.ag} ag.</b>` : ''}
       ${s.urg ? `<b style="color:var(--soon)">${s.urg} urgente${s.urg>1?'s':''}</b>` : ''}
-      ${!s.ag && !s.urg ? '<span style="color:var(--ok)">â</span>' : ''}
+      ${!s.ag && !s.urg ? '<span style="color:var(--ok)">✓</span>' : ''}
     </div>`
   ).join('') + `<div class="stats-chip" style="margin-left:auto"><b>${totalAll}</b> productos</div>`;
 }
@@ -1620,7 +859,7 @@ function makeCard(line, pred) {
         <div class="stock-bar-track"><div class="stock-bar-fill ${pred.status}" style="width:${stockBarPct(pred)}%"></div></div>
         <div class="stock-bar-days">${formatCountdown(pred)}</div>
       </div>
-      <button class="add-btn ${line.addedToShoppingList ? 'in-list' : ''}" data-action="toggle-list" title="${line.addedToShoppingList ? 'En la lista' : 'AÃ±adir a lista'}">
+      <button class="add-btn ${line.addedToShoppingList ? 'in-list' : ''}" data-action="toggle-list" title="${line.addedToShoppingList ? 'En la lista' : 'Añadir a lista'}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           ${line.addedToShoppingList
             ? '<polyline points="20 6 9 17 4 12"/>'
@@ -1639,7 +878,7 @@ function makeCard(line, pred) {
           <select class="expand-select" data-field="persona">
             <option value="p1" ${line.persona === 'p1' ? 'selected' : ''}>${esc(getPersonaName('p1'))}</option>
             <option value="p2" ${line.persona === 'p2' ? 'selected' : ''}>${esc(getPersonaName('p2'))}</option>
-            <option value="comun" ${line.persona === 'comun' ? 'selected' : ''}>ComÃºn</option>
+            <option value="comun" ${line.persona === 'comun' ? 'selected' : ''}>Común</option>
           </select>
         </div>
         <div class="expand-field">
@@ -1651,7 +890,7 @@ function makeCard(line, pred) {
         </div>
       </div>
       <div class="expand-actions">
-        <button class="chip-btn ${line.manualStatus === 'agotandose' ? 'active' : ''}" data-action="mark" data-val="agotandose">AgotÃ¡ndose</button>
+        <button class="chip-btn ${line.manualStatus === 'agotandose' ? 'active' : ''}" data-action="mark" data-val="agotandose">Agotándose</button>
         <button class="chip-btn ${line.manualStatus === 'agotado' ? 'active' : ''}" data-action="mark" data-val="agotado">Agotado</button>
         <button class="chip-btn ${line.manualStatus === 'puntual' ? 'active' : ''}" data-action="mark" data-val="puntual">Puntual</button>
         <button class="chip-btn danger" data-action="delete">Eliminar</button>
@@ -1694,7 +933,7 @@ function makeCard(line, pred) {
 
   card.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
     e.stopPropagation();
-    customConfirm('Â¿Eliminar ' + line.product + '?', () => {
+    customConfirm('¿Eliminar ' + line.product + '?', () => {
       DB.lines = DB.lines.filter(l => l.id !== line.id);
       if (expandedId === line.id) expandedId = null;
       saveAndSync();
@@ -1722,7 +961,7 @@ function makeCard(line, pred) {
 function renderPurchaseList(line) {
   if (!line.purchases || !line.purchases.length) return '<span style="font-size:12px;color:var(--text2)">Sin compras registradas</span>';
   return line.purchases.slice().reverse().slice(0, 8).map((p) => {
-    const priceStr = p.price != null ? (+(p.price)).toFixed(2) + 'â¬' : '';
+    const priceStr = p.price != null ? (+(p.price)).toFixed(2) + '€' : '';
     return `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px;border-bottom:1px solid var(--surface2)">
       <span style="color:var(--text2)">${p.date}</span>
       <span style="flex:1">${esc(p.store || '')}</span>
@@ -1732,7 +971,7 @@ function renderPurchaseList(line) {
   }).join('');
 }
 
-// ââ SHOPPING LIST ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SHOPPING LIST ──────────────────────────────────────────────────────────
 // Store pending prices before compra hecha (keyed by line.id)
 const _shoppingPrices = {};
 
@@ -1742,7 +981,7 @@ function renderShoppingList() {
   const totalEl = document.getElementById('shoppingTotal');
 
   if (!items.length) {
-    content.innerHTML = '<p style="color:var(--text2);font-size:15px;padding:16px 0">Lista vacÃ­a â toca + en cualquier producto para aÃ±adirlo</p>';
+    content.innerHTML = '<p style="color:var(--text2);font-size:15px;padding:16px 0">Lista vacía — toca + en cualquier producto para añadirlo</p>';
     totalEl.style.display = 'none';
     return;
   }
@@ -1758,7 +997,7 @@ function renderShoppingList() {
     list.forEach(l => { const c = detectCategory(l.product); if (!catMap[c]) catMap[c]=[];  catMap[c].push(l); });
     const showCats = Object.keys(catMap).length > 1;
     return Object.keys(catMap).sort().map(cat => {
-      const hdr = showCats ? `<div class="category-hdr" style="${isDone?'opacity:0.4':''}">â¸ ${cat}</div>` : '';
+      const hdr = showCats ? `<div class="category-hdr" style="${isDone?'opacity:0.4':''}">▸ ${cat}</div>` : '';
       return hdr + catMap[cat].map(l => {
         const isTicked = shoppingTicked.has(l.id);
         return `<div class="shopping-item ${isTicked ? 'ticked' : ''}" data-sid="${l.id}">
@@ -1767,9 +1006,9 @@ function renderShoppingList() {
           </button>
           <div class="shopping-item-info">
             <div class="shopping-item-name">${esc(l.product)}</div>
-            <div class="shopping-item-sub">${esc(getPersonaName(l.persona))} Â· ${esc(getLugarName(l.lugar))}</div>
+            <div class="shopping-item-sub">${esc(getPersonaName(l.persona))} · ${esc(getLugarName(l.lugar))}</div>
           </div>
-          <input class="shopping-price-input" type="number" min="0" step="0.01" placeholder="â¬" data-price-id="${l.id}" value="${_shoppingPrices[l.id] != null ? _shoppingPrices[l.id] : ''}" inputmode="decimal">
+          <input class="shopping-price-input" type="number" min="0" step="0.01" placeholder="€" data-price-id="${l.id}" value="${_shoppingPrices[l.id] != null ? _shoppingPrices[l.id] : ''}" inputmode="decimal">
           <button class="shopping-remove" data-remove="${l.id}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -1778,7 +1017,7 @@ function renderShoppingList() {
     }).join('');
   }
 
-  const tickedLabel = ticked.length ? `<div class="category-hdr" style="margin-top:16px;color:var(--ok)">â Comprados (${ticked.length})</div>` : '';
+  const tickedLabel = ticked.length ? `<div class="category-hdr" style="margin-top:16px;color:var(--ok)">✓ Comprados (${ticked.length})</div>` : '';
   content.innerHTML = renderGroup(unticked, false) + tickedLabel + renderGroup(ticked, true);
 
   function _toggleTick(id) {
@@ -1837,13 +1076,13 @@ function renderShoppingList() {
   });
   if (hasPrices) {
     totalEl.style.display = 'block';
-    totalEl.textContent = 'Total aprox.: ' + total.toFixed(2) + 'â¬';
+    totalEl.textContent = 'Total aprox.: ' + total.toFixed(2) + '€';
   } else {
     totalEl.style.display = 'none';
   }
 }
 
-// ââ SAVE & SYNC ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SAVE & SYNC ────────────────────────────────────────────────────────────
 let syncTimer = null;
 function saveAndSync() {
   DB.settings = settings;
@@ -1861,7 +1100,7 @@ async function gistWriteOnly() {
   } catch(e) { showToast('Error al guardar en Gist'); }
 }
 
-// ââ SETUP ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SETUP ──────────────────────────────────────────────────────────────────
 function showSetup() {
   document.getElementById('setupOverlay').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
@@ -1963,7 +1202,7 @@ function setupNamesNext() {
   settings.lugar1Name = document.getElementById('setupL1Name').value.trim() || 'Piso';
   settings.lugar2Name = document.getElementById('setupL2Name').value.trim() || 'Mogor';
 
-  document.getElementById('setupLugarQ').textContent = 'Â¿En quÃ© casa estÃ¡s ahora?';
+  document.getElementById('setupLugarQ').textContent = '¿En qué casa estás ahora?';
   document.getElementById('setupLugar1Btn').textContent = settings.lugar1Name;
   document.getElementById('setupLugar2Btn').textContent = settings.lugar2Name;
 
@@ -1979,7 +1218,7 @@ function finishSetup(lugarKey) {
   syncFromGist(true);
 }
 
-// ââ SETTINGS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SETTINGS ───────────────────────────────────────────────────────────────
 function openSettings() {
   renderAll();
   openOverlay('settingsOverlay');
@@ -2000,11 +1239,11 @@ function saveSettings() {
   showToast('Ajustes guardados');
 }
 
-// ââ OVERLAY HELPERS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── OVERLAY HELPERS ────────────────────────────────────────────────────────
 function openOverlay(id) { document.getElementById(id).classList.add('open'); }
 function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
 
-// ââ UTILS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── UTILS ──────────────────────────────────────────────────────────────────
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
@@ -2020,7 +1259,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ââ MERGE DUPLICATES âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── MERGE DUPLICATES ─────────────────────────────────────────────────────────
 function mergeDuplicates(silent) {
   const seen = {};
   const merged = [];
@@ -2045,12 +1284,12 @@ function mergeDuplicates(silent) {
     if (!silent) { saveAndSync(); renderAll(); }
     else saveLocal(DB);
   }
-  if (!silent) showToast(count > 0 ? count + ' duplicado(s) fusionados â' : 'Sin duplicados');
+  if (!silent) showToast(count > 0 ? count + ' duplicado(s) fusionados ✓' : 'Sin duplicados');
   return count;
 }
 
-// ââ TUTORIAL ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// ââ AUTOCOMPLETE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── TUTORIAL ────────────────────────────────────────────────────────────────
+// ── AUTOCOMPLETE ──────────────────────────────────────────────────────────────
 function makeAutocomplete(inputEl, getFn) {
   let drop = null;
   function removeDrop() { if (drop) { drop.remove(); drop = null; } }
@@ -2088,7 +1327,7 @@ function initAutocompletes() {
   if (addStore) makeAutocomplete(addStore, getStoreNames);
 }
 
-// ââ TUTORIAL INTERACTIVO âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── TUTORIAL INTERACTIVO ───────────────────────────────────────────────────────
 function _tutSteps() {
   const lines = (DB && DB.lines) || [];
   const agotados = lines.filter(l => predict(l).status === 'agotado').length;
@@ -2096,10 +1335,10 @@ function _tutSteps() {
   const enLista  = lines.filter(l => l.addedToShoppingList).length;
   const total    = lines.length;
   return [
-    { id: 'headerTitle',    title: 'Resetear filtros',    desc: 'Toca el tÃ­tulo LADESPENSA para quitar todos los filtros activos de golpe.' },
-    { id: 'fabAdd',         title: 'AÃ±adir productos',    desc: `Pulsa aquÃ­ para aÃ±adir un producto nuevo. Tienes ${total} productos registrados${agotados ? ', ' + agotados + ' agotado' + (agotados > 1 ? 's' : '') : ''}${urgentes ? ' y ' + urgentes + ' agotÃ¡ndose' : ''}.` },
-    { id: 'shoppingListBtn',title: 'Lista de la compra',  desc: `Toca el icono + en cualquier producto para aÃ±adirlo a la lista.${enLista ? ' Ahora hay ' + enLista + ' producto' + (enLista > 1 ? 's' : '') + ' en la lista.' : ' Cuando termines la compra, mÃ¡rcala como hecha.'}` },
-    { id: 'syncBtn',        title: 'Sincronizar',         desc: 'Sube y descarga cambios entre dispositivos. Ãsalo al cambiar de mÃ³vil o tras importar tickets.' },
+    { id: 'headerTitle',    title: 'Resetear filtros',    desc: 'Toca el título LADESPENSA para quitar todos los filtros activos de golpe.' },
+    { id: 'fabAdd',         title: 'Añadir productos',    desc: `Pulsa aquí para añadir un producto nuevo. Tienes ${total} productos registrados${agotados ? ', ' + agotados + ' agotado' + (agotados > 1 ? 's' : '') : ''}${urgentes ? ' y ' + urgentes + ' agotándose' : ''}.` },
+    { id: 'shoppingListBtn',title: 'Lista de la compra',  desc: `Toca el icono + en cualquier producto para añadirlo a la lista.${enLista ? ' Ahora hay ' + enLista + ' producto' + (enLista > 1 ? 's' : '') + ' en la lista.' : ' Cuando termines la compra, márcala como hecha.'}` },
+    { id: 'syncBtn',        title: 'Sincronizar',         desc: 'Sube y descarga cambios entre dispositivos. Ú�alo al cambiar de móvil o tras importar tickets.' },
     { id: 'filterBtn',      title: 'Filtros',             desc: 'Filtra por persona, lugar o tienda. Toca LADESPENSA arriba para quitar todos los filtros a la vez.' },
     { id: 'settingsBtn',    title: 'Ajustes',             desc: 'Personaliza nombres, actualiza el token de GitHub, fusiona duplicados o relanza este tutorial.' }
   ].filter(s => document.getElementById(s.id));
@@ -2143,7 +1382,7 @@ function _startInteractiveTutorial() {
     const isLast = idx === steps.length-1;
     box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
       <span style="font-size:15px;font-weight:700;flex:1">${step.title}</span>
-      <button id="_tutX" style="background:none;border:none;cursor:pointer;color:var(--text2);padding:0 0 0 8px;font-size:22px;line-height:1;flex-shrink:0">Ã</button>
+      <button id="_tutX" style="background:none;border:none;cursor:pointer;color:var(--text2);padding:0 0 0 8px;font-size:22px;line-height:1;flex-shrink:0">×</button>
     </div>
     <p style="font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:14px">${step.desc}</p>
     <div style="display:flex;justify-content:space-between;align-items:center">
@@ -2175,7 +1414,7 @@ function initTutorial() {
   });
 }
 
-// ââ BUSCADOR âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── BUSCADOR ───────────────────────────────────────────────────────────────
 function renderBuscador(query) {
   const results = document.getElementById('buscadorResults');
   const q = (query || '').trim().toLowerCase();
@@ -2192,10 +1431,10 @@ function renderBuscador(query) {
     const purchases = (l.purchases || []).slice().reverse();
     const rows = purchases.length
       ? purchases.slice(0, 10).map(p => {
-          const priceStr = p.price != null ? (+(p.price)).toFixed(2) + 'â¬' : 'â';
+          const priceStr = p.price != null ? (+(p.price)).toFixed(2) + '€' : '—';
           return `<div class="buscador-result-row">
             <span>${p.date}</span>
-            <span>${esc(p.store || 'â')}</span>
+            <span>${esc(p.store || '—')}</span>
             <span>x${p.qty || 1}</span>
             <span class="buscador-result-price">${priceStr}</span>
           </div>`;
@@ -2205,16 +1444,16 @@ function renderBuscador(query) {
     const statusColors = { agotado:'var(--urgent)', urgente:'var(--urgent)', pronto:'var(--soon)', visible:'var(--visible)', ok:'var(--ok)', desconocido:'var(--text2)' };
     return `<div class="buscador-result-item">
       <div class="buscador-result-name">
-        <span style="color:${statusColors[pred.status]||'var(--text2)'}">â</span>
+        <span style="color:${statusColors[pred.status]||'var(--text2)'}">●</span>
         ${esc(l.product)}
-        <span style="font-size:12px;color:var(--text2);font-weight:400"> Â· ${esc(getPersonaName(l.persona))} Â· ${esc(getLugarName(l.lugar))}</span>
+        <span style="font-size:12px;color:var(--text2);font-weight:400"> · ${esc(getPersonaName(l.persona))} · ${esc(getLugarName(l.lugar))}</span>
       </div>
       ${rows}
     </div>`;
   }).join('');
 }
 
-// ââ INIT âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── INIT ───────────────────────────────────────────────────────────────────
 function init() {
   try { _initInner(); } catch(e) { showToast('Error al arrancar: ' + e.message); console.error('init error:', e); }
 }
@@ -2288,7 +1527,7 @@ function _initInner() {
     DB.settings = settings;
     saveLocal(DB);
     document.getElementById('settingsNewToken').value = '';
-    showToast('Token actualizado â');
+    showToast('Token actualizado ✓');
     closeOverlay('settingsOverlay');
     setTimeout(() => syncFromGist(false), 500);
   });
@@ -2310,7 +1549,7 @@ function _initInner() {
   });
 
   document.getElementById('settingsResetBtn').addEventListener('click', () => {
-    customConfirm('Â¿Reiniciar la app? Se perderÃ¡n los ajustes locales.', () => {
+    customConfirm('¿Reiniciar la app? Se perderán los ajustes locales.', () => {
       localStorage.removeItem('ladespensa');
       location.reload();
     });
@@ -2351,7 +1590,7 @@ function _initInner() {
     closeOverlay('addOverlay');
     saveAndSync();
     renderAll();
-    showToast('Producto aÃ±adido');
+    showToast('Producto añadido');
   });
 
   // Shopping list
@@ -2410,7 +1649,7 @@ function _initInner() {
     saveAndSync();
     renderAll();
     closeOverlay('shoppingOverlay');
-    showToast('Â¡Compra registrada!');
+    showToast('¡Compra registrada!');
   });
 
   // Close overlays on backdrop click
@@ -2451,8 +1690,8 @@ if (document.readyState === 'loading') {
   init();
 }
 
-// ââ SERVICE WORKER âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// ââ EXPORT / IMPORT ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SERVICE WORKER ─────────────────────────────────────────────────────────
+// ── EXPORT / IMPORT ────────────────────────────────────────────────────────
 function exportData() {
   const safe = JSON.parse(JSON.stringify(DB));
   // No exportar el token (seguridad); el usuario lo tiene en Keychain o apuntado
@@ -2466,7 +1705,7 @@ function exportData() {
   a.download = `ladespensa-backup-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast('Datos exportados â');
+  showToast('Datos exportados ✓');
 }
 
 function importData(file) {
@@ -2475,7 +1714,7 @@ function importData(file) {
   reader.onload = (e) => {
     try {
       const data = JSON.parse(e.target.result);
-      if (!data.lines || !data.settings) { showToast('Archivo no vÃ¡lido'); return; }
+      if (!data.lines || !data.settings) { showToast('Archivo no válido'); return; }
       // Preservar token y gistId del dispositivo actual si existen
       const savedToken = settings?.gistToken || '';
       const savedGistId = settings?.gistId || '';
@@ -2488,7 +1727,7 @@ function importData(file) {
       saveLocal(DB);
       closeOverlay('settingsOverlay');
       renderAll();
-      showToast('Datos restaurados â');
+      showToast('Datos restaurados ✓');
     } catch (err) {
       showToast('Error al leer el archivo');
     }
@@ -2496,7 +1735,7 @@ function importData(file) {
   reader.readAsText(file);
 }
 
-// Sin SW de cachÃ© â actualizaciones por HTTP (como Clarito)
+// Sin SW de caché — actualizaciones por HTTP (como Clarito)
 </script>
 
 <!-- TUTORIAL OVERLAY -->
@@ -2505,15 +1744,15 @@ function importData(file) {
     <button id="tutorialXBtn" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;color:var(--text2);padding:4px" title="Cerrar">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
-    <div class="sheet-title">Â¿CÃ³mo funciona?</div>
+    <div class="sheet-title">¿Cómo funciona?</div>
     <div style="display:flex;flex-direction:column;gap:20px;margin:16px 0;">
       <div style="display:flex;gap:12px;align-items:flex-start">
         <div style="background:var(--surface2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         </div>
         <div>
-          <p style="font-size:14px;font-weight:600;margin-bottom:4px">AÃ±adir productos</p>
-          <p style="font-size:13px;color:var(--text2)">Pulsa el botÃ³n + (abajo a la derecha) para aÃ±adir un producto. Indica quiÃ©n lo compra, en quÃ© casa y el supermercado habitual.</p>
+          <p style="font-size:14px;font-weight:600;margin-bottom:4px">Añadir productos</p>
+          <p style="font-size:13px;color:var(--text2)">Pulsa el botón + (abajo a la derecha) para añadir un producto. Indica quién lo compra, en qué casa y el supermercado habitual.</p>
         </div>
       </div>
       <div style="display:flex;gap:12px;align-items:flex-start">
@@ -2522,7 +1761,7 @@ function importData(file) {
         </div>
         <div>
           <p style="font-size:14px;font-weight:600;margin-bottom:4px">Lista de la compra</p>
-          <p style="font-size:13px;color:var(--text2)">Toca el icono + junto a un producto para aÃ±adirlo a la lista. Ãbrela con el icono de cesta en la cabecera. Marca "Compra hecha" cuando termines.</p>
+          <p style="font-size:13px;color:var(--text2)">Toca el icono + junto a un producto para añadirlo a la lista. Ábrela con el icono de cesta en la cabecera. Marca "Compra hecha" cuando termines.</p>
         </div>
       </div>
       <div style="display:flex;gap:12px;align-items:flex-start">
@@ -2530,7 +1769,7 @@ function importData(file) {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
         </div>
         <div>
-          <p style="font-size:14px;font-weight:600;margin-bottom:4px">SincronizaciÃ³n</p>
+          <p style="font-size:14px;font-weight:600;margin-bottom:4px">Sincronización</p>
           <p style="font-size:13px;color:var(--text2)">Pulsa el icono de flechas circulares para subir y descargar cambios desde el Gist compartido. Los cambios de otro dispositivo llegan al sincronizar.</p>
         </div>
       </div>
@@ -2540,7 +1779,7 @@ function importData(file) {
         </div>
         <div>
           <p style="font-size:14px;font-weight:600;margin-bottom:4px">Filtros</p>
-          <p style="font-size:13px;color:var(--text2)">Pulsa el embudo para filtrar por persona, lugar o tienda. Toca el tÃ­tulo LADESPENSA para quitar todos los filtros de golpe.No volver a mostrar
+          <p style="font-size:13px;color:var(--text2)">Pulsa el embudo para filtrar por persona, lugar o tienda. Toca el título LADESPENSA para quitar todos los filtros de golpe.No volver a mostrar
     </label>
     <button class="btn-primary" id="tutorialCloseBtn">Entendido</button>
   </div>
