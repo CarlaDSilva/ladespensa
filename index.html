@@ -16,8 +16,9 @@
     --bg: #1a1a1f;
     --surface: #242429;
     --surface2: #2e2e35;
-    --accent: #06b6d4;
-    --accent-light: #22d3ee;
+    --accent: #e2e8f0;
+    --accent-light: #ffffff;
+    --accent-text: #0f172a;
     --text: #f0f0f5;
     --text2: #9999aa;
     --radius: 14px;
@@ -287,7 +288,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(6,182,212,0.4);
+    box-shadow: 0 4px 20px rgba(226,232,240,0.25);
     transition: background 0.15s, transform 0.15s;
     z-index: 50;
   }
@@ -510,7 +511,7 @@
     background: var(--accent);
     border: none;
     border-radius: var(--radius);
-    color: white;
+    color: var(--accent-text);
     font-size: 16px;
     font-weight: 600;
     padding: 14px;
@@ -799,15 +800,17 @@
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
       <p class="setup-subtitle">Conecta con tu Gist de Clarito para empezar a predecir el stock de tu despensa.</p>
-      <div class="sheet-field">
-        <label class="sheet-label">Gist ID</label>
-        <input class="sheet-input" id="setupGistId" placeholder="abc123def456..." autocomplete="off" spellcheck="false">
-      </div>
-      <div class="sheet-field">
-        <label class="sheet-label">Token GitHub <span style="color:var(--text2);font-size:11px">(scope: gist)</span></label>
-        <input class="sheet-input" id="setupToken" type="password" placeholder="ghp_..." autocomplete="off">
-      </div>
-      <button class="btn-primary" id="setupConnectBtn">Conectar</button>
+      <form id="setupForm" action="javascript:void(0)" autocomplete="on">
+        <div class="sheet-field">
+          <label class="sheet-label">Gist ID</label>
+          <input class="sheet-input" id="setupGistId" placeholder="abc123def456..." autocomplete="username" spellcheck="false">
+        </div>
+        <div class="sheet-field">
+          <label class="sheet-label">Token GitHub <span style="color:var(--text2);font-size:11px">(scope: gist)</span></label>
+          <input class="sheet-input" id="setupToken" type="password" placeholder="ghp_..." autocomplete="current-password">
+        </div>
+        <button class="btn-primary" id="setupConnectBtn" type="submit">Conectar</button>
+      </form>
       <p id="setupError" style="color:#c0392b;font-size:13px;margin-top:8px;display:none"></p>
     </div>
 
@@ -862,7 +865,7 @@
         </div>
         <button class="icon-btn" id="filterBtn" title="Filtros">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 16 12.46 22 3"/>
           </svg>
         </button>
         <button class="icon-btn" id="syncBtn" title="Sincronizar">
@@ -1037,7 +1040,7 @@
       </div>
       <div class="sheet-field" style="margin-top:12px">
         <label class="sheet-label">Actualizar token</label>
-        <input class="sheet-input" id="settingsNewToken" type="password" placeholder="ghp_... nuevo token" autocomplete="off">
+        <input class="sheet-input" id="settingsNewToken" type="password" placeholder="ghp_... nuevo token" autocomplete="current-password">
       </div>
       <button class="btn-secondary" id="settingsUpdateTokenBtn" style="margin-top:4px">Guardar nuevo token</button>
     </div>
@@ -1093,6 +1096,14 @@
     <button class="btn-primary" id="settingsSaveBtn">Guardar</button>
     <button class="btn-secondary" id="settingsCloseBtn">Cancelar</button>
     <button class="btn-secondary" id="mergeDupsBtn" style="margin-top:8px">Fusionar duplicados</button>
+    <div class="settings-section" style="margin-top:16px">
+      <div class="settings-section-title">Copia de seguridad</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Exporta todos tus datos a un archivo JSON. Si borras la app, puedes restaurarlos importando ese archivo.</div>
+      <button class="btn-secondary" id="exportDataBtn">â¬ Exportar datos</button>
+      <label class="btn-secondary" id="importDataLabel" style="display:block;text-align:center;cursor:pointer;margin-top:8px">â¬ Importar datos
+        <input type="file" id="importDataInput" accept=".json" style="display:none">
+      </label>
+    </div>
     <button class="btn-secondary" id="settingsTutorialBtn" style="margin-top:8px">Tutorial</button>
     <button class="btn-secondary" id="settingsResetBtn" style="color:#c0392b;border-color:#c0392b;margin-top:8px">Reiniciar app</button>
   </div>
@@ -1108,13 +1119,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.6.2 Â· Sol</div>
+<div class="version-tag">v1.6.3 Â· Sol</div>
 
 <script>
 'use strict';
 
-// ââ CONSTANTS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-const VERSION = '1.6.2';
+// ââ CONSTANTS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const VERSION = '1.6.3';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -2078,7 +2089,6 @@ function initAutocompletes() {
 }
 
 // ââ TUTORIAL INTERACTIVO âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-
 function _tutSteps() {
   const lines = (DB && DB.lines) || [];
   const agotados = lines.filter(l => predict(l).status === 'agotado').length;
@@ -2087,7 +2097,7 @@ function _tutSteps() {
   const total    = lines.length;
   return [
     { id: 'headerTitle',    title: 'Resetear filtros',    desc: 'Toca el tÃ­tulo LADESPENSA para quitar todos los filtros activos de golpe.' },
-    { id: 'fabAdd',         title: 'AÃ±adir productos',    desc: `Pulsa aquÃ­ para aÃ±adir un producto nuevo. Tienes ${total} productos registrados${agotados ? ', ' + agotados + ' agotado' + (agotados > 1 ? 's' : '') : ''}${urgentes ? ' y' + urgentes + ' agotÃ¡ndose' : ''}.` },
+    { id: 'fabAdd',         title: 'AÃ±adir productos',    desc: `Pulsa aquÃ­ para aÃ±adir un producto nuevo. Tienes ${total} productos registrados${agotados ? ', ' + agotados + ' agotado' + (agotados > 1 ? 's' : '') : ''}${urgentes ? ' y ' + urgentes + ' agotÃ¡ndose' : ''}.` },
     { id: 'shoppingListBtn',title: 'Lista de la compra',  desc: `Toca el icono + en cualquier producto para aÃ±adirlo a la lista.${enLista ? ' Ahora hay ' + enLista + ' producto' + (enLista > 1 ? 's' : '') + ' en la lista.' : ' Cuando termines la compra, mÃ¡rcala como hecha.'}` },
     { id: 'syncBtn',        title: 'Sincronizar',         desc: 'Sube y descarga cambios entre dispositivos. Ãsalo al cambiar de mÃ³vil o tras importar tickets.' },
     { id: 'filterBtn',      title: 'Filtros',             desc: 'Filtra por persona, lugar o tienda. Toca LADESPENSA arriba para quitar todos los filtros a la vez.' },
@@ -2140,7 +2150,7 @@ function _startInteractiveTutorial() {
       <span style="font-size:11px;color:var(--text2)">${idx+1} / ${steps.length}</span>
       <div style="display:flex;gap:8px">
         ${idx>0?'<button id="_tutPrev" style="background:var(--surface2);border:none;border-radius:8px;color:var(--text);padding:7px 12px;cursor:pointer;font-size:13px">Anterior</button>':''}
-        <button id="_tutNext" style="background:var(--accent);border:none;border-radius:8px;color:white;padding:7px 14px;cursor:pointer;font-size:13px;font-weight:600">${isLast?'Entendido':'Siguiente'}</button>
+        <button id="_tutNext" style="background:var(--accent);border:none;border-radius:8px;color:var(--accent-text);padding:7px 14px;cursor:pointer;font-size:13px;font-weight:600">${isLast?'Entendido':'Siguiente'}</button>
       </div>
     </div>`;
     document.getElementById('_tutX').addEventListener('click', e => { e.stopPropagation(); close(); });
@@ -2230,6 +2240,7 @@ function _initInner() {
   });
 
   // Setup wizard
+  document.getElementById('setupForm').addEventListener('submit', (e) => { e.preventDefault(); runSetupConnect(); });
   document.getElementById('setupConnectBtn').addEventListener('click', runSetupConnect);
   document.getElementById('setupNamesNext').addEventListener('click', setupNamesNext);
   document.getElementById('setupLugar1Btn').addEventListener('click', () => finishSetup('lugar1'));
@@ -2292,6 +2303,12 @@ function _initInner() {
     renderAll();
   });
   initTutorial();
+  document.getElementById('exportDataBtn').addEventListener('click', exportData);
+  document.getElementById('importDataInput').addEventListener('change', (e) => {
+    importData(e.target.files[0]);
+    e.target.value = '';
+  });
+
   document.getElementById('settingsResetBtn').addEventListener('click', () => {
     customConfirm('Â¿Reiniciar la app? Se perderÃ¡n los ajustes locales.', () => {
       localStorage.removeItem('ladespensa');
@@ -2435,11 +2452,51 @@ if (document.readyState === 'loading') {
 }
 
 // ââ SERVICE WORKER âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
-  });
+// ââ EXPORT / IMPORT ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function exportData() {
+  const safe = JSON.parse(JSON.stringify(DB));
+  // No exportar el token (seguridad); el usuario lo tiene en Keychain o apuntado
+  if (safe.settings) { delete safe.settings.gistToken; }
+  safe._exportedAt = new Date().toISOString();
+  safe._version = VERSION;
+  const blob = new Blob([JSON.stringify(safe, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ladespensa-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Datos exportados â');
 }
+
+function importData(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.lines || !data.settings) { showToast('Archivo no vÃ¡lido'); return; }
+      // Preservar token y gistId del dispositivo actual si existen
+      const savedToken = settings?.gistToken || '';
+      const savedGistId = settings?.gistId || '';
+      DB = data;
+      if (!DB.settings) DB.settings = {};
+      if (savedToken) DB.settings.gistToken = savedToken;
+      if (savedGistId) DB.settings.gistId = savedGistId;
+      if (!DB.clarPrices) DB.clarPrices = {};
+      settings = DB.settings;
+      saveLocal(DB);
+      closeOverlay('settingsOverlay');
+      renderAll();
+      showToast('Datos restaurados â');
+    } catch (err) {
+      showToast('Error al leer el archivo');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Sin SW de cachÃ© â actualizaciones por HTTP (como Clarito)
 </script>
 
 <!-- TUTORIAL OVERLAY -->
