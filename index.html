@@ -252,6 +252,19 @@
   </div>
 </div>
 
+<!-- IMPORT WINDOW MODAL -->
+<div class="overlay" id="importOverlay">
+  <div class="sheet">
+    <div class="shopping-header">
+      <span class="shopping-header-title">¿En qué casa va cada producto?</span>
+      <button class="chip-btn" id="importAllDefaultBtn">Todo a Piso</button>
+    </div>
+    <div style="font-size:13px;color:var(--text2);padding:8px 0 4px">Productos nuevos importados de Clarito. Elige la casa de cada uno o pulsa el botón de arriba para pasarlos todos a la casa por defecto.</div>
+    <div id="importList"></div>
+    <button class="btn-primary" id="importConfirmBtn">Confirmar</button>
+  </div>
+</div>
+
 <!-- SETTINGS MODAL -->
 <div class="overlay" id="settingsOverlay">
   <div class="sheet">
@@ -307,6 +320,13 @@
       </select>
     </div>
     <div class="settings-section">
+      <div class="settings-section-title">Lugar por defecto de importaciones</div>
+      <select class="sheet-select" id="settingsImportLugar">
+        <option value="lugar1">Lugar 1</option>
+        <option value="lugar2">Lugar 2</option>
+      </select>
+    </div>
+    <div class="settings-section">
       <div class="settings-section-title">Preferencias</div>
       <div class="settings-row">
         <span class="settings-row-label">Nombres originales (Clarito)</span>
@@ -336,6 +356,7 @@
       <label class="btn-secondary" id="importDataLabel" style="display:block;text-align:center;cursor:pointer;margin-top:8px">⬆ Importar datos
         <input type="file" id="importDataInput" accept=".json" style="display:none">
       </label>
+      <button class="btn-secondary" id="cleanTombstonesBtn" style="margin-top:8px">Limpiar marcas de borrado antiguas</button>
     </div>
     <button class="btn-secondary" id="settingsTutorialBtn" style="margin-top:8px">Tutorial</button>
     <button class="btn-secondary" id="settingsResetBtn" style="color:#c0392b;border-color:#c0392b;margin-top:8px">Reiniciar app</button>
@@ -369,6 +390,7 @@ let expandedId = null;
 let filters = { persona: 'all', lugar: 'all', store: 'all' };
 let shoppingTicked = new Set(); // ids ticked in current shopping session
 let collapsedSections = new Set(); // collapsed section ids
+let _pendingImport = []; // productos de tickets nuevos pendientes de asignar casa
 
 // ── CONFIRM MODAL ──────────────────────────────────────────────────────────
 let _confirmCallback = null;
@@ -406,6 +428,7 @@ function defaultDB() {
       lugar1Name: 'Piso',
       lugar2Name: 'Mogor',
       currentLugar: 'lugar1',
+      importDefaultLugar: 'lugar1',
       lastSync: null
     },
     lines: [],
@@ -515,6 +538,7 @@ async function syncFromGist(initial) {
   }
 
   renderAll();
+  if (_pendingImport && _pendingImport.length) showImportWindow();
 }
 
 function importClarito(gistData) {
@@ -556,6 +580,7 @@ function importClarito(gistData) {
     (line.purchases || []).forEach(p => { if (p.ticketId) processedIds.add(p.ticketId); });
   });
 
+  _pendingImport = [];
   for (const ticket of tickets) {
     if (processedIds.has(ticket.id)) continue;
     for (const prod of (ticket.products || [])) {
@@ -563,35 +588,110 @@ function importClarito(gistData) {
       const persona = prod.assignedTo || 'comun';
       const qty = prod.qty || 1;
       const unitPrice = prod.unitP != null ? prod.unitP : ((prod.finalPrice ?? prod.price) != null ? (prod.finalPrice ?? prod.price) / qty : null);
-      let line = DB.lines.find(l => l.product === prod.name && l.persona === persona && l.lugar === settings.currentLugar);
-      if (!line) {
-        line = {
-          id: uid(),
-          product: prod.name,
-          persona: persona,
-          lugar: settings.currentLugar,
-          purchases: [],
-          manualStatus: null,
-          addedToShoppingList: false,
-          estimatedCadenceDays: null,
-          lastUpdated: new Date().toISOString()
-        };
-        DB.lines.push(line);
-      }
-      // Clear agotado/agotandose manual override on new purchase
-      if (line.manualStatus === 'agotado' || line.manualStatus === 'agotandose') {
-        line.manualStatus = null;
-      }
-      line.purchases.push({
-        date: ticket.date,
+      // No se crea la línea aún: se recoge para preguntar la casa en la ventana de importación
+      _pendingImport.push({
+        ticketId: ticket.id,
+        name: prod.name,
+        persona: persona,
         qty: qty,
         store: ticket.store || '',
         price: unitPrice,
-        ticketId: ticket.id
+        date: ticket.date
       });
-      line.lastUpdated = new Date().toISOString();
     }
   }
+}
+
+// ── IMPORT WINDOW ──────────────────────────────────────────────────────────
+// Crea las líneas de los productos pendientes con la casa elegida por producto.
+function commitImport(houseByKey) {
+  const defLugar = settings.importDefaultLugar || 'lugar1';
+  (_pendingImport || []).forEach(it => {
+    const key = it.name + '|' + it.persona;
+    const lugar = (houseByKey && houseByKey[key]) || defLugar;
+    let line = DB.lines.find(l => l.product === it.name && l.persona === it.persona && l.lugar === lugar);
+    if (!line) {
+      line = {
+        id: uid(),
+        product: it.name,
+        persona: it.persona,
+        lugar: lugar,
+        purchases: [],
+        manualStatus: null,
+        addedToShoppingList: false,
+        estimatedCadenceDays: null,
+        lastUpdated: new Date().toISOString()
+      };
+      DB.lines.push(line);
+    }
+    if (line.manualStatus === 'agotado' || line.manualStatus === 'agotandose') line.manualStatus = null;
+    line.purchases.push({ date: it.date, qty: it.qty, store: it.store, price: it.price, ticketId: it.ticketId });
+    line.lastUpdated = new Date().toISOString();
+  });
+  _pendingImport = [];
+  mergeDuplicates(true);
+  saveAndSync();
+  renderAll();
+}
+
+function showImportWindow() {
+  if (!_pendingImport || !_pendingImport.length) return;
+  // Productos únicos por nombre+persona
+  const seen = {};
+  const uniq = [];
+  _pendingImport.forEach(it => {
+    const key = it.name + '|' + it.persona;
+    if (!seen[key]) { seen[key] = true; uniq.push({ key, name: it.name, persona: it.persona }); }
+  });
+  const defLugar = settings.importDefaultLugar || 'lugar1';
+  const choices = {};
+  uniq.forEach(u => choices[u.key] = defLugar);
+
+  const list = document.getElementById('importList');
+  const defName = defLugar === 'lugar1' ? settings.lugar1Name : settings.lugar2Name;
+  document.getElementById('importAllDefaultBtn').textContent = 'Todo a ' + defName;
+
+  function draw() {
+    list.innerHTML = uniq.map(u => `
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--surface2)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(u.name)}</div>
+          <div style="font-size:12px;color:var(--text2)">${esc(getPersonaName(u.persona))}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="chip-btn ${choices[u.key]==='lugar1'?'active':''}" data-imp-key="${esc(u.key)}" data-imp-lugar="lugar1">${esc(settings.lugar1Name)}</button>
+          <button class="chip-btn ${choices[u.key]==='lugar2'?'active':''}" data-imp-key="${esc(u.key)}" data-imp-lugar="lugar2">${esc(settings.lugar2Name)}</button>
+        </div>
+      </div>`).join('');
+    list.querySelectorAll('[data-imp-key]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        choices[btn.dataset.impKey] = btn.dataset.impLugar;
+        draw();
+      });
+    });
+  }
+  draw();
+
+  const overlay = document.getElementById('importOverlay');
+  overlay.classList.add('open');
+
+  const confirmBtn = document.getElementById('importConfirmBtn');
+  const allBtn = document.getElementById('importAllDefaultBtn');
+  // Reemplazar handlers previos clonando (evita acumulación)
+  const newConfirm = confirmBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+  const newAll = allBtn.cloneNode(true);
+  allBtn.parentNode.replaceChild(newAll, allBtn);
+  newConfirm.addEventListener('click', () => {
+    commitImport(choices);
+    overlay.classList.remove('open');
+    showToast('Productos importados');
+  });
+  newAll.addEventListener('click', () => {
+    commitImport(null); // todo a la casa por defecto
+    overlay.classList.remove('open');
+    showToast('Importado a ' + defName);
+  });
 }
 
 // ── PRICE HELPERS ──────────────────────────────────────────────────────────
@@ -723,6 +823,9 @@ function renderAll() {
   document.getElementById('settingsCurrentLugar').value = settings.currentLugar;
   document.querySelector('#settingsCurrentLugar option[value="lugar1"]').textContent = settings.lugar1Name;
   document.querySelector('#settingsCurrentLugar option[value="lugar2"]').textContent = settings.lugar2Name;
+  document.querySelector('#settingsImportLugar option[value="lugar1"]').textContent = settings.lugar1Name;
+  document.querySelector('#settingsImportLugar option[value="lugar2"]').textContent = settings.lugar2Name;
+  document.getElementById('settingsImportLugar').value = settings.importDefaultLugar || 'lugar1';
   document.getElementById('settingsGistId').textContent = settings.gistId ? settings.gistId.slice(0, 8) + '...' : '-';
   document.getElementById('settingsLastSync').textContent = settings.lastSync ? new Date(settings.lastSync).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) : '-';
   document.getElementById('settingsOriginalNames').checked = !!settings.useOriginalNames;
@@ -827,13 +930,10 @@ function renderAll() {
   const totalAll = allLines.length;
   const statsBar = document.getElementById('statsBar');
   statsBar.innerHTML = [s1, s2].map(s =>
-    `<div class="stats-chip${s.ag || s.urg ? ' urgent' : ''}">
-      <span>${esc(s.lugarName)}</span>
-      ${s.ag ? `<b>${s.ag} ag.</b>` : ''}
-      ${s.urg ? `<b style="color:var(--soon)">${s.urg} urgente${s.urg>1?'s':''}</b>` : ''}
-      ${!s.ag && !s.urg ? '<span style="color:var(--ok)">✓</span>' : ''}
+    `<div class="stats-chip${s.ag || s.urg ? ' urgent' : ''}" style="white-space:nowrap;gap:6px">
+      <span>${esc(s.lugarName)}</span>${s.ag ? ` <b>${s.ag} ag.</b>` : ''}${s.urg ? ` <b style="color:var(--soon)">${s.urg} urg.</b>` : ''}${!s.ag && !s.urg ? ' <span style="color:var(--ok)">✓</span>' : ''}
     </div>`
-  ).join('') + `<div class="stats-chip" style="margin-left:auto"><b>${totalAll}</b> productos</div>`;
+  ).join('') + `<div class="stats-chip" style="white-space:nowrap;margin-left:auto"><b>${totalAll}</b> prod.</div>`;
 }
 
 function renderSection(sectionId, listId, items, title) {
@@ -1275,6 +1375,7 @@ function saveSettings() {
   settings.lugar1Name = document.getElementById('settingsL1Name').value.trim() || settings.lugar1Name;
   settings.lugar2Name = document.getElementById('settingsL2Name').value.trim() || settings.lugar2Name;
   settings.currentLugar = document.getElementById('settingsCurrentLugar').value;
+  settings.importDefaultLugar = document.getElementById('settingsImportLugar').value;
   settings.useOriginalNames = document.getElementById('settingsOriginalNames').checked;
   settings.dependOnClarito = document.getElementById('settingsDependClarito').checked;
   DB.settings = settings;
@@ -1581,6 +1682,19 @@ function _initInner() {
     setTimeout(() => syncFromGist(false), 500);
   });
   document.getElementById('mergeDupsBtn').addEventListener('click', () => { mergeDuplicates(false); });
+  document.getElementById('cleanTombstonesBtn').addEventListener('click', () => {
+    if (!DB.deletedIds) DB.deletedIds = [];
+    const cutoff = Date.now() - 90 * 86400000; // 90 días
+    const before = DB.deletedIds.length;
+    DB.deletedIds = DB.deletedIds.filter(d => {
+      const t = new Date(d.at).getTime();
+      return isNaN(t) ? false : t >= cutoff;
+    });
+    const removed = before - DB.deletedIds.length;
+    saveLocal(DB);
+    saveAndSync();
+    showToast(removed > 0 ? removed + ' marca(s) limpiada(s)' : 'Nada que limpiar');
+  });
   document.getElementById('headerTitle').addEventListener('click', () => {
     filters.persona = 'all'; filters.lugar = 'all'; filters.store = 'all';
     document.getElementById('filterPersona').value = 'all';
@@ -1710,6 +1824,8 @@ function _initInner() {
     if (!DB.claritoPrices) DB.claritoPrices = {};
     // Migrate: ensure deletedIds exists (tombstones de borrado para el sync)
     if (!DB.deletedIds) DB.deletedIds = [];
+    // Migrate: lugar por defecto de importaciones
+    if (DB.settings.importDefaultLugar === undefined) DB.settings.importDefaultLugar = 'lugar1';
     // Migrate: ensure original names exist
     if (DB.settings.persona1OriginalName === undefined) DB.settings.persona1OriginalName = '';
     if (DB.settings.persona2OriginalName === undefined) DB.settings.persona2OriginalName = '';
