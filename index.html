@@ -286,6 +286,10 @@
         <span class="settings-row-label">Última sync</span>
         <span class="settings-row-value" id="settingsLastSync">-</span>
       </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Diagnóstico import</span>
+        <span class="settings-row-value" id="settingsImportDbg" style="text-align:right;max-width:60%">-</span>
+      </div>
       <button class="btn-secondary" id="settingsSyncBtn" style="margin-top:8px">↻ Sincronizar ahora</button>
       <div class="sheet-field" style="margin-top:12px">
         <label class="sheet-label">Actualizar token</label>
@@ -555,7 +559,7 @@ function importClarito(gistData) {
       break;
     }
   }
-  if (!clarito) return;
+  if (!clarito) { _importDbg = 'No se encontró db.json de Clarito en el Gist'; return; }
 
   // Contar tickets sin confirmar (para avisar tras sincronizar)
   _unconfirmedNew = Object.values(clarito.tickets || {}).filter(t => t.type === 'ticket' && !t.confirmed).length;
@@ -840,6 +844,7 @@ function renderAll() {
   document.getElementById('settingsImportLugar').value = settings.importDefaultLugar || 'lugar1';
   document.getElementById('settingsGistId').textContent = settings.gistId ? settings.gistId.slice(0, 8) + '...' : '-';
   document.getElementById('settingsLastSync').textContent = settings.lastSync ? new Date(settings.lastSync).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+  document.getElementById('settingsImportDbg').textContent = _importDbg || '-';
   document.getElementById('settingsOriginalNames').checked = !!settings.useOriginalNames;
   document.getElementById('settingsDependClarito').checked = settings.dependOnClarito !== false; // default true
 
