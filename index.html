@@ -1691,6 +1691,18 @@ if (document.readyState === 'loading') {
 }
 
 // ── SERVICE WORKER ─────────────────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => reg.update()).catch(() => {});
+  });
+  let _swReloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (_swReloaded || !hadController) return;
+    _swReloaded = true;
+    location.reload(); // recarga una vez cuando el SW nuevo toma el control
+  });
+}
 // ── EXPORT / IMPORT ────────────────────────────────────────────────────────
 function exportData() {
   const safe = JSON.parse(JSON.stringify(DB));
@@ -1734,8 +1746,6 @@ function importData(file) {
   };
   reader.readAsText(file);
 }
-
-// Sin SW de caché — actualizaciones por HTTP (como Clarito)
 </script>
 
 <!-- TUTORIAL OVERLAY -->
@@ -1779,7 +1789,12 @@ function importData(file) {
         </div>
         <div>
           <p style="font-size:14px;font-weight:600;margin-bottom:4px">Filtros</p>
-          <p style="font-size:13px;color:var(--text2)">Pulsa el embudo para filtrar por persona, lugar o tienda. Toca el título LADESPENSA para quitar todos los filtros de golpe.No volver a mostrar
+          <p style="font-size:13px;color:var(--text2)">Pulsa el embudo para filtrar por persona, lugar o tienda. Toca el título LADESPENSA para quitar todos los filtros de golpe.</p>
+        </div>
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text2);margin:4px 0 16px;cursor:pointer">
+      <input type="checkbox" id="tutorialDontShow" style="width:18px;height:18px"> No volver a mostrar
     </label>
     <button class="btn-primary" id="tutorialCloseBtn">Entendido</button>
   </div>
