@@ -12,6 +12,9 @@
 </head>
 <body>
 
+<!-- Splash de inicio -->
+<div id="splash"><div class="splash-wordmark">LADESPENSA</div></div>
+
 <!-- Sync bar -->
 <div class="sync-bar" id="syncBar"></div>
 
@@ -391,6 +394,8 @@ let filters = { persona: 'all', lugar: 'all', store: 'all' };
 let shoppingTicked = new Set(); // ids ticked in current shopping session
 let collapsedSections = new Set(); // collapsed section ids
 let _pendingImport = []; // productos de tickets nuevos pendientes de asignar casa
+let _unconfirmedNew = 0; // tickets de Clarito sin confirmar (aviso al sincronizar)
+let _importDbg = ''; // diagnóstico de importación (temporal, para localizar el bug)
 
 // ── CONFIRM MODAL ──────────────────────────────────────────────────────────
 let _confirmCallback = null;
@@ -539,6 +544,7 @@ async function syncFromGist(initial) {
 
   renderAll();
   if (_pendingImport && _pendingImport.length) showImportWindow();
+  else if (_importDbg) showToast('Import: ' + _importDbg);
 }
 
 function importClarito(gistData) {
@@ -550,6 +556,9 @@ function importClarito(gistData) {
     }
   }
   if (!clarito) return;
+
+  // Contar tickets sin confirmar (para avisar tras sincronizar)
+  _unconfirmedNew = Object.values(clarito.tickets || {}).filter(t => t.type === 'ticket' && !t.confirmed).length;
 
   // Import original person names
   if (clarito.persons && clarito.persons.length >= 1) {
@@ -600,6 +609,9 @@ function importClarito(gistData) {
       });
     }
   }
+  const _raw = Object.keys(clarito.tickets || {}).length;
+  const _typeT = Object.values(clarito.tickets || {}).filter(t => t && t.type === 'ticket').length;
+  _importDbg = _raw + ' entradas · ' + _typeT + ' ticket · ' + tickets.length + ' conf · ' + _pendingImport.length + ' nuevos';
 }
 
 // ── IMPORT WINDOW ──────────────────────────────────────────────────────────
@@ -1486,13 +1498,13 @@ function _tutSteps() {
   const enLista  = lines.filter(l => l.addedToShoppingList).length;
   const total    = lines.length;
   return [
-    { id: 'headerTitle',    title: 'Resetear filtros',    desc: 'Toca el título LADESPENSA para quitar todos los filtros activos de golpe.' },
+    { id: null,             title: 'Bienvenida',          desc: 'LADESPENSA te avisa de cuándo se te va a acabar cada producto, a partir de tu historial de compras de Clarito. Vamos a ver lo básico.' },
     { id: 'fabAdd',         title: 'Añadir productos',    desc: `Pulsa aquí para añadir un producto nuevo. Tienes ${total} productos registrados${agotados ? ', ' + agotados + ' agotado' + (agotados > 1 ? 's' : '') : ''}${urgentes ? ' y ' + urgentes + ' agotándose' : ''}.` },
     { id: 'shoppingListBtn',title: 'Lista de la compra',  desc: `Toca el icono + en cualquier producto para añadirlo a la lista.${enLista ? ' Ahora hay ' + enLista + ' producto' + (enLista > 1 ? 's' : '') + ' en la lista.' : ' Cuando termines la compra, márcala como hecha.'}` },
-    { id: 'syncBtn',        title: 'Sincronizar',         desc: 'Sube y descarga cambios entre dispositivos. Ú�alo al cambiar de móvil o tras importar tickets.' },
-    { id: 'filterBtn',      title: 'Filtros',             desc: 'Filtra por persona, lugar o tienda. Toca LADESPENSA arriba para quitar todos los filtros a la vez.' },
-    { id: 'settingsBtn',    title: 'Ajustes',             desc: 'Personaliza nombres, actualiza el token de GitHub, fusiona duplicados o relanza este tutorial.' }
-  ].filter(s => document.getElementById(s.id));
+    { id: 'filterBtn',      title: 'Filtros',             desc: 'Filtra por persona, lugar o tienda.' },
+    { id: 'headerTitle',    title: 'Resetear filtros',    desc: 'Toca el título LADESPENSA para quitar todos los filtros activos de golpe.' },
+    { id: 'settingsBtn',    title: 'Ajustes y sincronizar', desc: 'En Ajustes sincronizas (botón "Sincronizar ahora", úsalo al cambiar de móvil o tras subir tickets en Clarito), personalizas nombres, actualizas el token o relanzas este tutorial.' }
+  ].filter(s => !s.id || document.getElementById(s.id));
 }
 
 function showTutorial() {
@@ -1521,15 +1533,22 @@ function _startInteractiveTutorial() {
   overlay.addEventListener('click', close);
   function render() {
     const step = steps[idx];
-    const el = document.getElementById(step.id);
-    if (!el) { idx < steps.length-1 ? (idx++, render()) : close(); return; }
-    const r = el.getBoundingClientRect(), pad = 8;
-    spot.style.cssText = spot.style.cssText.replace(/left:[^;]+;|top:[^;]+;|width:[^;]+;|height:[^;]+;/g,'');
-    Object.assign(spot.style, { left:(r.left-pad)+'px', top:(r.top-pad)+'px', width:(r.width+pad*2)+'px', height:(r.height+pad*2)+'px' });
-    const boxL = Math.max(8, Math.min(r.left, window.innerWidth-278));
-    const belowY = r.bottom+pad+10;
-    const boxT = belowY+155 < window.innerHeight ? belowY : Math.max(8, r.top-pad-170);
-    Object.assign(box.style, { left:boxL+'px', top:boxT+'px' });
+    const el = step.id ? document.getElementById(step.id) : null;
+    if (step.id && !el) { idx < steps.length-1 ? (idx++, render()) : close(); return; }
+    const pad = 8;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      spot.style.opacity = '1';
+      Object.assign(spot.style, { left:(r.left-pad)+'px', top:(r.top-pad)+'px', width:(r.width+pad*2)+'px', height:(r.height+pad*2)+'px' });
+      const boxL = Math.max(8, Math.min(r.left, window.innerWidth-278));
+      const belowY = r.bottom+pad+10;
+      const boxT = belowY+155 < window.innerHeight ? belowY : Math.max(8, r.top-pad-170);
+      Object.assign(box.style, { left:boxL+'px', top:boxT+'px' });
+    } else {
+      // Paso de intro sin objetivo: pantalla atenuada y caja centrada
+      Object.assign(spot.style, { left:'50%', top:'50%', width:'0px', height:'0px' });
+      Object.assign(box.style, { left:Math.max(8,(window.innerWidth-278)/2)+'px', top:Math.max(40,(window.innerHeight-220)/2)+'px' });
+    }
     const isLast = idx === steps.length-1;
     box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
       <span style="font-size:15px;font-weight:700;flex:1">${step.title}</span>
@@ -1651,6 +1670,15 @@ function _initInner() {
   document.getElementById('settingsBtn').addEventListener('click', openSettings);
   document.getElementById('settingsSaveBtn').addEventListener('click', saveSettings);
   document.getElementById('settingsCloseBtn').addEventListener('click', () => closeOverlay('settingsOverlay'));
+  // Interruptores que se aplican al instante (para que el sync no los revierta)
+  document.getElementById('settingsOriginalNames').addEventListener('change', (e) => {
+    settings.useOriginalNames = e.target.checked;
+    DB.settings = settings; saveLocal(DB); renderAll();
+  });
+  document.getElementById('settingsDependClarito').addEventListener('change', (e) => {
+    settings.dependOnClarito = e.target.checked;
+    DB.settings = settings; saveLocal(DB);
+  });
   document.getElementById('settingsSyncBtn').addEventListener('click', () => {
     closeOverlay('settingsOverlay');
     if (settings && settings.gistId) syncFromGist(false);
@@ -1851,6 +1879,11 @@ if (document.readyState === 'loading') {
 }
 
 // ── SERVICE WORKER ─────────────────────────────────────────────────────────
+  // Retirar el splash de inicio tras su animación
+  window.addEventListener('load', () => {
+    const _sp = document.getElementById('splash');
+    if (_sp) setTimeout(() => _sp.remove(), 1500);
+  });
   if ('serviceWorker' in navigator) {
   const hadController = !!navigator.serviceWorker.controller;
   window.addEventListener('load', () => {
