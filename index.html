@@ -661,6 +661,7 @@ function formatCountdown(pred) {
   if (pred.status === 'agotado') return 'Agotado';
   if (pred.status === 'desconocido') return 'Desconocido';
   if (pred.daysRemaining === null) return 'Sin datos';
+  if (pred.status === 'ok' && pred.daysRemaining <= 0) return ''; // barra verde nunca dice "Agotado"
   if (pred.daysRemaining <= 0) return 'Agotado';
   if (pred.daysRemaining === 1) return 'Mañana';
   return 'En ' + pred.daysRemaining + ' días';
@@ -706,7 +707,10 @@ function renderAll() {
 
   // Collect stores for filter + datalist
   const stores = new Set();
-  DB.lines.forEach(l => (l.purchases || []).forEach(p => { if (p.store) stores.add(p.store); }));
+  DB.lines.forEach(l => {
+    if (l.store) stores.add(l.store);
+    (l.purchases || []).forEach(p => { if (p.store) stores.add(p.store); });
+  });
 
   const storeSelect = document.getElementById('filterStore');
   const storeVal = storeSelect.value;
@@ -747,6 +751,7 @@ function renderAll() {
     if (filters.lugar !== 'all' && line.lugar !== filters.lugar) return false;
     if (filters.store !== 'all') {
       const stores2 = (line.purchases || []).map(p => p.store);
+      if (line.store) stores2.push(line.store);
       if (!stores2.includes(filters.store)) return false;
     }
     return true;
@@ -853,7 +858,7 @@ function makeCard(line, pred) {
         <div class="item-meta">
           <span>${esc(getPersonaName(line.persona))}</span>
           <span>${esc(getLugarName(line.lugar))}</span>
-          ${pred.cadence ? '<span>' + Math.round(pred.cadence) + 'd/u</span>' : ''}
+          ${pred.cadence ? '<span>dura ~' + Math.round(pred.cadence) + ' días</span>' : ''}
         </div>
       </div>
       <div class="stock-bar-wrap">
@@ -889,6 +894,10 @@ function makeCard(line, pred) {
             <option value="lugar2" ${line.lugar === 'lugar2' ? 'selected' : ''}>${esc(settings.lugar2Name)}</option>
           </select>
         </div>
+        <div class="expand-field">
+          <span class="expand-label">Supermercado</span>
+          <input class="expand-input" data-field="store" value="${esc(line.store || '')}" placeholder="Mercadona, Lidl...">
+        </div>
       </div>
       <div class="expand-actions">
         <button class="chip-btn ${line.manualStatus === 'agotandose' ? 'active' : ''}" data-action="mark" data-val="agotandose">Agotándose</button>
@@ -915,6 +924,8 @@ function makeCard(line, pred) {
   // Autocomplete on expanded product input
   const _prodInput = card.querySelector('[data-field="product"]');
   if (_prodInput) makeAutocomplete(_prodInput, getProductNames);
+  const _storeInput = card.querySelector('[data-field="store"]');
+  if (_storeInput) makeAutocomplete(_storeInput, getStoreNames);
 
   card.querySelector('[data-action="toggle-list"]').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -947,9 +958,11 @@ function makeCard(line, pred) {
     const nameInput = card.querySelector('[data-field="product"]');
     const personaSelect = card.querySelector('[data-field="persona"]');
     const lugarSelect = card.querySelector('[data-field="lugar"]');
+    const storeInput = card.querySelector('[data-field="store"]');
     line.product = nameInput.value.trim() || line.product;
     line.persona = personaSelect.value;
     line.lugar = lugarSelect.value;
+    if (storeInput) line.store = storeInput.value.trim();
     line.lastUpdated = new Date().toISOString();
     saveAndSync();
     renderAll();
@@ -1318,7 +1331,10 @@ function makeAutocomplete(inputEl, getFn) {
 function getProductNames() { return (DB&&DB.lines||[]).map(l=>l.product).filter(Boolean); }
 function getStoreNames() {
   const s = new Set();
-  (DB&&DB.lines||[]).forEach(l=>(l.purchases||[]).forEach(p=>{ if(p.store) s.add(p.store); }));
+  (DB&&DB.lines||[]).forEach(l=>{
+    if(l.store) s.add(l.store);
+    (l.purchases||[]).forEach(p=>{ if(p.store) s.add(p.store); });
+  });
   return [...s];
 }
 function initAutocompletes() {
@@ -1578,13 +1594,8 @@ function _initInner() {
       estimatedCadenceDays: null,
       lastUpdated: new Date().toISOString()
     };
-    // If store provided, add an initial entry-less record
-    if (store) {
-      // Store will appear in datalist next time
-      const today = new Date().toISOString().slice(0, 10);
-      // Don't add fake purchase; just store reference for autocomplete via a tag
-      line.lastStore = store;
-    }
+    // Supermercado organizativo (no predictivo): se guarda en la línea, no crea compra
+    if (store) line.store = store;
     DB.lines.push(line);
     document.getElementById('addName').value = '';
     document.getElementById('addStatus').value = '';
