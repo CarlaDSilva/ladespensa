@@ -410,7 +410,8 @@ function defaultDB() {
     },
     lines: [],
     shoppingList: [],
-    claritoPrices: {}
+    claritoPrices: {},
+    deletedIds: []
   };
 }
 
@@ -445,6 +446,27 @@ async function gistWrite(gistId, token, content) {
 }
 
 // ── SYNC ───────────────────────────────────────────────────────────────────
+// Fusión de líneas por fecha: la versión más reciente (por lastUpdated) de cada
+// producto gana; se unen las que existan solo en un lado. Los tombstones de
+// borrado evitan resucitar productos eliminados en otro dispositivo.
+function mergeLinesByDate(localLines, remoteLines, deletedIds) {
+  const byId = {};
+  (localLines || []).forEach(l => { if (l && l.id) byId[l.id] = l; });
+  (remoteLines || []).forEach(r => {
+    if (!r || !r.id) return;
+    const cur = byId[r.id];
+    if (!cur) { byId[r.id] = r; return; }
+    if ((r.lastUpdated || '') > (cur.lastUpdated || '')) byId[r.id] = r;
+  });
+  const tomb = {};
+  (deletedIds || []).forEach(d => { if (d && d.id) tomb[d.id] = d.at || ''; });
+  return Object.values(byId).filter(l => {
+    const t = tomb[l.id];
+    if (!t) return true;
+    return (l.lastUpdated || '') > t; // conservar si se editó después del borrado
+  });
+}
+
 async function syncFromGist(initial) {
   const bar = document.getElementById('syncBar');
   bar.style.width = '30%';
@@ -457,8 +479,15 @@ async function syncFromGist(initial) {
       try {
         const remote = JSON.parse(gistData.files[LADESPENSA_FILE].content);
         if (remote && remote.version) {
-          DB.lines = remote.lines || [];
-        mergeDuplicates(true);
+          // Unir marcas de borrado (local + remoto) para no resucitar lo eliminado
+          if (!DB.deletedIds) DB.deletedIds = [];
+          const seenDel = new Set(DB.deletedIds.map(d => d.id + '|' + d.at));
+          (remote.deletedIds || []).forEach(d => {
+            if (d && d.id && !seenDel.has(d.id + '|' + d.at)) DB.deletedIds.push(d);
+          });
+          // Fusión por fecha en vez de sobrescritura ciega (no pierde ediciones locales)
+          DB.lines = mergeLinesByDate(DB.lines, remote.lines || [], DB.deletedIds);
+          mergeDuplicates(true);
           DB.shoppingList = remote.shoppingList || [];
           if (remote.claritoPrices) DB.claritoPrices = remote.claritoPrices;
         }
@@ -946,6 +975,8 @@ function makeCard(line, pred) {
   card.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
     e.stopPropagation();
     customConfirm('¿Eliminar ' + line.product + '?', () => {
+      if (!DB.deletedIds) DB.deletedIds = [];
+      DB.deletedIds.push({ id: line.id, at: new Date().toISOString() });
       DB.lines = DB.lines.filter(l => l.id !== line.id);
       if (expandedId === line.id) expandedId = null;
       saveAndSync();
@@ -1677,6 +1708,8 @@ function _initInner() {
     DB = saved;
     // Migrate: ensure claritoPrices exists
     if (!DB.claritoPrices) DB.claritoPrices = {};
+    // Migrate: ensure deletedIds exists (tombstones de borrado para el sync)
+    if (!DB.deletedIds) DB.deletedIds = [];
     // Migrate: ensure original names exist
     if (DB.settings.persona1OriginalName === undefined) DB.settings.persona1OriginalName = '';
     if (DB.settings.persona2OriginalName === undefined) DB.settings.persona2OriginalName = '';
