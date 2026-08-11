@@ -115,6 +115,12 @@
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
         </button>
+        <button class="icon-btn" id="headerSyncBtn" title="Sincronizar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+          </svg>
+        </button>
         <button class="icon-btn" id="settingsBtn" title="Ajustes">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"/>
@@ -971,6 +977,12 @@ function renderAll() {
       <span>${esc(s.lugarName)}</span>${s.ag ? ` <b>${s.ag} ag.</b>` : ''}${s.urg ? ` <b style="color:var(--soon)">${s.urg} urg.</b>` : ''}${!s.ag && !s.urg ? ' <span style="color:var(--ok)">✓</span>' : ''}
     </div>`
   ).join('') + `<div class="stats-chip" style="white-space:nowrap;margin-left:auto"><b>${totalAll}</b> prod.</div>`;
+
+  // Si el buscador está abierto, refrescarlo con el estado actual
+  const _busc = document.getElementById('buscadorOverlay');
+  if (_busc && _busc.classList.contains('open')) {
+    renderBuscador(document.getElementById('buscadorInput').value);
+  }
 }
 
 function renderSection(sectionId, listId, items, title) {
@@ -1622,30 +1634,12 @@ function renderBuscador(query) {
     results.innerHTML = '<p style="color:var(--text2);padding:16px;font-size:14px">Sin resultados</p>';
     return;
   }
-  results.innerHTML = matches.map(l => {
-    const purchases = (l.purchases || []).slice().reverse();
-    const rows = purchases.length
-      ? purchases.slice(0, 10).map(p => {
-          const priceStr = p.price != null ? (+(p.price)).toFixed(2) + '€' : '—';
-          return `<div class="buscador-result-row">
-            <span>${p.date}</span>
-            <span>${esc(p.store || '—')}</span>
-            <span>x${p.qty || 1}</span>
-            <span class="buscador-result-price">${priceStr}</span>
-          </div>`;
-        }).join('')
-      : '<div class="buscador-result-row" style="color:var(--text2)">Sin compras registradas</div>';
-    const pred = predict(l);
-    const statusColors = { agotado:'var(--urgent)', urgente:'var(--urgent)', pronto:'var(--soon)', visible:'var(--visible)', ok:'var(--ok)', desconocido:'var(--text2)' };
-    return `<div class="buscador-result-item">
-      <div class="buscador-result-name">
-        <span style="color:${statusColors[pred.status]||'var(--text2)'}">●</span>
-        ${esc(l.product)}
-        <span style="font-size:12px;color:var(--text2);font-weight:400"> · ${esc(getPersonaName(l.persona))} · ${esc(getLugarName(l.lugar))}</span>
-      </div>
-      ${rows}
-    </div>`;
-  }).join('');
+  results.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'item-list';
+  wrap.style.marginTop = '12px';
+  matches.forEach(l => wrap.appendChild(makeCard(l, predict(l))));
+  results.appendChild(wrap);
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────
@@ -1711,11 +1705,18 @@ function _initInner() {
   });
   document.getElementById('settingsTutorialBtn').addEventListener('click', () => { closeOverlay('settingsOverlay'); showTutorial(); });
 
+  // Sincronizar desde la cabecera
+  document.getElementById('headerSyncBtn').addEventListener('click', () => {
+    if (settings && settings.gistId) syncFromGist(false);
+    else showToast('Configura el Gist primero');
+  });
+
   // Search / buscador
   document.getElementById('searchBtn').addEventListener('click', () => {
     document.getElementById('buscadorOverlay').classList.add('open');
-    setTimeout(() => document.getElementById('buscadorInput').focus(), 100);
     renderBuscador('');
+    // Foco síncrono dentro del gesto: iOS solo abre el teclado así
+    document.getElementById('buscadorInput').focus();
   });
   document.getElementById('buscadorCloseBtn').addEventListener('click', () => {
     document.getElementById('buscadorOverlay').classList.remove('open');
