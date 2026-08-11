@@ -37,7 +37,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.7.0 · Perla</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.7.1 · Perla</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -276,7 +276,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.7.0 · Perla</span>
+        <span class="settings-row-value">v1.7.1 · Perla</span>
       </div>
       <div class="settings-row">
         <span class="settings-row-label">Gist ID</span>
@@ -380,13 +380,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.7.0 · Perla</div>
+<div class="version-tag">v1.7.1 · Perla</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.7.0';
+const VERSION = '1.7.1';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -556,7 +556,7 @@ async function importClarito(gistData) {
   const files = gistData.files || {};
   let candName = null, candTrunc = false;
   for (const fname of Object.keys(files)) {
-    if (fname === 'db.json' || fname.endsWith('db.json')) {
+    if (fname === 'db.json' || fname.endsWith('db.json') || fname === 'clarito-data.json' || fname.endsWith('clarito-data.json')) {
       candName = fname;
       const f = files[fname];
       candTrunc = !!f.truncated;
