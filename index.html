@@ -526,7 +526,7 @@ async function syncFromGist(initial) {
       } catch(e) {}
     }
 
-    importClarito(gistData);
+    await importClarito(gistData);
 
     settings.lastSync = new Date().toISOString();
     DB.settings = settings;
@@ -551,15 +551,35 @@ async function syncFromGist(initial) {
   else if (_importDbg) showToast('Import: ' + _importDbg);
 }
 
-function importClarito(gistData) {
+async function importClarito(gistData) {
   let clarito = null;
-  for (const fname of Object.keys(gistData.files || {})) {
+  const files = gistData.files || {};
+  let candName = null, candTrunc = false;
+  for (const fname of Object.keys(files)) {
     if (fname === 'db.json' || fname.endsWith('db.json')) {
-      try { clarito = JSON.parse(gistData.files[fname].content); } catch(e) {}
+      candName = fname;
+      const f = files[fname];
+      candTrunc = !!f.truncated;
+      if (!candTrunc && f.content) {
+        try { clarito = JSON.parse(f.content); } catch(e) {}
+      }
+      // Si viene truncado (fichero grande) o no se pudo leer, traer el contenido completo
+      if (!clarito && f.raw_url) {
+        try {
+          const r = await fetch(f.raw_url);
+          if (r.ok) clarito = await r.json();
+        } catch(e) {}
+      }
       break;
     }
   }
-  if (!clarito) { _importDbg = 'No se encontró db.json de Clarito en el Gist'; return; }
+  if (!clarito) {
+    const names = Object.keys(files).join(', ') || '(vacío)';
+    _importDbg = candName
+      ? (candName + ' no se pudo leer' + (candTrunc ? ' (truncado)' : '') + '. Ficheros: ' + names)
+      : 'Sin db.json. Ficheros: ' + names;
+    return;
+  }
 
   // Contar tickets sin confirmar (para avisar tras sincronizar)
   _unconfirmedNew = Object.values(clarito.tickets || {}).filter(t => t.type === 'ticket' && !t.confirmed).length;
