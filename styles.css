@@ -590,6 +590,8 @@
     text-transform: uppercase;
     letter-spacing: 1.5px;
     margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--surface2);
   }
   .settings-row {
     display: flex;
@@ -804,4 +806,40 @@
   }
   @keyframes splashFade {
     to { opacity: 0; visibility: hidden; }
+  }
+
+  /* ── UNDO TOAST (eliminar con deshacer) ── */
+  .undo-toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface2);
+    color: var(--text);
+    padding: 10px 12px 10px 20px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 450;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    white-space: nowrap;
+    max-width: 90vw;
+  }
+  .undo-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: all; }
+  .undo-toast span { overflow: hidden; text-overflow: ellipsis; }
+  .undo-toast button {
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: 14px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
   }

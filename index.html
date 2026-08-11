@@ -21,6 +21,12 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Undo toast -->
+<div class="undo-toast" id="undoToast">
+  <span id="undoToastMsg"></span>
+  <button id="undoToastBtn">Deshacer</button>
+</div>
+
 <!-- CUSTOM CONFIRM MODAL -->
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-box">
@@ -113,12 +119,6 @@
         <button class="icon-btn" id="searchBtn" title="Buscar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </button>
-        <button class="icon-btn" id="headerSyncBtn" title="Sincronizar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
           </svg>
         </button>
         <button class="icon-btn" id="settingsBtn" title="Ajustes">
@@ -277,14 +277,14 @@
 <!-- SETTINGS MODAL -->
 <div class="overlay" id="settingsOverlay">
   <div class="sheet">
-    <div class="sheet-title">Ajustes</div>
+    <div class="sheet-title" id="settingsTitle">Ajustes</div>
     <div class="settings-section">
       <div class="settings-section-title">Conexión</div>
-      <div class="settings-row">
+      <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
         <span class="settings-row-value">v1.7.1 · Perla</span>
       </div>
-      <div class="settings-row">
+      <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
         <span class="settings-row-value" id="settingsGistId">-</span>
       </div>
@@ -292,18 +292,18 @@
         <span class="settings-row-label">Última sync</span>
         <span class="settings-row-value" id="settingsLastSync">-</span>
       </div>
-      <div class="settings-row">
+      <div class="settings-row dev-only">
         <span class="settings-row-label">Diagnóstico import</span>
         <span class="settings-row-value" id="settingsImportDbg" style="text-align:right;max-width:60%">-</span>
       </div>
       <button class="btn-secondary" id="settingsSyncBtn" style="margin-top:8px">↻ Sincronizar ahora</button>
-      <div class="sheet-field" style="margin-top:12px">
+      <div class="sheet-field dev-only" style="margin-top:12px">
         <label class="sheet-label">Actualizar token</label>
         <input class="sheet-input" id="settingsNewToken" type="password" placeholder="ghp_... nuevo token" autocomplete="current-password">
       </div>
-      <button class="btn-secondary" id="settingsUpdateTokenBtn" style="margin-top:4px">Guardar nuevo token</button>
+      <button class="btn-secondary dev-only" id="settingsUpdateTokenBtn" style="margin-top:4px">Guardar nuevo token</button>
     </div>
-    <div class="settings-section">
+    <div class="settings-section dev-only">
       <div class="settings-section-title">Personas</div>
       <div class="sheet-field">
         <label class="sheet-label">Persona 1</label>
@@ -314,7 +314,7 @@
         <input class="sheet-input" id="settingsP2Name">
       </div>
     </div>
-    <div class="settings-section">
+    <div class="settings-section dev-only">
       <div class="settings-section-title">Lugares</div>
       <div class="sheet-field">
         <label class="sheet-label">Lugar 1</label>
@@ -325,7 +325,7 @@
         <input class="sheet-input" id="settingsL2Name">
       </div>
     </div>
-    <div class="settings-section">
+    <div class="settings-section dev-only">
       <div class="settings-section-title">Casa actual</div>
       <select class="sheet-select" id="settingsCurrentLugar">
         <option value="lugar1">Lugar 1</option>
@@ -339,7 +339,7 @@
         <option value="lugar2">Lugar 2</option>
       </select>
     </div>
-    <div class="settings-section">
+    <div class="settings-section dev-only">
       <div class="settings-section-title">Preferencias</div>
       <div class="settings-row">
         <span class="settings-row-label">Nombres originales (Clarito)</span>
@@ -359,10 +359,10 @@
         </label>
       </div>
     </div>
-    <button class="btn-primary" id="settingsSaveBtn">Guardar</button>
+    <button class="btn-primary dev-only" id="settingsSaveBtn">Guardar</button>
     <button class="btn-secondary" id="settingsCloseBtn">Cancelar</button>
-    <button class="btn-secondary" id="mergeDupsBtn" style="margin-top:8px">Fusionar duplicados</button>
-    <div class="settings-section" style="margin-top:16px">
+    <button class="btn-secondary dev-only" id="mergeDupsBtn" style="margin-top:8px">Fusionar duplicados</button>
+    <div class="settings-section dev-only" style="margin-top:16px">
       <div class="settings-section-title">Copia de seguridad</div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Exporta todos tus datos a un archivo JSON. Si borras la app, puedes restaurarlos importando ese archivo.</div>
       <button class="btn-secondary" id="exportDataBtn">⬇ Exportar datos</button>
@@ -371,8 +371,9 @@
       </label>
       <button class="btn-secondary" id="cleanTombstonesBtn" style="margin-top:8px">Limpiar marcas de borrado antiguas</button>
     </div>
-    <button class="btn-secondary" id="settingsTutorialBtn" style="margin-top:8px">Tutorial</button>
-    <button class="btn-secondary" id="settingsResetBtn" style="color:#c0392b;border-color:#c0392b;margin-top:8px">Reiniciar app</button>
+    <button class="btn-secondary dev-only" id="settingsTutorialBtn" style="margin-top:8px">Tutorial</button>
+    <button class="btn-secondary dev-only" id="settingsResetBtn" style="color:#c0392b;border-color:#c0392b;margin-top:8px">Reiniciar app</button>
+    <button class="btn-secondary" id="userModeBtn" style="margin-top:8px;display:none">Volver a modo usuario</button>
   </div>
 </div>
 
@@ -404,6 +405,8 @@ let filters = { persona: 'all', lugar: 'all', store: 'all' };
 let shoppingTicked = new Set(); // ids ticked in current shopping session
 let collapsedSections = new Set(); // collapsed section ids
 let _pendingImport = []; // productos de tickets nuevos pendientes de asignar casa
+let _devMode = false; // modo desarrollador (oculto): muestra ajustes avanzados
+let _ajustesTaps = 0; // contador de toques en el título "Ajustes"
 let _unconfirmedNew = 0; // tickets de Clarito sin confirmar (aviso al sincronizar)
 let _importDbg = ''; // diagnóstico de importación (temporal, para localizar el bug)
 
@@ -449,7 +452,8 @@ function defaultDB() {
     lines: [],
     shoppingList: [],
     claritoPrices: {},
-    deletedIds: []
+    deletedIds: [],
+    categoryOverrides: {}
   };
 }
 
@@ -528,6 +532,7 @@ async function syncFromGist(initial) {
           mergeDuplicates(true);
           DB.shoppingList = remote.shoppingList || [];
           if (remote.claritoPrices) DB.claritoPrices = remote.claritoPrices;
+          DB.categoryOverrides = Object.assign({}, remote.categoryOverrides || {}, DB.categoryOverrides || {});
         }
       } catch(e) {}
     }
@@ -755,20 +760,28 @@ function dateDiffDays(a, b) {
   return Math.round((new Date(a) - new Date(b)) / 86400000);
 }
 
+const CATEGORIES = ['Lácteos','Fruta','Verdura','Pan','Cereales y legumbres','Carne','Pescado','Conservas','Despensa','Bebidas','Dulces','Salados','Baño','Limpieza','Auto','Otros'];
+
 function detectCategory(name) {
-  const n = (name || '').toLowerCase();
-  if (/leche|yogur|queso|mantequilla|nata|kéfir|lácteo/.test(n)) return 'Lácteos';
+  const key = (name || '').toLowerCase().trim();
+  // La corrección manual manda siempre
+  if (DB && DB.categoryOverrides && DB.categoryOverrides[key]) return DB.categoryOverrides[key];
+  const n = key;
+  if (/leche|yogur|queso|mantequilla|nata|kéfir|lácteo|huevo/.test(n)) return 'Lácteos';
   if (/manzana|pera|naranja|plátano|uva|fresa|limón|mandarina|melón|sandía|piña|mango|kiwi|melocotón|ciruela|cereza|fruta/.test(n)) return 'Fruta';
-  if (/lechuga|tomate|cebolla|ajo|zanahoria|patata|pimiento|calabacín|berenjena|espinaca|brócoli|coliflor|pepino|judía|guisante|verdura|ensalada|acelga|puerro|seta|champiñón/.test(n)) return 'Verdura';
-  if (/huevo/.test(n)) return 'Huevos';
+  if (/lechuga|tomate|cebolla|ajo|zanahoria|patata(?!s? frita)|pimiento|calabacín|berenjena|espinaca|brócoli|coliflor|pepino|judía|guisante|verdura|ensalada|acelga|puerro|seta|champiñón|choclo|maíz|maiz/.test(n)) return 'Verdura';
   if (/pan|baguette|bollo|croissant|tostada/.test(n)) return 'Pan';
   if (/pasta|arroz|cereal|avena|quinoa|cuscús|harina|legumbre|lenteja|garbanzo|alubia/.test(n)) return 'Cereales y legumbres';
   if (/pollo|carne|ternera|cerdo|cordero|pavo|jamón|chorizo|salchich|lomo|costilla|bacon/.test(n)) return 'Carne';
   if (/pescado|salmón|atún|sardina|merluza|bacalao|gamba|marisco|calamar|mejillón/.test(n)) return 'Pescado';
-  if (/aceite|vinagre|sal\b|azúcar|levadura|salsa|mayonesa|ketchup|mostaza|especias|caldo|conserva/.test(n)) return 'Despensa';
+  if (/conserva|enlatad|\blata\b|aceituna|encurtido|pepinillo|tomate frito/.test(n)) return 'Conservas';
+  if (/aceite|vinagre|sal\b|azúcar|levadura|salsa|mayonesa|ketchup|mostaza|especias|caldo/.test(n)) return 'Despensa';
   if (/café|té|infusión|zumo|refresco|agua|cerveza|vino|alcohol|batido/.test(n)) return 'Bebidas';
-  if (/helado|chocolate|galleta|bizcocho|magdalena|caramelo|gominola|snack|chip|dulce/.test(n)) return 'Dulces';
-  if (/champú|gel|jabón|dentífrico|diente|papel|pañal|limpiador|detergente|suavizante|fregaplatos|colonia|crema|higiene/.test(n)) return 'Higiene y limpieza';
+  if (/helado|chocolate|galleta|bizcocho|magdalena|caramelo|gominola|dulce/.test(n)) return 'Dulces';
+  if (/patata frita|patatas frita|chips|snack|aperitivo|nacho|dorito|palomitas|frutos secos|cacahuete/.test(n)) return 'Salados';
+  if (/champú|gel|jabón|dentífrico|diente|cepillo|colonia|crema|desodorante|compresa|tampón|maquinilla|pañal|higiene/.test(n)) return 'Baño';
+  if (/limpiador|detergente|suavizante|fregaplatos|lavavajillas|lejía|friegasuelos|bayeta|estropajo|ambientador|servilleta|papel|bolsa de basura|escoba/.test(n)) return 'Limpieza';
+  if (/coche|limpiaparabrisas|anticongelante|\bmotor\b|neumático|parabrisas|refrigerante/.test(n)) return 'Auto';
   return 'Otros';
 }
 
@@ -1027,6 +1040,8 @@ function makeCard(line, pred) {
   card.dataset.id = line.id;
 
   const isExpanded = expandedId === line.id;
+  const otherLugar = line.lugar === 'lugar1' ? 'lugar2' : 'lugar1';
+  const otherLugarName = getLugarName(otherLugar);
 
   card.innerHTML = `
     <div class="item-main">
@@ -1076,12 +1091,19 @@ function makeCard(line, pred) {
           <span class="expand-label">Supermercado</span>
           <input class="expand-input" data-field="store" value="${esc(line.store || '')}" placeholder="Mercadona, Lidl...">
         </div>
+        <div class="expand-field">
+          <span class="expand-label">Categoría</span>
+          <select class="expand-select" data-field="category">
+            ${CATEGORIES.map(c => `<option value="${esc(c)}" ${detectCategory(line.product) === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
+          </select>
+        </div>
       </div>
       <div class="expand-actions">
         <button class="chip-btn ${line.manualStatus === 'agotandose' ? 'active' : ''}" data-action="mark" data-val="agotandose">Agotándose</button>
         <button class="chip-btn ${line.manualStatus === 'agotado' ? 'active' : ''}" data-action="mark" data-val="agotado">Agotado</button>
         <button class="chip-btn ${line.manualStatus === 'puntual' ? 'active' : ''}" data-action="mark" data-val="puntual">Puntual</button>
         <button class="chip-btn danger" data-action="delete">Eliminar</button>
+        <button class="chip-btn" data-action="dup">Copiar a ${esc(otherLugarName)}</button>
         <button class="chip-btn" data-action="save">Guardar</button>
       </div>
       <div style="margin-top:10px">
@@ -1093,10 +1115,32 @@ function makeCard(line, pred) {
     </div>
   `;
 
-  card.querySelector('.item-main').addEventListener('click', (e) => {
+  const _main = card.querySelector('.item-main');
+  _main.addEventListener('click', (e) => {
     if (e.target.closest('[data-action]')) return;
+    if (_swMoved) { _swMoved = false; return; } // fue un deslizamiento, no un toque
     expandedId = expandedId === line.id ? null : line.id;
     renderAll();
+  });
+
+  // Deslizar a la izquierda para eliminar
+  let _sx = 0, _sy = 0, _swMoved = false, _swiping = false;
+  _main.addEventListener('touchstart', (ev) => {
+    const t = ev.touches[0]; _sx = t.clientX; _sy = t.clientY;
+    _swiping = true; _swMoved = false; _main.style.transition = '';
+  }, { passive: true });
+  _main.addEventListener('touchmove', (ev) => {
+    if (!_swiping) return;
+    const t = ev.touches[0], dx = t.clientX - _sx, dy = t.clientY - _sy;
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) _swMoved = true;
+    if (_swMoved && dx < 0) _main.style.transform = 'translateX(' + Math.max(dx, -140) + 'px)';
+  }, { passive: true });
+  _main.addEventListener('touchend', (ev) => {
+    if (!_swiping) return; _swiping = false;
+    const dx = ev.changedTouches[0].clientX - _sx;
+    _main.style.transition = 'transform 0.2s';
+    if (_swMoved && dx < -80) { _main.style.transform = 'translateX(-100%)'; deleteWithUndo(line); }
+    else { _main.style.transform = 'translateX(0)'; }
   });
 
   // Autocomplete on expanded product input
@@ -1104,6 +1148,14 @@ function makeCard(line, pred) {
   if (_prodInput) makeAutocomplete(_prodInput, getProductNames);
   const _storeInput = card.querySelector('[data-field="store"]');
   if (_storeInput) makeAutocomplete(_storeInput, getStoreNames);
+  const _catSel = card.querySelector('[data-field="category"]');
+  if (_catSel) _catSel.addEventListener('change', (e) => {
+    if (!DB.categoryOverrides) DB.categoryOverrides = {};
+    DB.categoryOverrides[(line.product || '').toLowerCase().trim()] = e.target.value;
+    saveAndSync();
+    renderAll();
+    showToast('Categoría guardada');
+  });
 
   card.querySelector('[data-action="toggle-list"]').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -1131,6 +1183,27 @@ function makeCard(line, pred) {
       saveAndSync();
       renderAll();
     });
+  });
+
+  card.querySelector('[data-action="dup"]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const exists = DB.lines.find(l => l.product === line.product && l.persona === line.persona && l.lugar === otherLugar);
+    if (exists) { showToast('Ya existe en ' + otherLugarName); return; }
+    DB.lines.push({
+      id: uid(),
+      product: line.product,
+      persona: line.persona,
+      lugar: otherLugar,
+      store: line.store || '',
+      purchases: [],
+      manualStatus: null,
+      addedToShoppingList: false,
+      estimatedCadenceDays: null,
+      lastUpdated: new Date().toISOString()
+    });
+    saveAndSync();
+    renderAll();
+    showToast('Copiado en ' + otherLugarName);
   });
 
   card.querySelector('[data-action="save"]').addEventListener('click', (e) => {
@@ -1413,8 +1486,15 @@ function finishSetup(lugarKey) {
 }
 
 // ── SETTINGS ───────────────────────────────────────────────────────────────
+function applyDevMode() {
+  document.querySelectorAll('.dev-only').forEach(el => { el.style.display = _devMode ? '' : 'none'; });
+  const umb = document.getElementById('userModeBtn');
+  if (umb) umb.style.display = _devMode ? '' : 'none';
+}
+
 function openSettings() {
   renderAll();
+  applyDevMode();
   openOverlay('settingsOverlay');
 }
 
@@ -1452,6 +1532,34 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── ELIMINAR CON DESHACER ────────────────────────────────────────────────────
+let _undoTimer = null, _undoCb = null;
+function showUndoToast(msg, onUndo) {
+  _undoCb = onUndo;
+  document.getElementById('undoToastMsg').textContent = msg;
+  const el = document.getElementById('undoToast');
+  el.classList.add('show');
+  clearTimeout(_undoTimer);
+  _undoTimer = setTimeout(() => { el.classList.remove('show'); _undoCb = null; }, 5000);
+}
+
+function deleteWithUndo(line) {
+  if (!DB.deletedIds) DB.deletedIds = [];
+  const tomb = { id: line.id, at: new Date().toISOString() };
+  DB.deletedIds.push(tomb);
+  const backup = line;
+  DB.lines = DB.lines.filter(l => l.id !== line.id);
+  if (expandedId === line.id) expandedId = null;
+  saveAndSync();
+  renderAll();
+  showUndoToast('"' + line.product + '" eliminado', () => {
+    DB.lines.push(backup);
+    DB.deletedIds = DB.deletedIds.filter(d => !(d.id === tomb.id && d.at === tomb.at));
+    saveAndSync();
+    renderAll();
+  });
 }
 
 // ── MERGE DUPLICATES ─────────────────────────────────────────────────────────
@@ -1689,6 +1797,18 @@ function _initInner() {
   document.getElementById('settingsBtn').addEventListener('click', openSettings);
   document.getElementById('settingsSaveBtn').addEventListener('click', saveSettings);
   document.getElementById('settingsCloseBtn').addEventListener('click', () => closeOverlay('settingsOverlay'));
+  // Modo oculto: 13 toques en el título "Ajustes"
+  document.getElementById('settingsTitle').addEventListener('click', () => {
+    _ajustesTaps++;
+    if (_ajustesTaps >= 13) { _ajustesTaps = 0; _devMode = true; applyDevMode(); showToast('Modo desarrollador activado'); }
+  });
+  document.getElementById('userModeBtn').addEventListener('click', () => {
+    _devMode = false; applyDevMode(); showToast('Modo usuario');
+  });
+  // Lugar por defecto de importaciones: se guarda al instante (visible en modo usuario)
+  document.getElementById('settingsImportLugar').addEventListener('change', (e) => {
+    settings.importDefaultLugar = e.target.value; DB.settings = settings; saveLocal(DB);
+  });
   // Interruptores que se aplican al instante (para que el sync no los revierta)
   document.getElementById('settingsOriginalNames').addEventListener('change', (e) => {
     settings.useOriginalNames = e.target.checked;
@@ -1704,12 +1824,6 @@ function _initInner() {
     else showToast('Configura el Gist primero');
   });
   document.getElementById('settingsTutorialBtn').addEventListener('click', () => { closeOverlay('settingsOverlay'); showTutorial(); });
-
-  // Sincronizar desde la cabecera
-  document.getElementById('headerSyncBtn').addEventListener('click', () => {
-    if (settings && settings.gistId) syncFromGist(false);
-    else showToast('Configura el Gist primero');
-  });
 
   // Search / buscador
   document.getElementById('searchBtn').addEventListener('click', () => {
@@ -1736,6 +1850,11 @@ function _initInner() {
     setTimeout(() => syncFromGist(false), 500);
   });
   document.getElementById('mergeDupsBtn').addEventListener('click', () => { mergeDuplicates(false); });
+  document.getElementById('undoToastBtn').addEventListener('click', () => {
+    if (_undoCb) { _undoCb(); _undoCb = null; }
+    document.getElementById('undoToast').classList.remove('show');
+    clearTimeout(_undoTimer);
+  });
   document.getElementById('cleanTombstonesBtn').addEventListener('click', () => {
     if (!DB.deletedIds) DB.deletedIds = [];
     const cutoff = Date.now() - 90 * 86400000; // 90 días
@@ -1880,6 +1999,8 @@ function _initInner() {
     if (!DB.deletedIds) DB.deletedIds = [];
     // Migrate: lugar por defecto de importaciones
     if (DB.settings.importDefaultLugar === undefined) DB.settings.importDefaultLugar = 'lugar1';
+    // Migrate: correcciones de categoría
+    if (!DB.categoryOverrides) DB.categoryOverrides = {};
     // Migrate: ensure original names exist
     if (DB.settings.persona1OriginalName === undefined) DB.settings.persona1OriginalName = '';
     if (DB.settings.persona2OriginalName === undefined) DB.settings.persona2OriginalName = '';
