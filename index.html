@@ -43,7 +43,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.7.1 · Perla</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.8.0 · Marea</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -282,7 +282,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.7.1 · Perla</span>
+        <span class="settings-row-value">v1.8.0 · Marea</span>
       </div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
@@ -387,15 +387,38 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.7.1 · Perla</div>
+<div class="version-tag">v1.8.0 · Marea</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.7.1';
+const VERSION = '1.8.0';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
+
+// Misma normalización de clave que Clarito: nombre de producto → clave estable.
+// Se usa para resolver el pid (identificador estable) del mapa knowledge de Clarito.
+const normalizeKey = n => (n || '').toLowerCase().replace(/[^a-záéíóúñ0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+
+// Construye un índice { claveNormalizada: entradaKnowledge } y otro { pid: aliasActual }
+// a partir del mapa knowledge.products de Clarito.
+function buildClaritoIndex(clarito) {
+  const byKey = {}, aliasByPid = {};
+  const prods = (clarito && clarito.knowledge && clarito.knowledge.products) || {};
+  for (const [key, v] of Object.entries(prods)) {
+    if (!v) continue;
+    byKey[key] = v;
+    if (v.pid) aliasByPid[v.pid] = v.alias || key;
+  }
+  return { byKey, aliasByPid };
+}
+
+// Resuelve el pid y el nombre visible actual de un producto de ticket.
+function resolveClaritoProduct(idx, prodName) {
+  const entry = idx.byKey[normalizeKey(prodName)];
+  return { pid: entry && entry.pid ? entry.pid : null, name: (entry && entry.alias) || prodName };
+}
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 let DB = null;
@@ -409,6 +432,7 @@ let _devMode = false; // modo desarrollador (oculto): muestra ajustes avanzados
 let _ajustesTaps = 0; // contador de toques en el título "Ajustes"
 let _unconfirmedNew = 0; // tickets de Clarito sin confirmar (aviso al sincronizar)
 let _importDbg = ''; // diagnóstico de importación (temporal, para localizar el bug)
+let _reconNoMatchCount = 0; // líneas antiguas que no se pudieron enganchar a un pid
 
 // ── CONFIRM MODAL ──────────────────────────────────────────────────────────
 let _confirmCallback = null;
@@ -592,6 +616,25 @@ async function importClarito(gistData) {
     return;
   }
 
+  // ── RECONCILIACIÓN POR PID ─────────────────────────────────────────────
+  // El producto se identifica por un pid estable que nace en Clarito, no por
+  // el nombre. Aquí: (1) rellenamos el pid de las líneas antiguas emparejando
+  // por su nombre actual, y (2) refrescamos el nombre visible de toda línea con
+  // pid al alias vigente de Clarito, para que renombrar en Clarito se propague.
+  const _cidx = buildClaritoIndex(clarito);
+  let _reconNoMatch = 0;
+  (DB.lines || []).forEach(line => {
+    if (!line.pid) {
+      const entry = _cidx.byKey[normalizeKey(line.product)];
+      if (entry && entry.pid) line.pid = entry.pid;
+      else _reconNoMatch++;
+    }
+    if (line.pid && _cidx.aliasByPid[line.pid] && _cidx.aliasByPid[line.pid] !== line.product) {
+      line.product = _cidx.aliasByPid[line.pid];
+    }
+  });
+  _reconNoMatchCount = _reconNoMatch;
+
   // Contar tickets sin confirmar (para avisar tras sincronizar)
   _unconfirmedNew = Object.values(clarito.tickets || {}).filter(t => t.type === 'ticket' && !t.confirmed).length;
 
@@ -632,10 +675,13 @@ async function importClarito(gistData) {
       const persona = prod.assignedTo || 'comun';
       const qty = prod.qty || 1;
       const unitPrice = prod.unitP != null ? prod.unitP : ((prod.finalPrice ?? prod.price) != null ? (prod.finalPrice ?? prod.price) / qty : null);
+      // Resolver pid estable y nombre visible actual desde el mapa de Clarito
+      const resolved = resolveClaritoProduct(_cidx, prod.name);
       // No se crea la línea aún: se recoge para preguntar la casa en la ventana de importación
       _pendingImport.push({
         ticketId: ticket.id,
-        name: prod.name,
+        pid: resolved.pid,
+        name: resolved.name,
         persona: persona,
         qty: qty,
         store: ticket.store || '',
@@ -646,7 +692,8 @@ async function importClarito(gistData) {
   }
   const _raw = Object.keys(clarito.tickets || {}).length;
   const _typeT = Object.values(clarito.tickets || {}).filter(t => t && t.type === 'ticket').length;
-  _importDbg = _raw + ' entradas · ' + _typeT + ' ticket · ' + tickets.length + ' conf · ' + _pendingImport.length + ' nuevos';
+  _importDbg = _raw + ' entradas · ' + _typeT + ' ticket · ' + tickets.length + ' conf · ' + _pendingImport.length + ' nuevos'
+    + (_reconNoMatchCount ? ' · ' + _reconNoMatchCount + ' sin pid' : '');
 }
 
 // ── IMPORT WINDOW ──────────────────────────────────────────────────────────
@@ -654,12 +701,15 @@ async function importClarito(gistData) {
 function commitImport(houseByKey) {
   const defLugar = settings.importDefaultLugar || 'lugar1';
   (_pendingImport || []).forEach(it => {
-    const key = it.name + '|' + it.persona;
+    const key = (it.pid || normalizeKey(it.name)) + '|' + it.persona;
     const lugar = (houseByKey && houseByKey[key]) || defLugar;
-    let line = DB.lines.find(l => l.product === it.name && l.persona === it.persona && l.lugar === lugar);
+    let line = DB.lines.find(l =>
+      (it.pid ? l.pid === it.pid : normalizeKey(l.product) === normalizeKey(it.name))
+      && l.persona === it.persona && l.lugar === lugar);
     if (!line) {
       line = {
         id: uid(),
+        pid: it.pid || null,
         product: it.name,
         persona: it.persona,
         lugar: lugar,
@@ -687,7 +737,7 @@ function showImportWindow() {
   const seen = {};
   const uniq = [];
   _pendingImport.forEach(it => {
-    const key = it.name + '|' + it.persona;
+    const key = (it.pid || normalizeKey(it.name)) + '|' + it.persona;
     if (!seen[key]) { seen[key] = true; uniq.push({ key, name: it.name, persona: it.persona }); }
   });
   const defLugar = settings.importDefaultLugar || 'lugar1';
@@ -1576,7 +1626,7 @@ function mergeDuplicates(silent) {
   const merged = [];
   let count = 0;
   for (const line of DB.lines) {
-    const key = (line.product || '').toLowerCase().trim() + '|' + line.persona + '|' + line.lugar;
+    const key = (line.pid || (line.product || '').toLowerCase().trim()) + '|' + line.persona + '|' + line.lugar;
     if (seen[key] !== undefined) {
       const ex = merged[seen[key]];
       ex.purchases = [...(ex.purchases || []), ...(line.purchases || [])];
