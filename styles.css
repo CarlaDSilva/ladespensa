@@ -119,9 +119,29 @@
     background: var(--surface);
     border-radius: var(--radius);
     overflow: hidden;
+    position: relative;
     transition: box-shadow 0.15s;
   }
   .item-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+
+  /* Fondo de eliminar (se revela al deslizar a la izquierda) */
+  .swipe-delete-bg {
+    position: absolute;
+    inset: 0;
+    background: var(--urgent);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-right: 22px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .swipe-delete-bg svg { width: 20px; height: 20px; transition: transform 0.15s; }
+  .item-card.sw-armed .swipe-delete-bg svg { transform: scale(1.25); }
+  .item-card.sw-armed .swipe-delete-bg { background: #e04434; }
 
   .item-main {
     display: flex;
@@ -129,7 +149,11 @@
     padding: 14px 14px 14px 16px;
     gap: 12px;
     cursor: pointer;
+    position: relative;
+    z-index: 1;
+    background: var(--surface);
   }
+  .item-expanded.open { background: var(--surface); position: relative; z-index: 1; }
 
   .status-dot {
     width: 10px;

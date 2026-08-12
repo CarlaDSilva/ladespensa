@@ -1044,6 +1044,10 @@ function makeCard(line, pred) {
   const otherLugarName = getLugarName(otherLugar);
 
   card.innerHTML = `
+    <div class="swipe-delete-bg" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      <span>Eliminar</span>
+    </div>
     <div class="item-main">
       <div class="status-dot ${pred.status}"></div>
       <div class="item-info">
@@ -1133,7 +1137,10 @@ function makeCard(line, pred) {
     if (!_swiping) return;
     const t = ev.touches[0], dx = t.clientX - _sx, dy = t.clientY - _sy;
     if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) _swMoved = true;
-    if (_swMoved && dx < 0) _main.style.transform = 'translateX(' + Math.max(dx, -140) + 'px)';
+    if (_swMoved && dx < 0) {
+      _main.style.transform = 'translateX(' + Math.max(dx, -140) + 'px)';
+      if (dx < -80) card.classList.add('sw-armed'); else card.classList.remove('sw-armed');
+    }
   }, { passive: true });
   _main.addEventListener('touchend', (ev) => {
     if (!_swiping) return; _swiping = false;
@@ -1141,6 +1148,7 @@ function makeCard(line, pred) {
     _main.style.transition = 'transform 0.2s';
     if (_swMoved && dx < -80) { _main.style.transform = 'translateX(-100%)'; deleteWithUndo(line); }
     else { _main.style.transform = 'translateX(0)'; }
+    card.classList.remove('sw-armed');
   });
 
   // Autocomplete on expanded product input
