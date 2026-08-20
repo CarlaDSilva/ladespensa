@@ -43,7 +43,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.8.0 · Marea</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.0 · Marea</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -254,6 +254,10 @@
       <button class="chip-btn" id="selectAllBtn">Seleccionar todos</button>
       <div class="shopping-total" id="shoppingTotal" style="font-size:13px;color:var(--text2);margin-left:auto"></div>
     </div>
+    <div style="padding:0 16px 8px;flex-shrink:0">
+      <input class="expand-input" id="shoppingSearch" type="text" placeholder="Buscar producto para añadir..." autocomplete="off" style="width:100%">
+      <div id="shoppingSearchResults"></div>
+    </div>
     <div id="shoppingContent"></div>
     <div class="shopping-footer">
       <button class="shopping-compra-btn" id="compraMadaBtn">Compra hecha ✓</button>
@@ -282,7 +286,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.8.0 · Marea</span>
+        <span class="settings-row-value">v1.9.0 · Marea</span>
       </div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
@@ -387,7 +391,7 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.8.0 · Marea</div>
+<div class="version-tag">v1.9.0 · Marea</div>
 
 <script>
 'use strict';
@@ -1300,6 +1304,33 @@ function renderPurchaseList(line) {
 // Store pending prices before compra hecha (keyed by line.id)
 const _shoppingPrices = {};
 
+const shoppingOpenGroups = new Set();
+function renderShoppingSearchResults(query) {
+  const box = document.getElementById('shoppingSearchResults');
+  if (!box) return;
+  const q = (query || '').trim().toLowerCase();
+  if (!q) { box.innerHTML = ''; return; }
+  const matches = (DB.lines || []).filter(l => !l.addedToShoppingList && (l.product || '').toLowerCase().includes(q)).slice(0, 8);
+  if (!matches.length) { box.innerHTML = '<p style="color:var(--text2);font-size:13px;padding:8px 2px">Sin resultados para añadir</p>'; return; }
+  box.innerHTML = matches.map(l => `<div class="shop-search-row" data-add="${l.id}">
+    <div class="shop-search-info"><span class="shop-search-name">${esc(l.product)}</span><span class="shop-search-sub">${esc((l.store||'').trim()||'Sin supermercado')} · ${esc(getLugarName(l.lugar))}</span></div>
+    <button class="add-btn" data-add-btn="${l.id}" title="Añadir a la lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  </div>`).join('');
+  box.querySelectorAll('[data-add]').forEach(row => {
+    row.addEventListener('click', () => {
+      const l = DB.lines.find(x => x.id === row.dataset.add);
+      if (l) {
+        l.addedToShoppingList = true;
+        saveAndSync();
+        const inp = document.getElementById('shoppingSearch');
+        if (inp) inp.value = '';
+        box.innerHTML = '';
+        renderAll();
+        renderShoppingList();
+      }
+    });
+  });
+}
 function renderShoppingList() {
   const items = DB.lines.filter(l => l.addedToShoppingList);
   const content = document.getElementById('shoppingContent');
@@ -1315,30 +1346,47 @@ function renderShoppingList() {
   const unticked = items.filter(l => !shoppingTicked.has(l.id));
   const ticked   = items.filter(l =>  shoppingTicked.has(l.id));
 
+  function renderItemRow(l) {
+    const isTicked = shoppingTicked.has(l.id);
+    return `<div class="shopping-item ${isTicked ? 'ticked' : ''}" data-sid="${l.id}">
+      <button class="shopping-tick ${isTicked ? 'checked' : ''}" data-tick="${l.id}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <div class="shopping-item-info">
+        <div class="shopping-item-name">${esc(l.product)}</div>
+        <div class="shopping-item-sub">${esc(getPersonaName(l.persona))} · ${esc(getLugarName(l.lugar))}</div>
+      </div>
+      <input class="shopping-price-input" type="number" min="0" step="0.01" placeholder="€" data-price-id="${l.id}" value="${_shoppingPrices[l.id] != null ? _shoppingPrices[l.id] : ''}" inputmode="decimal">
+      <button class="shopping-remove" data-remove="${l.id}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`;
+  }
+
   function renderGroup(list, isDone) {
     if (!list.length) return '';
-    // sub-group by category
-    const catMap = {};
-    list.forEach(l => { const c = detectCategory(l.product); if (!catMap[c]) catMap[c]=[];  catMap[c].push(l); });
-    const showCats = Object.keys(catMap).length > 1;
-    return Object.keys(catMap).sort().map(cat => {
-      const hdr = showCats ? `<div class="category-hdr" style="${isDone?'opacity:0.4':''}">▸ ${cat}</div>` : '';
-      return hdr + catMap[cat].map(l => {
-        const isTicked = shoppingTicked.has(l.id);
-        return `<div class="shopping-item ${isTicked ? 'ticked' : ''}" data-sid="${l.id}">
-          <button class="shopping-tick ${isTicked ? 'checked' : ''}" data-tick="${l.id}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-          <div class="shopping-item-info">
-            <div class="shopping-item-name">${esc(l.product)}</div>
-            <div class="shopping-item-sub">${esc(getPersonaName(l.persona))} · ${esc(getLugarName(l.lugar))}</div>
-          </div>
-          <input class="shopping-price-input" type="number" min="0" step="0.01" placeholder="€" data-price-id="${l.id}" value="${_shoppingPrices[l.id] != null ? _shoppingPrices[l.id] : ''}" inputmode="decimal">
-          <button class="shopping-remove" data-remove="${l.id}">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>`;
+    // Agrupar por supermercado, y dentro por categoría
+    const storeMap = {};
+    list.forEach(l => { const s = (l.store || '').trim() || 'Sin supermercado'; if (!storeMap[s]) storeMap[s]=[]; storeMap[s].push(l); });
+    return Object.keys(storeMap).sort((a,b)=>{ if(a==='Sin supermercado')return 1; if(b==='Sin supermercado')return -1; return a.localeCompare(b); }).map(store => {
+      const gkey = (isDone?'done:':'todo:') + store;
+      const isOpen = shoppingOpenGroups.has(gkey);
+      const sub = storeMap[store];
+      const catMap = {};
+      sub.forEach(l => { const c = detectCategory(l.product); if (!catMap[c]) catMap[c]=[]; catMap[c].push(l); });
+      const showCats = Object.keys(catMap).length > 1;
+      const inner = Object.keys(catMap).sort().map(cat => {
+        const hdr = showCats ? `<div class="category-hdr" style="${isDone?'opacity:0.4':''}">${esc(cat)}</div>` : '';
+        return hdr + catMap[cat].map(renderItemRow).join('');
       }).join('');
+      return `<div class="shop-store-group ${isOpen?'open':''}" data-gkey="${esc(gkey)}" style="${isDone?'opacity:0.5':''}">
+        <div class="shop-store-hdr" data-gtoggle="${esc(gkey)}">
+          <svg class="shop-store-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="shop-store-name">${esc(store)}</span>
+          <span class="shop-store-count">${sub.length}</span>
+        </div>
+        <div class="shop-store-body" style="${isOpen?'':'display:none'}">${inner}</div>
+      </div>`;
     }).join('');
   }
 
@@ -1374,6 +1422,17 @@ function renderShoppingList() {
     inp.addEventListener('change', () => {
       if (inp.value !== '') _shoppingPrices[inp.dataset.priceId] = parseFloat(inp.value);
       else delete _shoppingPrices[inp.dataset.priceId];
+    });
+  });
+
+  // Events: plegar/desplegar grupos por supermercado
+  content.querySelectorAll('[data-gtoggle]').forEach(hdr => {
+    hdr.addEventListener('click', () => {
+      const gkey = hdr.dataset.gtoggle;
+      const group = hdr.closest('.shop-store-group');
+      const body = group.querySelector('.shop-store-body');
+      if (shoppingOpenGroups.has(gkey)) { shoppingOpenGroups.delete(gkey); group.classList.remove('open'); body.style.display='none'; }
+      else { shoppingOpenGroups.add(gkey); group.classList.add('open'); body.style.display=''; }
     });
   });
 
@@ -1985,9 +2044,14 @@ function _initInner() {
   // Shopping list
   document.getElementById('shoppingListBtn').addEventListener('click', () => {
     shoppingTicked.clear();
+    const ss = document.getElementById('shoppingSearch');
+    if (ss) ss.value = '';
+    const ssr = document.getElementById('shoppingSearchResults');
+    if (ssr) ssr.innerHTML = '';
     renderShoppingList();
     openOverlay('shoppingOverlay');
   });
+  document.getElementById('shoppingSearch').addEventListener('input', (e) => renderShoppingSearchResults(e.target.value));
   document.getElementById('shoppingCloseBtn').addEventListener('click', () => {
     shoppingTicked.clear();
     closeOverlay('shoppingOverlay');

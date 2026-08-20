@@ -1,6 +1,6 @@
 // LADESPENSA service worker — estrategia network-first
 // Sube el número en cada versión para forzar limpieza de cachés antiguas.
-const CACHE = 'ladespensa-v9';
+const CACHE = 'ladespensa-v10';
 const ASSETS = ['./', './index.html', './manifest.json', './styles.css'];
 
 // Instalar: guardar una copia de respaldo de los assets básicos.
