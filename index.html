@@ -43,7 +43,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.6 · Marea</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.8 · Marea</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -298,7 +298,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.9.6 · Marea</span>
+        <span class="settings-row-value">v1.9.8 · Marea</span>
       </div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
@@ -355,6 +355,19 @@
         <option value="lugar2">Lugar 2</option>
       </select>
     </div>
+    <div class="settings-section">
+      <div class="settings-section-title">Vista</div>
+      <div class="settings-row">
+        <div>
+          <span class="settings-row-label">Agrupar por supermercado primero</span>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Inicio: Supermercado → Categoría en vez de Categoría → Supermercado</div>
+        </div>
+        <label class="toggle" style="flex-shrink:0;margin-left:12px">
+          <input type="checkbox" id="settingsStoreFirst">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
     <div class="settings-section dev-only">
       <div class="settings-section-title">Preferencias</div>
       <div class="settings-row">
@@ -403,13 +416,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.9.6 · Marea</div>
+<div class="version-tag">v1.9.8 · Marea</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.9.6';
+const VERSION = '1.9.8';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -444,6 +457,7 @@ let filters = { persona: 'all', lugar: 'all', store: 'all' };
 let shoppingTicked = new Set(); // ids ticked in current shopping session
 let collapsedSections = new Set(); // collapsed section ids
 let collapsedCats = new Set(); // categorías plegadas (clave: contexto::categoría); por defecto abiertas
+let collapsedStores = new Set(); // supermercados plegados dentro de categoría (principal); por defecto abiertos
 let _pendingImport = []; // productos de tickets nuevos pendientes de asignar casa
 let _devMode = false; // modo desarrollador (oculto): muestra ajustes avanzados
 let _ajustesTaps = 0; // contador de toques en el título "Ajustes"
@@ -488,6 +502,7 @@ function defaultDB() {
       lugar2Name: 'Mogor',
       currentLugar: 'lugar1',
       importDefaultLugar: 'lugar1',
+      storeFirst: false,
       lastSync: null
     },
     lines: [],
@@ -954,6 +969,7 @@ function renderAll() {
   document.getElementById('settingsImportDbg').textContent = _importDbg || '-';
   document.getElementById('settingsOriginalNames').checked = !!settings.useOriginalNames;
   document.getElementById('settingsDependClarito').checked = settings.dependOnClarito !== false; // default true
+  document.getElementById('settingsStoreFirst').checked = !!settings.storeFirst;
 
   // Add persona options to add modal
   document.querySelector('#addPersona option[value="p1"]').textContent = getPersonaName('p1');
@@ -1082,32 +1098,54 @@ function renderSection(sectionId, listId, items, title) {
   }
   if (isCollapsed) { list.innerHTML = ''; return; }
   list.innerHTML = '';
-  // Group by category
-  const catMap = {};
-  items.forEach(item => {
-    const cat = detectCategory(item.line.product);
-    if (!catMap[cat]) catMap[cat] = [];
-    catMap[cat].push(item);
-  });
-  const cats = Object.keys(catMap).sort();
-  const showCats = cats.length > 1;
-  cats.forEach(cat => {
-    const catKey = sectionId + '::' + cat;
-    const catCollapsed = showCats && collapsedCats.has(catKey);
-    if (showCats) {
+  // Dos niveles de agrupación, orden según ajuste (categoría→súper por defecto, o súper→categoría)
+  const storeFirst = !!(settings && settings.storeFirst);
+  const isEmptyStore = k => k === 'Sin supermercado';
+  const catOf = it => detectCategory(it.line.product);
+  const storeOf = it => getEffStore(it.line) || 'Sin supermercado';
+  const outerOf = storeFirst ? storeOf : catOf;
+  const innerOf = storeFirst ? catOf : storeOf;
+  const sortKeys = arr => arr.sort((a, b) => { if (isEmptyStore(a)) return 1; if (isEmptyStore(b)) return -1; return a.localeCompare(b); });
+
+  const outerMap = {};
+  items.forEach(it => { const k = outerOf(it); (outerMap[k] = outerMap[k] || []).push(it); });
+  const outerKeys = sortKeys(Object.keys(outerMap));
+  const showOuter = storeFirst ? (outerKeys.length > 1 || !isEmptyStore(outerKeys[0])) : (outerKeys.length > 1);
+
+  outerKeys.forEach(outerKey => {
+    const oColKey = sectionId + '::O::' + outerKey;
+    const oCollapsed = showOuter && collapsedCats.has(oColKey);
+    if (showOuter) {
       const hdr = document.createElement('div');
-      hdr.className = 'category-hdr category-hdr-toggle';
-      hdr.innerHTML = '<span class="section-chevron cat-text-chevron">' + (catCollapsed ? '▶' : '▼') + '</span> ' + esc(cat) + ' <span class="category-count">(' + catMap[cat].length + ')</span>';
-      hdr.onclick = () => { if (collapsedCats.has(catKey)) collapsedCats.delete(catKey); else collapsedCats.add(catKey); renderAll(); };
+      hdr.className = storeFirst ? 'store-subhdr store-subhdr-toggle' : 'category-hdr category-hdr-toggle';
+      const badge = storeFirst ? '<span class="store-subcount">' + outerMap[outerKey].length + '</span>' : '<span class="category-count">(' + outerMap[outerKey].length + ')</span>';
+      hdr.innerHTML = '<span class="section-chevron cat-text-chevron">' + (oCollapsed ? '▶' : '▼') + '</span> ' + esc(outerKey) + ' ' + badge;
+      hdr.onclick = () => { if (collapsedCats.has(oColKey)) collapsedCats.delete(oColKey); else collapsedCats.add(oColKey); renderAll(); };
       list.appendChild(hdr);
     }
-    if (!catCollapsed) {
-      catMap[cat].forEach(({ line, pred }) => list.appendChild(makeCard(line, pred)));
-    }
+    if (oCollapsed) return;
+    const innerMap = {};
+    outerMap[outerKey].forEach(it => { const k = innerOf(it); (innerMap[k] = innerMap[k] || []).push(it); });
+    const innerKeys = sortKeys(Object.keys(innerMap));
+    const showInner = storeFirst ? (innerKeys.length > 1) : (innerKeys.length > 1 || !isEmptyStore(innerKeys[0]));
+    innerKeys.forEach(innerKey => {
+      const iColKey = sectionId + '::I::' + outerKey + '::' + innerKey;
+      const iCollapsed = showInner && collapsedStores.has(iColKey);
+      if (showInner) {
+        const sh = document.createElement('div');
+        sh.className = storeFirst ? 'category-hdr category-hdr-toggle' : 'store-subhdr store-subhdr-toggle';
+        const badge = storeFirst ? '<span class="category-count">(' + innerMap[innerKey].length + ')</span>' : '<span class="store-subcount">' + innerMap[innerKey].length + '</span>';
+        sh.innerHTML = '<span class="section-chevron cat-text-chevron">' + (iCollapsed ? '▶' : '▼') + '</span> ' + esc(innerKey) + ' ' + badge;
+        sh.onclick = () => { if (collapsedStores.has(iColKey)) collapsedStores.delete(iColKey); else collapsedStores.add(iColKey); renderAll(); };
+        list.appendChild(sh);
+      }
+      if (iCollapsed) return;
+      innerMap[innerKey].forEach(({ line, pred }) => list.appendChild(makeCard(line, pred)));
+    });
   });
 }
 
-function makeCard(line, pred) {
+function makeCard(line, pred, showStore) {
   const card = document.createElement('div');
   card.className = 'item-card';
   card.dataset.id = line.id;
@@ -1132,7 +1170,7 @@ function makeCard(line, pred) {
           <span>${esc(getLugarName(line.lugar))}</span>
           ${pred.cadence ? '<span>dura ~' + Math.round(pred.cadence) + ' días</span>' : ''}
           ${avgP != null ? '<span class="item-price">~' + avgP.toFixed(2).replace('.', ',') + ' €</span>' : ''}
-          ${effStore ? '<span class="item-store">' + esc(effStore) + '</span>' : ''}
+          ${(showStore && effStore) ? '<span class="item-store">' + esc(effStore) + '</span>' : ''}
         </div>
       </div>
       <div class="stock-bar-wrap">
@@ -1930,7 +1968,7 @@ function renderBuscador(query) {
   const wrap = document.createElement('div');
   wrap.className = 'item-list';
   wrap.style.marginTop = '12px';
-  matches.forEach(l => wrap.appendChild(makeCard(l, predict(l))));
+  matches.forEach(l => wrap.appendChild(makeCard(l, predict(l), true)));
   results.appendChild(wrap);
 }
 
@@ -2001,6 +2039,10 @@ function _initInner() {
   document.getElementById('settingsDependClarito').addEventListener('change', (e) => {
     settings.dependOnClarito = e.target.checked;
     DB.settings = settings; saveLocal(DB);
+  });
+  document.getElementById('settingsStoreFirst').addEventListener('change', (e) => {
+    settings.storeFirst = e.target.checked;
+    DB.settings = settings; saveLocal(DB); renderAll();
   });
   document.getElementById('settingsSyncBtn').addEventListener('click', () => {
     closeOverlay('settingsOverlay');

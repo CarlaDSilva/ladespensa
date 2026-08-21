@@ -454,6 +454,27 @@
     margin-bottom: 4px;
   }
 
+  .store-subhdr {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    padding: 6px 0 4px 14px;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .store-subcount {
+    background: var(--surface2);
+    color: var(--text2);
+    border-radius: 10px;
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
   /* Stats bar */
   .stats-bar {
     padding: 10px 16px;
