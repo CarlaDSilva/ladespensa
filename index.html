@@ -43,7 +43,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.10 · Marea</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.11 · Marea</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -336,7 +336,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.9.10 · Marea</span>
+        <span class="settings-row-value">v1.9.11 · Marea</span>
       </div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
@@ -454,13 +454,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.9.10 · Marea</div>
+<div class="version-tag">v1.9.11 · Marea</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.9.10';
+const VERSION = '1.9.11';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -969,7 +969,7 @@ function formatCountdown(pred) {
   if (pred.status === 'ok' && pred.daysRemaining <= 0) return ''; // barra verde nunca dice "Agotado"
   if (pred.daysRemaining <= 0) return 'Agotado';
   if (pred.daysRemaining === 1) return 'Mañana';
-  return pred.daysRemaining + ' d';
+  return 'En ' + pred.daysRemaining + ' días';
 }
 
 // ── NAMES ──────────────────────────────────────────────────────────────────
@@ -1200,32 +1200,28 @@ function makeCard(line, pred, showStore) {
       <span>Eliminar</span>
     </div>
     <div class="item-main">
-      <div class="item-top">
-        <div class="status-dot ${pred.status}"></div>
-        <div class="item-info">
-          <div class="item-name">${esc(line.product)}</div>
-          <div class="item-meta">
-            <span>${esc(getPersonaName(line.persona))}</span>
-            <span>${esc(getLugarName(line.lugar))}</span>
-            ${pred.cadence ? '<span>' + Math.round(pred.cadence) + ' d</span>' : ''}
-            ${avgP != null ? '<span class="item-price">~' + avgP.toFixed(2).replace('.', ',') + ' €</span>' : ''}
-            ${(showStore && effStore) ? '<span class="item-store">' + esc(effStore) + '</span>' : ''}
-          </div>
+      <div class="status-dot ${pred.status}"></div>
+      <div class="item-info">
+        <div class="item-name">${esc(line.product)}</div>
+        <div class="item-meta">
+          <span>${esc(getPersonaName(line.persona))}</span>
+          <span>${esc(getLugarName(line.lugar))}</span>
+          ${pred.cadence ? '<span class="meta-days"><span class="dfull">dura ~' + Math.round(pred.cadence) + ' días</span><span class="dshort">' + Math.round(pred.cadence) + ' d</span></span>' : ''}
+          ${avgP != null ? '<span class="item-price">~' + avgP.toFixed(2).replace('.', ',') + ' €</span>' : ''}
+          ${(showStore && effStore) ? '<span class="item-store">' + esc(effStore) + '</span>' : ''}
         </div>
       </div>
-      <div class="item-bottom">
-        <div class="stock-bar-wrap">
-          <div class="stock-bar-track"><div class="stock-bar-fill ${pred.status}" style="width:${stockBarPct(pred)}%"></div></div>
-          <div class="stock-bar-days">${formatCountdown(pred)}</div>
-        </div>
-        <button class="add-btn ${line.addedToShoppingList ? 'in-list' : ''}" data-action="toggle-list" title="${line.addedToShoppingList ? 'En la lista' : 'Añadir a lista'}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            ${line.addedToShoppingList
-              ? '<polyline points="20 6 9 17 4 12"/>'
-              : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}
-          </svg>
-        </button>
+      <div class="stock-bar-wrap">
+        <div class="stock-bar-track"><div class="stock-bar-fill ${pred.status}" style="width:${stockBarPct(pred)}%"></div></div>
+        <div class="stock-bar-days">${formatCountdown(pred)}</div>
       </div>
+      <button class="add-btn ${line.addedToShoppingList ? 'in-list' : ''}" data-action="toggle-list" title="${line.addedToShoppingList ? 'En la lista' : 'Añadir a lista'}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          ${line.addedToShoppingList
+            ? '<polyline points="20 6 9 17 4 12"/>'
+            : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}
+        </svg>
+      </button>
     </div>
     <div class="item-expanded ${isExpanded ? 'open' : ''}">
       <div class="expand-grid">
