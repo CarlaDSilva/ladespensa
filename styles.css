@@ -145,14 +145,17 @@
 
   .item-main {
     display: flex;
-    align-items: center;
-    padding: 14px 14px 14px 16px;
-    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 14px;
+    gap: 10px;
     cursor: pointer;
     position: relative;
     z-index: 1;
     background: var(--surface);
   }
+  .item-top { display: flex; align-items: center; gap: 12px; }
+  .item-bottom { display: flex; align-items: center; gap: 12px; }
   .item-expanded.open { background: var(--surface); position: relative; z-index: 1; }
 
   .status-dot {
@@ -187,16 +190,15 @@
   .item-meta .item-store { color: var(--text2); border: 1px solid var(--surface2); border-radius: 6px; padding: 0 6px; }
   /* stock bar replaces item-countdown */
   .stock-bar-wrap {
-    width: 44px;
-    flex-shrink: 0;
+    flex: 1;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 3px;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
   }
   .stock-bar-track {
-    width: 36px;
+    flex: 1;
+    width: auto;
     height: 6px;
     background: var(--surface2);
     border-radius: 3px;
@@ -738,8 +740,8 @@
   .shopping-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 0;
+    gap: 10px;
+    padding: 9px 0;
     border-bottom: 1px solid var(--surface2);
     transition: opacity 0.2s;
     cursor: pointer;
@@ -759,7 +761,7 @@
   .shopping-tick.checked { background: var(--ok); border-color: var(--ok); color: white; }
   .shopping-tick svg { width: 14px; height: 14px; }
   .shopping-item-info { flex: 1; min-width: 0; }
-  .shopping-item-name { font-size: 17px; font-weight: 500; }
+  .shopping-item-name { font-size: 15px; font-weight: 500; }
   .shopping-item-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
   .shopping-item-price { font-size: 14px; color: var(--text2); flex-shrink: 0; }
   .category-hdr-toggle { cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none; }
@@ -976,3 +978,6 @@
 .shop-search-info{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
 .shop-search-name{font-size:15px;color:var(--text)}
 .shop-search-sub{font-size:12px;color:var(--text2)}
+
+.shop-search-new .shop-search-name { color: var(--accent-light); }
+.shop-search-new .shop-search-sub { color: var(--accent); }

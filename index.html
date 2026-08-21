@@ -43,7 +43,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.8 · Marea</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.10 · Marea</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -243,6 +243,44 @@
   </div>
 </div>
 
+<!-- DIÁLOGO DATOS PRODUCTO NUEVO (al pulsar Compra hecha en un provisional) -->
+<div class="overlay" id="newProdOverlay">
+  <div class="sheet">
+    <div class="sheet-title" id="newProdTitle">Datos del producto</div>
+    <div class="sheet-field">
+      <label class="sheet-label">Precio</label>
+      <input class="sheet-input" id="npPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="€">
+    </div>
+    <div class="sheet-field">
+      <label class="sheet-label">Supermercado</label>
+      <input class="sheet-input" id="npStore" list="storeListAdd" placeholder="Mercadona, Lidl..." autocomplete="off">
+    </div>
+    <div class="sheet-field">
+      <label class="sheet-label">Persona</label>
+      <select class="sheet-select" id="npPersona">
+        <option value="p1">Persona 1</option>
+        <option value="p2">Persona 2</option>
+        <option value="comun">Común</option>
+      </select>
+    </div>
+    <div class="sheet-field">
+      <label class="sheet-label">Categoría</label>
+      <select class="sheet-select" id="npCategory"></select>
+    </div>
+    <div class="sheet-field">
+      <label class="sheet-label">Estado</label>
+      <select class="sheet-select" id="npStatus">
+        <option value="">Normal</option>
+        <option value="agotandose">Agotándose</option>
+        <option value="agotado">Agotado</option>
+        <option value="puntual">Puntual (compra ocasional)</option>
+      </select>
+    </div>
+    <button class="btn-primary" id="npConfirmBtn">Guardar y registrar</button>
+    <button class="btn-secondary" id="npCancelBtn">Cancelar</button>
+  </div>
+</div>
+
 <!-- SHOPPING LIST MODAL -->
 <div class="overlay" id="shoppingOverlay">
   <div class="sheet">
@@ -298,7 +336,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.9.8 · Marea</span>
+        <span class="settings-row-value">v1.9.10 · Marea</span>
       </div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
@@ -416,13 +454,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.9.8 · Marea</div>
+<div class="version-tag">v1.9.10 · Marea</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.9.8';
+const VERSION = '1.9.10';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -931,7 +969,7 @@ function formatCountdown(pred) {
   if (pred.status === 'ok' && pred.daysRemaining <= 0) return ''; // barra verde nunca dice "Agotado"
   if (pred.daysRemaining <= 0) return 'Agotado';
   if (pred.daysRemaining === 1) return 'Mañana';
-  return 'En ' + pred.daysRemaining + ' días';
+  return pred.daysRemaining + ' d';
 }
 
 // ── NAMES ──────────────────────────────────────────────────────────────────
@@ -1162,28 +1200,32 @@ function makeCard(line, pred, showStore) {
       <span>Eliminar</span>
     </div>
     <div class="item-main">
-      <div class="status-dot ${pred.status}"></div>
-      <div class="item-info">
-        <div class="item-name">${esc(line.product)}</div>
-        <div class="item-meta">
-          <span>${esc(getPersonaName(line.persona))}</span>
-          <span>${esc(getLugarName(line.lugar))}</span>
-          ${pred.cadence ? '<span>dura ~' + Math.round(pred.cadence) + ' días</span>' : ''}
-          ${avgP != null ? '<span class="item-price">~' + avgP.toFixed(2).replace('.', ',') + ' €</span>' : ''}
-          ${(showStore && effStore) ? '<span class="item-store">' + esc(effStore) + '</span>' : ''}
+      <div class="item-top">
+        <div class="status-dot ${pred.status}"></div>
+        <div class="item-info">
+          <div class="item-name">${esc(line.product)}</div>
+          <div class="item-meta">
+            <span>${esc(getPersonaName(line.persona))}</span>
+            <span>${esc(getLugarName(line.lugar))}</span>
+            ${pred.cadence ? '<span>' + Math.round(pred.cadence) + ' d</span>' : ''}
+            ${avgP != null ? '<span class="item-price">~' + avgP.toFixed(2).replace('.', ',') + ' €</span>' : ''}
+            ${(showStore && effStore) ? '<span class="item-store">' + esc(effStore) + '</span>' : ''}
+          </div>
         </div>
       </div>
-      <div class="stock-bar-wrap">
-        <div class="stock-bar-track"><div class="stock-bar-fill ${pred.status}" style="width:${stockBarPct(pred)}%"></div></div>
-        <div class="stock-bar-days">${formatCountdown(pred)}</div>
+      <div class="item-bottom">
+        <div class="stock-bar-wrap">
+          <div class="stock-bar-track"><div class="stock-bar-fill ${pred.status}" style="width:${stockBarPct(pred)}%"></div></div>
+          <div class="stock-bar-days">${formatCountdown(pred)}</div>
+        </div>
+        <button class="add-btn ${line.addedToShoppingList ? 'in-list' : ''}" data-action="toggle-list" title="${line.addedToShoppingList ? 'En la lista' : 'Añadir a lista'}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            ${line.addedToShoppingList
+              ? '<polyline points="20 6 9 17 4 12"/>'
+              : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}
+          </svg>
+        </button>
       </div>
-      <button class="add-btn ${line.addedToShoppingList ? 'in-list' : ''}" data-action="toggle-list" title="${line.addedToShoppingList ? 'En la lista' : 'Añadir a lista'}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          ${line.addedToShoppingList
-            ? '<polyline points="20 6 9 17 4 12"/>'
-            : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}
-        </svg>
-      </button>
     </div>
     <div class="item-expanded ${isExpanded ? 'open' : ''}">
       <div class="expand-grid">
@@ -1366,17 +1408,83 @@ function renderPurchaseList(line) {
 const _shoppingPrices = {};
 
 const shoppingOpenGroups = new Set();
+function addProvisionalToList(name) {
+  const nm = (name || '').trim();
+  if (!nm) return;
+  const line = {
+    id: uid(),
+    product: nm,
+    persona: 'comun',
+    lugar: (settings && settings.currentLugar) || 'lugar1',
+    purchases: [],
+    manualStatus: 'puntual',
+    addedToShoppingList: true,
+    provisional: true,
+    estimatedCadenceDays: null,
+    lastUpdated: new Date().toISOString()
+  };
+  DB.lines.push(line);
+  saveAndSync();
+  const inp = document.getElementById('shoppingSearch');
+  if (inp) inp.value = '';
+  const box = document.getElementById('shoppingSearchResults');
+  if (box) box.innerHTML = '';
+  renderAll();
+  renderShoppingList();
+  showToast('Añadido como puntual');
+}
+
+// Diálogo de datos para un producto provisional al confirmar la compra.
+// onConfirm recibe {price, store, persona, category, status}; onCancel aborta.
+function openNewProdDialog(line, onConfirm, onCancel) {
+  const ov = document.getElementById('newProdOverlay');
+  document.getElementById('newProdTitle').textContent = line.product;
+  const priceEl = document.getElementById('npPrice');
+  priceEl.value = (_shoppingPrices[line.id] != null ? _shoppingPrices[line.id] : '');
+  document.getElementById('npStore').value = getEffStore(line) || '';
+  const perSel = document.getElementById('npPersona');
+  perSel.querySelector('option[value="p1"]').textContent = getPersonaName('p1');
+  perSel.querySelector('option[value="p2"]').textContent = getPersonaName('p2');
+  perSel.value = line.persona || 'comun';
+  const catSel = document.getElementById('npCategory');
+  catSel.innerHTML = CATEGORIES.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  catSel.value = detectCategory(line.product);
+  document.getElementById('npStatus').value = line.manualStatus || 'puntual';
+  ov.classList.add('open');
+  document.getElementById('npConfirmBtn').onclick = () => {
+    const ps = priceEl.value;
+    ov.classList.remove('open');
+    onConfirm({
+      price: ps !== '' ? parseFloat(ps) : null,
+      store: document.getElementById('npStore').value.trim(),
+      persona: perSel.value,
+      category: catSel.value,
+      status: document.getElementById('npStatus').value || null
+    });
+  };
+  document.getElementById('npCancelBtn').onclick = () => { ov.classList.remove('open'); if (onCancel) onCancel(); };
+}
+
 function renderShoppingSearchResults(query) {
   const box = document.getElementById('shoppingSearchResults');
   if (!box) return;
-  const q = (query || '').trim().toLowerCase();
+  const raw = (query || '').trim();
+  const q = raw.toLowerCase();
   if (!q) { box.innerHTML = ''; return; }
   const matches = (DB.lines || []).filter(l => !l.addedToShoppingList && (l.product || '').toLowerCase().includes(q)).slice(0, 8);
-  if (!matches.length) { box.innerHTML = '<p style="color:var(--text2);font-size:13px;padding:8px 2px">Sin resultados para añadir</p>'; return; }
-  box.innerHTML = matches.map(l => `<div class="shop-search-row" data-add="${l.id}">
+  const existsExact = (DB.lines || []).some(l => (l.product || '').trim().toLowerCase() === q);
+  let html = matches.map(l => `<div class="shop-search-row" data-add="${l.id}">
     <div class="shop-search-info"><span class="shop-search-name">${esc(l.product)}</span><span class="shop-search-sub">${esc(getEffStore(l)||'Sin supermercado')} · ${esc(getLugarName(l.lugar))}</span></div>
     <button class="add-btn" data-add-btn="${l.id}" title="Añadir a la lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
   </div>`).join('');
+  if (!existsExact) {
+    html += `<div class="shop-search-row shop-search-new" data-addnew="1">
+      <div class="shop-search-info"><span class="shop-search-name">Añadir «${esc(raw)}»</span><span class="shop-search-sub">Producto nuevo · puntual</span></div>
+      <button class="add-btn" data-addnew-btn="1" title="Añadir como nuevo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    </div>`;
+  }
+  if (!html) { box.innerHTML = '<p style="color:var(--text2);font-size:13px;padding:8px 2px">Ya está en la lista</p>'; return; }
+  box.innerHTML = html;
   box.querySelectorAll('[data-add]').forEach(row => {
     row.addEventListener('click', () => {
       const l = DB.lines.find(x => x.id === row.dataset.add);
@@ -1391,6 +1499,8 @@ function renderShoppingSearchResults(query) {
       }
     });
   });
+  const newRow = box.querySelector('[data-addnew]');
+  if (newRow) newRow.addEventListener('click', () => addProvisionalToList(raw));
 }
 function renderShoppingList() {
   const items = DB.lines.filter(l => l.addedToShoppingList);
@@ -1549,10 +1659,11 @@ function renderShoppingList() {
     btn.addEventListener('click', () => {
       const l = DB.lines.find(x => x.id === btn.dataset.remove);
       if (l) {
-        l.addedToShoppingList = false;
         shoppingTicked.delete(l.id);
         delete _shoppingPrices[l.id];
         delete l.shoppingQty;
+        if (l.provisional) { DB.lines = DB.lines.filter(x => x.id !== l.id); }
+        else { l.addedToShoppingList = false; }
         saveAndSync();
         renderAll();
         renderShoppingList();
@@ -2214,32 +2325,54 @@ function _initInner() {
       if (inp.value !== '') _shoppingPrices[inp.dataset.priceId] = parseFloat(inp.value);
     });
     const today = new Date().toISOString().slice(0, 10);
-    DB.lines.forEach(l => {
-      if (shoppingTicked.has(l.id)) {
+    const tickedLines = DB.lines.filter(l => shoppingTicked.has(l.id));
+    const provQueue = tickedLines.filter(l => l.provisional);
+    const staged = [];
+
+    function commitNormalAndFinish() {
+      // Aplicar provisionales (con datos de sus diálogos)
+      staged.forEach(({ line, data }) => {
+        line.store = data.store;
+        line.persona = data.persona;
+        line.manualStatus = data.status || null;
+        if (data.category) { if (!DB.categoryOverrides) DB.categoryOverrides = {}; DB.categoryOverrides[(line.product || '').toLowerCase().trim()] = data.category; }
+        line.provisional = false;
+        line.addedToShoppingList = false;
+        if (!line.purchases) line.purchases = [];
+        line.purchases.push({ date: today, qty: line.shoppingQty || 1, store: data.store || '', price: data.price != null ? data.price : null });
+        delete _shoppingPrices[line.id];
+        delete line.shoppingQty;
+      });
+      // Aplicar líneas normales
+      tickedLines.forEach(l => {
+        if (l.provisional) return;
         l.addedToShoppingList = false;
-        const price = _shoppingPrices[l.id];
-        // Add purchase record
         if (!l.purchases) l.purchases = [];
-        l.purchases.push({
-          date: today,
-          qty: l.shoppingQty || 1,
-          store: settings.defaultStore || '',
-          price: price != null ? price : null
-        });
+        const price = _shoppingPrices[l.id];
+        l.purchases.push({ date: today, qty: l.shoppingQty || 1, store: getEffStore(l) || settings.defaultStore || '', price: price != null ? price : null });
         delete _shoppingPrices[l.id];
         delete l.shoppingQty;
-      }
-    });
-    shoppingTicked.clear();
-    // Reset filters so user can see all products
-    filters = { persona: 'all', lugar: 'all', store: 'all' };
-    document.getElementById('filterPersona').value = 'all';
-    document.getElementById('filterLugar').value = 'all';
-    document.getElementById('filterStore').value = 'all';
-    saveAndSync();
-    renderAll();
-    closeOverlay('shoppingOverlay');
-    showToast('¡Compra registrada!');
+      });
+      shoppingTicked.clear();
+      filters = { persona: 'all', lugar: 'all', store: 'all' };
+      document.getElementById('filterPersona').value = 'all';
+      document.getElementById('filterLugar').value = 'all';
+      document.getElementById('filterStore').value = 'all';
+      saveAndSync();
+      renderAll();
+      closeOverlay('shoppingOverlay');
+      showToast('¡Compra registrada!');
+    }
+
+    function runProvQueue(i) {
+      if (i >= provQueue.length) { commitNormalAndFinish(); return; }
+      openNewProdDialog(provQueue[i],
+        (data) => { staged.push({ line: provQueue[i], data }); runProvQueue(i + 1); },
+        () => { showToast('Compra cancelada'); }); // cancelar: nada se aplica
+    }
+
+    if (provQueue.length) runProvQueue(0);
+    else commitNormalAndFinish();
   });
 
   // Vaciar toda la lista de la compra. Solo quita el flag addedToShoppingList y
@@ -2261,7 +2394,11 @@ function _initInner() {
   if (_vCancel) _vCancel.addEventListener('click', _hideVaciarConfirm);
   const _vYes = document.getElementById('vaciarYesBtn');
   if (_vYes) _vYes.addEventListener('click', () => {
-    DB.lines.forEach(l => { if (l.addedToShoppingList) { l.addedToShoppingList = false; delete l.shoppingQty; } });
+    DB.lines = DB.lines.filter(l => {
+      if (l.addedToShoppingList && l.provisional) return false; // provisional: se borra entero
+      if (l.addedToShoppingList) { l.addedToShoppingList = false; delete l.shoppingQty; }
+      return true;
+    });
     for (const k in _shoppingPrices) delete _shoppingPrices[k];
     shoppingTicked.clear();
     _hideVaciarConfirm();
