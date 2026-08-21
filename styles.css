@@ -985,3 +985,10 @@
   .meta-days .dfull { display: none; }
   .meta-days .dshort { display: inline; }
 }
+
+/* Lista de la compra: deslizar para quitar, cantidad discreta, precio medio */
+.shopping-swipe { position: relative; overflow: hidden; }
+.shopping-swipe .shopping-item { position: relative; z-index: 1; background: var(--surface); }
+.qty-btn { background: transparent; border: none; color: var(--text2); }
+.qty-val { color: var(--text2); font-weight: 500; }
+.shopping-avg { font-size: 13px; color: var(--text2); flex-shrink: 0; min-width: 46px; text-align: right; }
