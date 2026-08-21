@@ -43,7 +43,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.4 · Marea</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.6 · Marea</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -298,7 +298,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.9.4 · Marea</span>
+        <span class="settings-row-value">v1.9.6 · Marea</span>
       </div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
@@ -403,13 +403,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.9.4 · Marea</div>
+<div class="version-tag">v1.9.6 · Marea</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.9.4';
+const VERSION = '1.9.6';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -443,6 +443,7 @@ let expandedId = null;
 let filters = { persona: 'all', lugar: 'all', store: 'all' };
 let shoppingTicked = new Set(); // ids ticked in current shopping session
 let collapsedSections = new Set(); // collapsed section ids
+let collapsedCats = new Set(); // categorías plegadas (clave: contexto::categoría); por defecto abiertas
 let _pendingImport = []; // productos de tickets nuevos pendientes de asignar casa
 let _devMode = false; // modo desarrollador (oculto): muestra ajustes avanzados
 let _ajustesTaps = 0; // contador de toques en el título "Ajustes"
@@ -740,6 +741,7 @@ function commitImport(houseByKey) {
     if (line.manualStatus === 'agotado' || line.manualStatus === 'agotandose') line.manualStatus = null;
     line.purchases.push({ date: it.date, qty: it.qty, store: it.store, price: it.price, ticketId: it.ticketId });
     line.lastUpdated = new Date().toISOString();
+    if (!(line.store || '').trim()) { const es = getEffStore(line); if (es) line.store = es; }
   });
   _pendingImport = [];
   mergeDuplicates(true);
@@ -1090,13 +1092,18 @@ function renderSection(sectionId, listId, items, title) {
   const cats = Object.keys(catMap).sort();
   const showCats = cats.length > 1;
   cats.forEach(cat => {
+    const catKey = sectionId + '::' + cat;
+    const catCollapsed = showCats && collapsedCats.has(catKey);
     if (showCats) {
       const hdr = document.createElement('div');
-      hdr.className = 'category-hdr';
-      hdr.textContent = cat;
+      hdr.className = 'category-hdr category-hdr-toggle';
+      hdr.innerHTML = '<span class="section-chevron cat-text-chevron">' + (catCollapsed ? '▶' : '▼') + '</span> ' + esc(cat) + ' <span class="category-count">(' + catMap[cat].length + ')</span>';
+      hdr.onclick = () => { if (collapsedCats.has(catKey)) collapsedCats.delete(catKey); else collapsedCats.add(catKey); renderAll(); };
       list.appendChild(hdr);
     }
-    catMap[cat].forEach(({ line, pred }) => list.appendChild(makeCard(line, pred)));
+    if (!catCollapsed) {
+      catMap[cat].forEach(({ line, pred }) => list.appendChild(makeCard(line, pred)));
+    }
   });
 }
 
@@ -1109,6 +1116,7 @@ function makeCard(line, pred) {
   const otherLugar = line.lugar === 'lugar1' ? 'lugar2' : 'lugar1';
   const otherLugarName = getLugarName(otherLugar);
   const avgP = getAvgPrice(line.product);
+  const effStore = getEffStore(line);
 
   card.innerHTML = `
     <div class="swipe-delete-bg" aria-hidden="true">
@@ -1124,6 +1132,7 @@ function makeCard(line, pred) {
           <span>${esc(getLugarName(line.lugar))}</span>
           ${pred.cadence ? '<span>dura ~' + Math.round(pred.cadence) + ' días</span>' : ''}
           ${avgP != null ? '<span class="item-price">~' + avgP.toFixed(2).replace('.', ',') + ' €</span>' : ''}
+          ${effStore ? '<span class="item-store">' + esc(effStore) + '</span>' : ''}
         </div>
       </div>
       <div class="stock-bar-wrap">
@@ -1161,7 +1170,7 @@ function makeCard(line, pred) {
         </div>
         <div class="expand-field">
           <span class="expand-label">Supermercado</span>
-          <input class="expand-input" data-field="store" value="${esc(line.store || '')}" placeholder="Mercadona, Lidl...">
+          <input class="expand-input" data-field="store" value="${esc(getEffStore(line))}" placeholder="Mercadona, Lidl...">
         </div>
         <div class="expand-field">
           <span class="expand-label">Categoría</span>
@@ -1327,7 +1336,7 @@ function renderShoppingSearchResults(query) {
   const matches = (DB.lines || []).filter(l => !l.addedToShoppingList && (l.product || '').toLowerCase().includes(q)).slice(0, 8);
   if (!matches.length) { box.innerHTML = '<p style="color:var(--text2);font-size:13px;padding:8px 2px">Sin resultados para añadir</p>'; return; }
   box.innerHTML = matches.map(l => `<div class="shop-search-row" data-add="${l.id}">
-    <div class="shop-search-info"><span class="shop-search-name">${esc(l.product)}</span><span class="shop-search-sub">${esc((l.store||'').trim()||'Sin supermercado')} · ${esc(getLugarName(l.lugar))}</span></div>
+    <div class="shop-search-info"><span class="shop-search-name">${esc(l.product)}</span><span class="shop-search-sub">${esc(getEffStore(l)||'Sin supermercado')} · ${esc(getLugarName(l.lugar))}</span></div>
     <button class="add-btn" data-add-btn="${l.id}" title="Añadir a la lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
   </div>`).join('');
   box.querySelectorAll('[data-add]').forEach(row => {
@@ -1387,7 +1396,7 @@ function renderShoppingList() {
     if (!list.length) return '';
     // Agrupar por supermercado, y dentro por categoría
     const storeMap = {};
-    list.forEach(l => { const s = (l.store || '').trim() || 'Sin supermercado'; if (!storeMap[s]) storeMap[s]=[]; storeMap[s].push(l); });
+    list.forEach(l => { const s = getEffStore(l) || 'Sin supermercado'; if (!storeMap[s]) storeMap[s]=[]; storeMap[s].push(l); });
     return Object.keys(storeMap).sort((a,b)=>{ if(a==='Sin supermercado')return 1; if(b==='Sin supermercado')return -1; return a.localeCompare(b); }).map(store => {
       const gkey = (isDone?'done:':'todo:') + store;
       const isOpen = shoppingOpenGroups.has(gkey);
@@ -1396,8 +1405,12 @@ function renderShoppingList() {
       sub.forEach(l => { const c = detectCategory(l.product); if (!catMap[c]) catMap[c]=[]; catMap[c].push(l); });
       const showCats = Object.keys(catMap).length > 1;
       const inner = Object.keys(catMap).sort().map(cat => {
-        const hdr = showCats ? `<div class="category-hdr" style="${isDone?'opacity:0.4':''}">${esc(cat)}</div>` : '';
-        return hdr + catMap[cat].map(renderItemRow).join('');
+        const catKey = gkey + '::' + cat;
+        const catOpen = !collapsedCats.has(catKey);
+        const rows = catMap[cat].map(renderItemRow).join('');
+        if (!showCats) return rows;
+        const hdr = `<div class="category-hdr category-hdr-toggle" data-cattoggle="${esc(catKey)}" style="${isDone?'opacity:0.4':''}"><span class="cat-chevron ${catOpen?'open':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>${esc(cat)} <span class="category-count">(${catMap[cat].length})</span></div>`;
+        return hdr + `<div class="category-body" style="${catOpen?'':'display:none'}">${rows}</div>`;
       }).join('');
       return `<div class="shop-store-group ${isOpen?'open':''}" data-gkey="${esc(gkey)}" style="${isDone?'opacity:0.5':''}">
         <div class="shop-store-hdr" data-gtoggle="${esc(gkey)}">
@@ -1480,6 +1493,16 @@ function renderShoppingList() {
       const body = group.querySelector('.shop-store-body');
       if (shoppingOpenGroups.has(gkey)) { shoppingOpenGroups.delete(gkey); group.classList.remove('open'); body.style.display='none'; }
       else { shoppingOpenGroups.add(gkey); group.classList.add('open'); body.style.display=''; }
+    });
+  });
+
+  // Events: plegar/desplegar categorías dentro de cada supermercado
+  content.querySelectorAll('[data-cattoggle]').forEach(hdr => {
+    hdr.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const key = hdr.dataset.cattoggle;
+      if (collapsedCats.has(key)) collapsedCats.delete(key); else collapsedCats.add(key);
+      renderShoppingList();
     });
   });
 
@@ -1770,6 +1793,13 @@ function makeAutocomplete(inputEl, getFn) {
     parent.appendChild(drop);
   });
   inputEl.addEventListener('blur', () => setTimeout(removeDrop, 200));
+}
+function getEffStore(line) {
+  if (line && line.store && String(line.store).trim()) return String(line.store).trim();
+  const ps = ((line && line.purchases) || []).filter(p => p && p.store && String(p.store).trim());
+  if (!ps.length) return '';
+  ps.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+  return String(ps[0].store).trim();
 }
 function getProductNames() { return (DB&&DB.lines||[]).map(l=>l.product).filter(Boolean); }
 function getStoreNames() {
