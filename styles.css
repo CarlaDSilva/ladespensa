@@ -344,6 +344,15 @@
   }
   .overlay.open .sheet { transform: translateY(0); }
 
+  /* Link picker: anclado arriba para que el teclado no tape la lista */
+  #linkOverlay { align-items: flex-start; }
+  #linkOverlay .sheet {
+    border-radius: 0 0 20px 20px;
+    transform: translateY(-100%);
+    padding-top: max(20px, env(safe-area-inset-top));
+  }
+  #linkOverlay.open .sheet { transform: translateY(0); }
+
   /* Shopping list: fullscreen */
   #shoppingOverlay {
     background: var(--bg);
