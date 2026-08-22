@@ -43,7 +43,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.19 · Marea</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.20 · Marea</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -180,6 +180,10 @@
     <div id="okSection" style="display:none">
       <div class="section-title">Bien por ahora</div>
       <div class="item-list" id="okList"></div>
+    </div>
+    <div id="hiddenSection" style="display:none">
+      <div class="section-title">Ocultos</div>
+      <div class="item-list" id="hiddenList"></div>
     </div>
     <div id="emptyState" class="empty-state" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -347,7 +351,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.9.19 · Marea</span>
+        <span class="settings-row-value">v1.9.20 · Marea</span>
       </div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
@@ -431,6 +435,16 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
+      <div class="settings-row">
+        <div>
+          <span class="settings-row-label">Ocultos en el buscador</span>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">El buscador del inicio muestra también los ocultos</div>
+        </div>
+        <label class="toggle" style="flex-shrink:0;margin-left:12px">
+          <input type="checkbox" id="settingsSearchHidden">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
     </div>
     <div class="settings-section dev-only">
       <div class="settings-section-title">Preferencias</div>
@@ -480,13 +494,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.9.19 · Marea</div>
+<div class="version-tag">v1.9.20 · Marea</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.9.19';
+const VERSION = '1.9.20';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -522,6 +536,7 @@ let shoppingTicked = new Set(); // ids ticked in current shopping session
 let collapsedSections = new Set(); // collapsed section ids
 let collapsedCats = new Set(); // categorías plegadas (clave: contexto::categoría); por defecto abiertas
 let collapsedStores = new Set(); // supermercados plegados dentro de categoría (principal); por defecto abiertos
+let forcedExpanded = new Set(); // secciones que arrancan plegadas SIEMPRE (ej. Ocultos); membresía = expandida en esta sesión
 // v1.9.17: interpreta el Set según startCollapsed (guarda desviaciones respecto al default)
 function isCol(set, id) { return settings && settings.startCollapsed ? !set.has(id) : set.has(id); }
 let _pendingImport = []; // productos de tickets nuevos pendientes de asignar casa
@@ -570,6 +585,7 @@ function defaultDB() {
       importDefaultLugar: 'lugar1',
       storeFirst: false,
       startCollapsed: false,
+      searchIncludesHidden: true,
       lastSync: null
     },
     lines: [],
@@ -1171,6 +1187,7 @@ function renderAll() {
   document.getElementById('settingsDependClarito').checked = settings.dependOnClarito !== false; // default true
   document.getElementById('settingsStoreFirst').checked = !!settings.storeFirst;
   document.getElementById('settingsStartCollapsed').checked = !!settings.startCollapsed;
+  document.getElementById('settingsSearchHidden').checked = settings.searchIncludesHidden !== false;
 
   // Add persona options to add modal
   document.querySelector('#addPersona option[value="p1"]').textContent = getPersonaName('p1');
@@ -1237,8 +1254,11 @@ function renderAll() {
     return 0;
   });
 
+  const visibleLined = lined.filter(x => !x.line.hidden);
+  const hiddenLined = lined.filter(x => x.line.hidden);
+
   const groups = { agotado: [], urgente: [], pronto: [], visible: [], ok: [], desconocido: [] };
-  lined.forEach(item => {
+  visibleLined.forEach(item => {
     const g = item.pred.status;
     (groups[g] || groups.desconocido).push(item);
   });
@@ -1248,6 +1268,7 @@ function renderAll() {
   renderSection('soonSection', 'soonList', groups.pronto, 'En breve (esta semana)');
   renderSection('visibleSection', 'visibleList', groups.visible, 'Próximamente');
   renderSection('okSection', 'okList', [...groups.ok, ...groups.desconocido], 'Sin alertas');
+  renderSection('hiddenSection', 'hiddenList', hiddenLined, 'Ocultos', true);
 
   const total = lined.length;
   document.getElementById('emptyState').style.display = total === 0 ? 'block' : 'none';
@@ -1260,7 +1281,7 @@ function renderAll() {
   // Stats bar
   const allLines = DB.lines;
   function placeStats(lugarKey, lugarName) {
-    const lines = allLines.filter(l => l.lugar === lugarKey);
+    const lines = allLines.filter(l => l.lugar === lugarKey && !l.hidden);
     const ag = lines.filter(l => predict(l).status === 'agotado').length;
     const urg = lines.filter(l => predict(l).status === 'urgente').length;
     return { lugarName, ag, urg, total: lines.length };
@@ -1282,18 +1303,25 @@ function renderAll() {
   }
 }
 
-function renderSection(sectionId, listId, items, title) {
+function renderSection(sectionId, listId, items, title, defaultCollapsed) {
   const section = document.getElementById(sectionId);
   const list = document.getElementById(listId);
   if (!items.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
-  const isCollapsed = isCol(collapsedSections, sectionId);
+  let isCollapsed, toggleTop;
+  if (defaultCollapsed) {
+    isCollapsed = !forcedExpanded.has(sectionId); // arranca plegado; membresía = expandido
+    toggleTop = () => { if (forcedExpanded.has(sectionId)) forcedExpanded.delete(sectionId); else forcedExpanded.add(sectionId); renderAll(); };
+  } else {
+    isCollapsed = isCol(collapsedSections, sectionId);
+    toggleTop = () => { if (collapsedSections.has(sectionId)) collapsedSections.delete(sectionId); else collapsedSections.add(sectionId); renderAll(); };
+  }
   if (title) {
     const t = section.querySelector('.section-title');
     if (t) {
       t.innerHTML = '<span class="section-toggle-label">' + title + ' <span class="section-count">(' + items.length + ')</span></span><span class="section-chevron">' + (isCollapsed ? '▶' : '▼') + '</span>';
       t.style.cursor = 'pointer';
-      t.onclick = () => { if (collapsedSections.has(sectionId)) collapsedSections.delete(sectionId); else collapsedSections.add(sectionId); renderAll(); };
+      t.onclick = toggleTop;
     }
   }
   if (isCollapsed) { list.innerHTML = ''; return; }
@@ -1421,9 +1449,12 @@ function makeCard(line, pred, showStore) {
         <button class="chip-btn ${line.manualStatus === 'agotandose' ? 'active' : ''}" data-action="mark" data-val="agotandose">Agotándose</button>
         <button class="chip-btn ${line.manualStatus === 'agotado' ? 'active' : ''}" data-action="mark" data-val="agotado">Agotado</button>
         <button class="chip-btn ${line.manualStatus === 'puntual' ? 'active' : ''}" data-action="mark" data-val="puntual">Puntual</button>
-        <button class="chip-btn danger" data-action="delete">Eliminar</button>
+        <button class="chip-btn ${line.hidden ? 'active' : ''}" data-action="hide" aria-label="${line.hidden ? 'Mostrar' : 'Ocultar'}">${line.hidden
+          ? '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+          : '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'}</button>
+        <button class="chip-btn danger" data-action="delete" aria-label="Eliminar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
         <button class="chip-btn" data-action="dup">Copiar a ${esc(otherLugarName)}</button>
-        <button class="chip-btn" data-action="save">Guardar</button>
+        <button class="chip-btn" data-action="save" aria-label="Guardar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
       </div>
       <div style="margin-top:10px">
         <span class="expand-label">Compras (${(line.purchases || []).length})</span>
@@ -1495,6 +1526,15 @@ function makeCard(line, pred, showStore) {
     saveAndSync();
     renderAll();
   }));
+
+  const hideBtn = card.querySelector('[data-action="hide"]');
+  if (hideBtn) hideBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    line.hidden = !line.hidden;
+    saveAndSync();
+    renderAll();
+    showToast(line.hidden ? 'Ocultado' : 'Visible');
+  });
 
   card.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -2291,7 +2331,8 @@ function renderBuscador(query) {
     results.innerHTML = '<p style="color:var(--text2);padding:16px;font-size:14px">Escribe el nombre de un producto</p>';
     return;
   }
-  const matches = (DB && DB.lines || []).filter(l => l.product.toLowerCase().includes(q));
+  const includeHidden = !settings || settings.searchIncludesHidden !== false;
+  const matches = (DB && DB.lines || []).filter(l => l.product.toLowerCase().includes(q) && (includeHidden || !l.hidden));
   if (!matches.length) {
     results.innerHTML = '<p style="color:var(--text2);padding:16px;font-size:14px">Sin resultados</p>';
     return;
@@ -2379,6 +2420,10 @@ function _initInner() {
   document.getElementById('settingsStartCollapsed').addEventListener('change', (e) => {
     settings.startCollapsed = e.target.checked;
     collapsedSections.clear(); collapsedCats.clear(); collapsedStores.clear();
+    DB.settings = settings; saveLocal(DB); renderAll();
+  });
+  document.getElementById('settingsSearchHidden').addEventListener('change', (e) => {
+    settings.searchIncludesHidden = e.target.checked;
     DB.settings = settings; saveLocal(DB); renderAll();
   });
   document.getElementById('settingsSyncBtn').addEventListener('click', () => {
