@@ -43,7 +43,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.13 · Marea</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.15 · Marea</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -328,6 +328,17 @@
   </div>
 </div>
 
+<!-- LINK PICKER MODAL -->
+<div class="overlay" id="linkOverlay">
+  <div class="sheet">
+    <div class="sheet-title" id="linkTitle">Enlazar</div>
+    <div style="font-size:12px;color:var(--text2);padding:0 0 8px">Elige el producto de Clarito al que corresponde. Se conserva tu nombre; solo se guarda el identificador.</div>
+    <input class="sheet-input" id="linkSearch" type="text" placeholder="Buscar producto de Clarito..." autocomplete="off">
+    <div id="linkList" style="max-height:50vh;overflow:auto;margin-top:8px"></div>
+    <button class="btn-secondary" id="linkCancelBtn" style="margin-top:8px">Dejar como nueva</button>
+  </div>
+</div>
+
 <!-- SETTINGS MODAL -->
 <div class="overlay" id="settingsOverlay">
   <div class="sheet">
@@ -336,7 +347,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.9.13 · Marea</span>
+        <span class="settings-row-value">v1.9.15 · Marea</span>
       </div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
@@ -356,6 +367,11 @@
         <input class="sheet-input" id="settingsNewToken" type="password" placeholder="ghp_... nuevo token" autocomplete="current-password">
       </div>
       <button class="btn-secondary dev-only" id="settingsUpdateTokenBtn" style="margin-top:4px">Guardar nuevo token</button>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">Productos sin identificador</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Líneas que no están enlazadas a un producto de Clarito (sin pid). Las marcadas como «puntual» son normales: se crearon aquí y no existen en Clarito. El resto quizá no casó por nombre.</div>
+      <div id="settingsNoPidList"></div>
     </div>
     <div class="settings-section dev-only">
       <div class="settings-section-title">Personas</div>
@@ -454,13 +470,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.9.13 · Marea</div>
+<div class="version-tag">v1.9.15 · Marea</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.9.13';
+const VERSION = '1.9.15';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -655,8 +671,10 @@ async function syncFromGist(initial) {
   }
 
   renderAll();
-  if (_pendingImport && _pendingImport.length) showImportWindow();
-  else if (_importDbg) showToast('Import: ' + _importDbg);
+  if (!initial) {
+    if (_pendingImport && _pendingImport.length) showImportWindow();
+    else if (_importDbg) showToast('Import: ' + _importDbg);
+  }
 }
 
 async function importClarito(gistData) {
@@ -695,6 +713,14 @@ async function importClarito(gistData) {
   // por su nombre actual, y (2) refrescamos el nombre visible de toda línea con
   // pid al alias vigente de Clarito, para que renombrar en Clarito se propague.
   const _cidx = buildClaritoIndex(clarito);
+  // v1.9.15: catálogo compacto {pid, nombre} para reasignación manual offline
+  const _cat = [], _seenPid = {};
+  for (const [key, v] of Object.entries((clarito.knowledge && clarito.knowledge.products) || {})) {
+    if (!v || !v.pid || _seenPid[v.pid]) continue;
+    _seenPid[v.pid] = 1;
+    _cat.push({ pid: v.pid, name: v.alias || key });
+  }
+  if (_cat.length) DB.claritoCatalog = _cat;
   let _reconNoMatch = 0;
   (DB.lines || []).forEach(line => {
     if (!line.pid) {
@@ -702,7 +728,7 @@ async function importClarito(gistData) {
       if (entry && entry.pid) line.pid = entry.pid;
       else _reconNoMatch++;
     }
-    if (line.pid && _cidx.aliasByPid[line.pid] && _cidx.aliasByPid[line.pid] !== line.product) {
+    if (!line.customName && line.pid && _cidx.aliasByPid[line.pid] && _cidx.aliasByPid[line.pid] !== line.product) {
       line.product = _cidx.aliasByPid[line.pid];
     }
   });
@@ -976,6 +1002,116 @@ function formatCountdown(pred) {
 }
 
 // ── NAMES ──────────────────────────────────────────────────────────────────
+function renderNoPidList() {
+  const box = document.getElementById('settingsNoPidList');
+  if (!box) return;
+  box.textContent = '';
+  const noPid = (DB.lines || []).filter(l => l && !l.pid);
+  if (!noPid.length) {
+    const ok = document.createElement('div');
+    ok.style.cssText = 'font-size:13px;color:var(--text2)';
+    ok.textContent = 'Todos los productos tienen identificador.';
+    box.appendChild(ok);
+    return;
+  }
+  noPid.sort((a, b) => (a.product || '').localeCompare(b.product || '', 'es'));
+  noPid.forEach(l => {
+    const row = document.createElement('div');
+    row.className = 'settings-row';
+    const left = document.createElement('div');
+    left.style.cssText = 'flex:1;min-width:0';
+    const name = document.createElement('div');
+    name.style.cssText = 'font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    name.textContent = l.product || '(sin nombre)';
+    const meta = document.createElement('div');
+    meta.style.cssText = 'font-size:12px;color:var(--text2)';
+    meta.textContent = [getPersonaName(l.persona), getEffStore(l), l.provisional ? 'puntual' : '']
+      .filter(Boolean).join(' · ') || '-';
+    left.appendChild(name);
+    left.appendChild(meta);
+    const btn = document.createElement('button');
+    btn.className = 'chip-btn';
+    btn.style.cssText = 'flex-shrink:0';
+    btn.setAttribute('aria-label', 'Enlazar');
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+    btn.addEventListener('click', () => openLinkPicker(l.id));
+    row.appendChild(left);
+    row.appendChild(btn);
+    box.appendChild(row);
+  });
+}
+
+function openLinkPicker(lineId) {
+  const line = (DB.lines || []).find(l => l && l.id === lineId);
+  if (!line) return;
+  const catalog = DB.claritoCatalog || [];
+  const overlay = document.getElementById('linkOverlay');
+  const listEl = document.getElementById('linkList');
+  const search = document.getElementById('linkSearch');
+  document.getElementById('linkTitle').textContent = 'Enlazar «' + (line.product || '') + '»';
+  let armedPid = null; // pid en uso pendiente de segundo toque
+
+  function draw(filter) {
+    listEl.textContent = '';
+    if (!catalog.length) {
+      const w = document.createElement('div');
+      w.style.cssText = 'font-size:13px;color:var(--text2);padding:12px 0';
+      w.textContent = 'No hay catálogo de Clarito. Sincroniza primero desde Ajustes.';
+      listEl.appendChild(w);
+      return;
+    }
+    const f = normalizeKey(filter || '');
+    let items = f ? catalog.filter(c => normalizeKey(c.name).includes(f)) : catalog.slice();
+    items.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'es'));
+    items = items.slice(0, 50);
+    if (!items.length) {
+      const w = document.createElement('div');
+      w.style.cssText = 'font-size:13px;color:var(--text2);padding:12px 0';
+      w.textContent = 'Sin resultados.';
+      listEl.appendChild(w);
+      return;
+    }
+    items.forEach(c => {
+      const used = (DB.lines || []).some(x => x && x.id !== line.id && x.pid === c.pid);
+      const armed = armedPid === c.pid;
+      const it = document.createElement('div');
+      it.style.cssText = 'padding:12px 0;border-bottom:1px solid var(--surface2);font-size:16px;cursor:pointer'
+        + (armed ? ';color:var(--accent,#e08)' : '');
+      it.textContent = c.name
+        + (armed ? '  · toca otra vez para enlazar' : (used ? '  · ya en uso' : ''));
+      it.addEventListener('click', () => {
+        if (used && !armed) { armedPid = c.pid; draw(search.value); return; }
+        applyLink(line, c);
+        overlay.classList.remove('open');
+      });
+      listEl.appendChild(it);
+    });
+  }
+  draw('');
+
+  // Rebind (evita acumular handlers)
+  const ns = search.cloneNode(true);
+  search.parentNode.replaceChild(ns, search);
+  ns.value = '';
+  ns.addEventListener('input', () => { armedPid = null; draw(ns.value); });
+  const cancel = document.getElementById('linkCancelBtn');
+  const nc = cancel.cloneNode(true);
+  cancel.parentNode.replaceChild(nc, cancel);
+  nc.addEventListener('click', () => overlay.classList.remove('open'));
+
+  overlay.classList.add('open');
+}
+
+function applyLink(line, c) {
+  line.pid = c.pid;                 // se conserva line.product (tu nombre/mote)
+  line.customName = true;           // protege el mote del renombrado automático en imports
+  line.lastUpdated = new Date().toISOString();
+  saveAndSync();
+  renderAll();
+  renderNoPidList();
+  showToast('Enlazado');
+}
+
 function getPersonaName(p) {
   const useOrig = settings.useOriginalNames;
   if (p === 'p1') return (useOrig && settings.persona1OriginalName) ? settings.persona1OriginalName : settings.persona1Name;
@@ -1009,6 +1145,7 @@ function renderAll() {
   document.getElementById('settingsGistId').textContent = settings.gistId ? settings.gistId.slice(0, 8) + '...' : '-';
   document.getElementById('settingsLastSync').textContent = settings.lastSync ? new Date(settings.lastSync).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) : '-';
   document.getElementById('settingsImportDbg').textContent = _importDbg || '-';
+  renderNoPidList();
   document.getElementById('settingsOriginalNames').checked = !!settings.useOriginalNames;
   document.getElementById('settingsDependClarito').checked = settings.dependOnClarito !== false; // default true
   document.getElementById('settingsStoreFirst').checked = !!settings.storeFirst;
