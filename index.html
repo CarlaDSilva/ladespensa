@@ -43,7 +43,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.16 · Marea</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.17 · Marea</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -347,7 +347,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.9.16 · Marea</span>
+        <span class="settings-row-value">v1.9.17 · Marea</span>
       </div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
@@ -421,6 +421,16 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
+      <div class="settings-row">
+        <div>
+          <span class="settings-row-label">Empezar colapsado</span>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Inicio arranca con todo plegado</div>
+        </div>
+        <label class="toggle" style="flex-shrink:0;margin-left:12px">
+          <input type="checkbox" id="settingsStartCollapsed">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
     </div>
     <div class="settings-section dev-only">
       <div class="settings-section-title">Preferencias</div>
@@ -470,13 +480,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.9.16 · Marea</div>
+<div class="version-tag">v1.9.17 · Marea</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.9.16';
+const VERSION = '1.9.17';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -512,6 +522,8 @@ let shoppingTicked = new Set(); // ids ticked in current shopping session
 let collapsedSections = new Set(); // collapsed section ids
 let collapsedCats = new Set(); // categorías plegadas (clave: contexto::categoría); por defecto abiertas
 let collapsedStores = new Set(); // supermercados plegados dentro de categoría (principal); por defecto abiertos
+// v1.9.17: interpreta el Set según startCollapsed (guarda desviaciones respecto al default)
+function isCol(set, id) { return settings && settings.startCollapsed ? !set.has(id) : set.has(id); }
 let _pendingImport = []; // productos de tickets nuevos pendientes de asignar casa
 let _devMode = false; // modo desarrollador (oculto): muestra ajustes avanzados
 let _ajustesTaps = 0; // contador de toques en el título "Ajustes"
@@ -557,6 +569,7 @@ function defaultDB() {
       currentLugar: 'lugar1',
       importDefaultLugar: 'lugar1',
       storeFirst: false,
+      startCollapsed: false,
       lastSync: null
     },
     lines: [],
@@ -1103,13 +1116,21 @@ function openLinkPicker(lineId) {
 }
 
 function applyLink(line, c) {
+  const prevPid = line.pid, prevCustom = line.customName, prevUpd = line.lastUpdated;
   line.pid = c.pid;                 // se conserva line.product (tu nombre/mote)
   line.customName = true;           // protege el mote del renombrado automático en imports
   line.lastUpdated = new Date().toISOString();
   saveAndSync();
   renderAll();
   renderNoPidList();
-  showToast('Enlazado');
+  showUndoToast('Enlazado', () => {
+    line.pid = prevPid;
+    line.customName = prevCustom;
+    line.lastUpdated = prevUpd || new Date().toISOString();
+    saveAndSync();
+    renderAll();
+    renderNoPidList();
+  });
 }
 
 function getPersonaName(p) {
@@ -1149,6 +1170,7 @@ function renderAll() {
   document.getElementById('settingsOriginalNames').checked = !!settings.useOriginalNames;
   document.getElementById('settingsDependClarito').checked = settings.dependOnClarito !== false; // default true
   document.getElementById('settingsStoreFirst').checked = !!settings.storeFirst;
+  document.getElementById('settingsStartCollapsed').checked = !!settings.startCollapsed;
 
   // Add persona options to add modal
   document.querySelector('#addPersona option[value="p1"]').textContent = getPersonaName('p1');
@@ -1265,7 +1287,7 @@ function renderSection(sectionId, listId, items, title) {
   const list = document.getElementById(listId);
   if (!items.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
-  const isCollapsed = collapsedSections.has(sectionId);
+  const isCollapsed = isCol(collapsedSections, sectionId);
   if (title) {
     const t = section.querySelector('.section-title');
     if (t) {
@@ -1292,7 +1314,7 @@ function renderSection(sectionId, listId, items, title) {
 
   outerKeys.forEach(outerKey => {
     const oColKey = sectionId + '::O::' + outerKey;
-    const oCollapsed = showOuter && collapsedCats.has(oColKey);
+    const oCollapsed = showOuter && isCol(collapsedCats, oColKey);
     if (showOuter) {
       const hdr = document.createElement('div');
       hdr.className = storeFirst ? 'store-subhdr store-subhdr-toggle' : 'category-hdr category-hdr-toggle';
@@ -1308,7 +1330,7 @@ function renderSection(sectionId, listId, items, title) {
     const showInner = storeFirst ? (innerKeys.length > 1) : (innerKeys.length > 1 || !isEmptyStore(innerKeys[0]));
     innerKeys.forEach(innerKey => {
       const iColKey = sectionId + '::I::' + outerKey + '::' + innerKey;
-      const iCollapsed = showInner && collapsedStores.has(iColKey);
+      const iCollapsed = showInner && isCol(collapsedStores, iColKey);
       if (showInner) {
         const sh = document.createElement('div');
         sh.className = storeFirst ? 'category-hdr category-hdr-toggle' : 'store-subhdr store-subhdr-toggle';
@@ -2352,6 +2374,11 @@ function _initInner() {
   });
   document.getElementById('settingsStoreFirst').addEventListener('change', (e) => {
     settings.storeFirst = e.target.checked;
+    DB.settings = settings; saveLocal(DB); renderAll();
+  });
+  document.getElementById('settingsStartCollapsed').addEventListener('change', (e) => {
+    settings.startCollapsed = e.target.checked;
+    collapsedSections.clear(); collapsedCats.clear(); collapsedStores.clear();
     DB.settings = settings; saveLocal(DB); renderAll();
   });
   document.getElementById('settingsSyncBtn').addEventListener('click', () => {
