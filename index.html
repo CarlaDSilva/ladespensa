@@ -43,7 +43,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.15 · Marea</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.16 · Marea</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -329,13 +329,13 @@
 </div>
 
 <!-- LINK PICKER MODAL -->
-<div class="overlay" id="linkOverlay">
+<div class="overlay" id="linkOverlay" style="z-index:9990">
   <div class="sheet">
     <div class="sheet-title" id="linkTitle">Enlazar</div>
-    <div style="font-size:12px;color:var(--text2);padding:0 0 8px">Elige el producto de Clarito al que corresponde. Se conserva tu nombre; solo se guarda el identificador.</div>
+    <div style="font-size:12px;color:var(--text2);padding:0 0 8px">Elige el producto de Clarito al que corresponde. Se conserva tu nombre; solo se guarda el identificador. Si aún no está en Clarito, pulsa «Salir»: quedará pendiente y podrás enlazarlo cuando Clarito lo tenga.</div>
     <input class="sheet-input" id="linkSearch" type="text" placeholder="Buscar producto de Clarito..." autocomplete="off">
     <div id="linkList" style="max-height:50vh;overflow:auto;margin-top:8px"></div>
-    <button class="btn-secondary" id="linkCancelBtn" style="margin-top:8px">Dejar como nueva</button>
+    <button class="btn-secondary" id="linkCancelBtn" style="margin-top:8px">Salir</button>
   </div>
 </div>
 
@@ -347,7 +347,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.9.15 · Marea</span>
+        <span class="settings-row-value">v1.9.16 · Marea</span>
       </div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
@@ -470,13 +470,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.9.15 · Marea</div>
+<div class="version-tag">v1.9.16 · Marea</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.9.15';
+const VERSION = '1.9.16';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
