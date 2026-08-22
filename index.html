@@ -43,7 +43,7 @@
   <div class="setup-card">
     <button class="setup-close-btn" id="setupCloseBtn" style="display:none" title="Cerrar">×</button>
     <div class="setup-logo">LADESPENSA</div>
-      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.18 · Marea</div>
+      <div style="font-size:11px;color:var(--text2);letter-spacing:1px;margin-bottom:4px">v1.9.19 · Marea</div>
 
     <!-- Step 1: Gist -->
     <div class="setup-step active" id="step1">
@@ -347,7 +347,7 @@
       <div class="settings-section-title">Conexión</div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Versión</span>
-        <span class="settings-row-value">v1.9.18 · Marea</span>
+        <span class="settings-row-value">v1.9.19 · Marea</span>
       </div>
       <div class="settings-row dev-only">
         <span class="settings-row-label">Gist ID</span>
@@ -480,13 +480,13 @@
 </div>
 
 <!-- Version -->
-<div class="version-tag">v1.9.18 · Marea</div>
+<div class="version-tag">v1.9.19 · Marea</div>
 
 <script>
 'use strict';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const VERSION = '1.9.18';
+const VERSION = '1.9.19';
 const LADESPENSA_FILE = 'ladespensa.json';
 const GIST_API = 'https://api.github.com/gists/';
 
@@ -908,7 +908,7 @@ function showImportWindow() {
 function getAvgPrice(productName) {
   const prices = (DB.claritoPrices || {})[productName];
   if (!prices || !prices.length) return null;
-  return prices.reduce((s, p) => s + p, 0) / prices.length;
+  return median(prices); // v1.9.19: mediana en vez de media (ignora errores de OCR y ofertas puntuales)
 }
 
 // ── PREDICTION ─────────────────────────────────────────────────────────────
